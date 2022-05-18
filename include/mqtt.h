@@ -1,10 +1,10 @@
+#ifndef mqtt_h
+#define mqtt_h
+
 #include <PubSubClient.h>
-#include <EEPROM.h>
+#include "eepromState.h"
 #define MQTT_attr "espaltherma/ATTR"
 #define MQTT_lwt "espaltherma/LWT"
-
-#define EEPROM_CHK 1
-#define EEPROM_STATE 0
 
 #ifdef JSONTABLE
 char jsonbuff[MAX_MSG_SIZE] = "[{\0";
@@ -36,25 +36,6 @@ void sendValues()
 #else
   strcpy(jsonbuff, "{\0");
 #endif
-}
-
-void saveEEPROM(uint8_t state){
-    EEPROM.write(EEPROM_STATE,state);
-    EEPROM.commit();
-}
-
-void readEEPROM(){
-  if ('R' == EEPROM.read(EEPROM_CHK)){
-    digitalWrite(PIN_THERM,EEPROM.read(EEPROM_STATE));
-    mqttSerial.printf("Restoring previous state: %s",(EEPROM.read(EEPROM_STATE) == HIGH)? "Off":"On" );
-  }
-  else{
-    mqttSerial.printf("EEPROM not initialized (%d). Initializing...",EEPROM.read(EEPROM_CHK));
-    EEPROM.write(EEPROM_CHK,'R');
-    EEPROM.write(EEPROM_STATE,HIGH);
-    EEPROM.commit();
-    digitalWrite(PIN_THERM,HIGH);
-  }
 }
 
 void reconnect()
@@ -95,37 +76,68 @@ void reconnect()
   }
 }
 
-void callbackTherm(byte *payload, unsigned int length)
-{
+void callbackReboot()
+{  
+    mqttSerial.println("Rebooting");
+    delay(100);
+    esp_restart();
+}
+
+#ifdef PIN_RT_HEATING
+void callbackHeating(byte *payload, unsigned int length)
+{  
   payload[length] = '\0';
   
   // Is it ON or OFF?
   // Ok I'm not super proud of this, but it works :p 
   if (payload[1] == 'F')
   { //turn off
-    digitalWrite(PIN_THERM, HIGH);
-    saveEEPROM(HIGH);
-    client.publish("espaltherma/STATE", "OFF");
-    mqttSerial.println("Turned OFF");
+    digitalWrite(PIN_RT_HEATING, HIGH);
+    saveEEPROM(EEPROM_HEATING, HIGH);
+    client.publish("espaltherma/state/heating", "OFF");
+    mqttSerial.println("Turned heating OFF");
   }
   else if (payload[1] == 'N')
   { //turn on
-    digitalWrite(PIN_THERM, LOW);
-    saveEEPROM(LOW);
-    client.publish("espaltherma/STATE", "ON");
-    mqttSerial.println("Turned ON");
+    digitalWrite(PIN_RT_HEATING, LOW);
+    saveEEPROM(EEPROM_HEATING, LOW);
+    client.publish("espaltherma/state/heating", "ON");
+    mqttSerial.println("Turned heating ON");
   }
-  else if (payload[0] == 'R')//R(eset/eboot)
-  { 
-    mqttSerial.println("Rebooting");
-    delay(100);
-    esp_restart();
-  }  
   else
   {
     Serial.printf("Unknown message: %s\n", payload);
   }
 }
+#endif
+
+#ifdef PIN_RT_COOLING
+void callbackCooling(byte *payload, unsigned int length)
+{  
+  payload[length] = '\0';
+  
+  // Is it ON or OFF?
+  // Ok I'm not super proud of this, but it works :p 
+  if (payload[1] == 'F')
+  { //turn off
+    digitalWrite(PIN_RT_COOLING, HIGH);
+    saveEEPROM(EEPROM_COOLING, HIGH);
+    client.publish("espaltherma/state/cooling", "OFF");
+    mqttSerial.println("Turned cooling OFF");
+  }
+  else if (payload[1] == 'N')
+  { //turn on
+    digitalWrite(PIN_RT_COOLING, LOW);
+    saveEEPROM(EEPROM_COOLING, LOW);
+    client.publish("espaltherma/state/cooling", "ON");
+    mqttSerial.println("Turned cooling ON");
+  }
+  else
+  {
+    Serial.printf("Unknown message: %s\n", payload);
+  }
+}
+#endif
 
 #ifdef PIN_SG1
 //Smartgrid callbacks
@@ -138,6 +150,8 @@ void callbackSg(byte *payload, unsigned int length)
     // Set SG 0 mode => SG1 = INACTIVE, SG2 = INACTIVE
     digitalWrite(PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(PIN_SG2, SG_RELAY_INACTIVE_STATE);
+    saveEEPROM(EEPROM_SG1, SG_RELAY_INACTIVE_STATE);
+    saveEEPROM(EEPROM_SG2, SG_RELAY_INACTIVE_STATE);
     client.publish("espaltherma/sg/state", "0");
     Serial.println("Set SG mode to 0 - Normal operation");
   }
@@ -146,6 +160,8 @@ void callbackSg(byte *payload, unsigned int length)
     // Set SG 1 mode => SG1 = INACTIVE, SG2 = ACTIVE
     digitalWrite(PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(PIN_SG2, SG_RELAY_ACTIVE_STATE);
+    saveEEPROM(EEPROM_SG1, SG_RELAY_INACTIVE_STATE);
+    saveEEPROM(EEPROM_SG2, SG_RELAY_ACTIVE_STATE);
     client.publish("espaltherma/sg/state", "1");
     Serial.println("Set SG mode to 1 - Forced OFF");
   }
@@ -162,6 +178,8 @@ void callbackSg(byte *payload, unsigned int length)
     // Set SG 3 mode => SG1 = ACTIVE, SG2 = ACTIVE
     digitalWrite(PIN_SG1, SG_RELAY_ACTIVE_STATE);
     digitalWrite(PIN_SG2, SG_RELAY_ACTIVE_STATE);
+    saveEEPROM(EEPROM_SG1, SG_RELAY_ACTIVE_STATE);
+    saveEEPROM(EEPROM_SG2, SG_RELAY_ACTIVE_STATE);
     client.publish("espaltherma/sg/state", "3");
     Serial.println("Set SG mode to 3 - Forced ON");
   }
@@ -176,18 +194,37 @@ void callback(char *topic, byte *payload, unsigned int length)
 {
   Serial.printf("Message arrived [%s] : %s\n", topic, payload);
 
-  if (strcmp(topic, "espaltherma/POWER") == 0)
+#ifdef PIN_RT_HEATING
+  if (strcmp(topic, "espaltherma/set/heating") == 0)
   {
-    callbackTherm(payload, length);
+    callbackHeating(payload, length);
   }
+#else
+  if(false){}
+#endif 
+
+#ifdef PIN_RT_COOLING
+  else if (strcmp(topic, "espaltherma/set/cooling") == 0)
+  {
+    callbackCooling(payload, length);
+  }
+#endif
+
 #ifdef PIN_SG1
-  else if (strcmp(topic, "espaltherma/sg/set") == 0)
+  else if (strcmp(topic, "espaltherma/set/sg") == 0)
   {
     callbackSg(payload, length);
   }
 #endif
+
+  else if (strcmp(topic, "espaltherma/reboot") == 0)
+  {
+    callbackReboot();
+  }
+
   else
   {
     Serial.printf("Unknown topic: %s\n", topic);
   }
 }
+#endif

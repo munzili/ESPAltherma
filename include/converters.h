@@ -1,3 +1,6 @@
+#ifndef converters_h
+#define converters_h
+
 //convert read registry value to the expected format based on convID
 // #include <registrys.h>
 #include <Arduino.h>
@@ -398,3 +401,4 @@ private:
         return result;
     }
 };
+#endif

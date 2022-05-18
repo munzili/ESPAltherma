@@ -1,3 +1,10 @@
+#if !__has_include("setup.local.h")
+#error "Please copy the setup.h local to setup.local.h and modify the settings in setup.local.h"
+#elif !__has_include("altherma.local.h")
+#error "Please copy a Altherma definition file from the include/def directory (maybe from the correct language subdirectory) to a local altherma.local.h file. Set in the new file the needed parameters"
+#else
+
+
 #ifdef ARDUINO_M5Stick_C_Plus
 #include <M5StickCPlus.h>
 #elif ARDUINO_M5Stick_C
@@ -11,11 +18,23 @@
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 
-#include "setup.h" //<-- Configure your setup here
+#include "altherma.local.h"
+
+#ifndef LABELDEF
+#warning "NO DEFINITION FOUND IN altherma.local.h: Please set your needed parameters in it -- Using default."
+#include "def/DEFAULT.h"
+#endif
+
+#include "setup.local.h"
 #include "mqttserial.h"
 #include "converters.h"
-#include "comm.h"
+#include "communication.h"
+#include "eepromState.h"
 #include "mqtt.h"
+
+#ifdef CAN_ENABLED
+#include <CAN.h>
+#endif
 
 Converter converter;
 char registryIDs[32]; //Holds the registries to query
@@ -182,24 +201,33 @@ void setup()
 {
   Serial.begin(115200);
   setupScreen();
-  MySerial.begin(9600, SERIAL_8E1, RX_PIN, TX_PIN);
-  pinMode(PIN_THERM, OUTPUT);
-  digitalWrite(PIN_THERM, HIGH);
+  SerialX10A.begin(9600, SERIAL_8E1, RX_PIN, TX_PIN);
 
-#ifdef PIN_SG1
+#ifdef PIN_RT_HEATING
+  pinMode(PIN_RT_HEATING, OUTPUT);
+  digitalWrite(PIN_RT_HEATING, SG_RELAY_INACTIVE_STATE);
+#endif
+
+#ifdef PIN_RT_COOLING
+  pinMode(PIN_RT_COOLING, OUTPUT);
+  digitalWrite(PIN_RT_COOLING, SG_RELAY_INACTIVE_STATE);
+#endif
+
+#if defined(PIN_SG1) && defined(PIN_SG2)
   //Smartgrid pins - Set first to the inactive state, before configuring as outputs (avoid false triggering when initializing)
   digitalWrite(PIN_SG1, SG_RELAY_INACTIVE_STATE);
   digitalWrite(PIN_SG2, SG_RELAY_INACTIVE_STATE);
   pinMode(PIN_SG1, OUTPUT);
-  pinMode(PIN_SG2, OUTPUT);
- 
+  pinMode(PIN_SG2, OUTPUT); 
 #endif
+
 #ifdef ARDUINO_M5Stick_C_Plus
   gpio_pulldown_dis(GPIO_NUM_25);
   gpio_pullup_dis(GPIO_NUM_25);
 #endif
 
   EEPROM.begin(10);
+  initEEPROM();  
   readEEPROM();//Restore previous state
   mqttSerial.print("Setting up wifi...");
   setup_wifi();
@@ -262,3 +290,4 @@ void loop()
   mqttSerial.printf("Done. Waiting %d sec...\n", FREQUENCY / 1000);
   waitLoop(FREQUENCY);
 }
+#endif
