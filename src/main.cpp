@@ -11,15 +11,20 @@
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 
-#include "setup.h" //<-- Configure your setup here
+#include "config.h"
+#include "mqttConfig.h"
+//#include "setup.h" //<-- Configure your setup here
+#include "def/DEFAULT.h"
 #include "mqttserial.h"
 #include "converters.h"
 #include "comm.h"
 #include "mqtt.h"
+#include "webui.h"
 
 Converter converter;
 char registryIDs[32]; //Holds the registries to query
 bool busy = false;
+bool configWifiEnabled;
 
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
 long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
@@ -94,31 +99,36 @@ void setup_wifi()
 {
   delay(10);
   // We start by connecting to a WiFi network
-  mqttSerial.printf("Connecting to %s\n", WIFI_SSID);
-  
-  #if defined(WIFI_IP) && defined(WIFI_GATEWAY) && defined(WIFI_SUBNET)
-    IPAddress local_IP(WIFI_IP);
-    IPAddress gateway(WIFI_GATEWAY);
-    IPAddress subnet(WIFI_SUBNET);
+  mqttSerial.printf("Connecting to %s\n", config.SSID);
 
-    #ifdef WIFI_PRIMARY_DNS
-      IPAddress primaryDNS(WIFI_PRIMARY_DNS);
-    #else
-      IPAddress primaryDNS();
-    #endif
+  if(config.SSID_STATIC_IP)
+  {
+    IPAddress local_IP;
+    IPAddress subnet;
+    IPAddress gateway;
+    IPAddress primaryDNS;
+    IPAddress secondaryDNS;
 
-    #ifdef WIFI_SECONDARY_DNS
-      IPAddress secondaryDNS(WIFI_SECONDARY_DNS);
-    #else
-      IPAddress secondaryDNS();
-    #endif
+    local_IP.fromString(config.SSID_IP);
+    subnet.fromString(config.SSID_SUBNET);
+    gateway.fromString(config.SSID_GATEWAY);
+
+    if(config.SSID_PRIMARY_DNS != "")
+    {
+      primaryDNS.fromString(config.SSID_PRIMARY_DNS);
+    }
+
+    if(config.SSID_SECONDARY_DNS != "")
+    {
+      secondaryDNS.fromString(config.SSID_SECONDARY_DNS);
+    }
 
     if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-      mqttSerial.println("Failed to set static ip!");
+        mqttSerial.println("Failed to set static ip!");
     }
-  #endif  
+  }
 
-  WiFi.begin(WIFI_SSID, WIFI_PWD);
+  WiFi.begin(config.SSID, config.SSID_PASSWORD);
   int i = 0;
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -181,25 +191,45 @@ void setupScreen(){
 void setup()
 {
   Serial.begin(115200);
-  setupScreen();
-  MySerial.begin(9600, SERIAL_8E1, RX_PIN, TX_PIN);
-  pinMode(PIN_THERM, OUTPUT);
-  digitalWrite(PIN_THERM, HIGH);
 
-#ifdef PIN_SG1
-  //Smartgrid pins - Set first to the inactive state, before configuring as outputs (avoid false triggering when initializing)
-  digitalWrite(PIN_SG1, SG_RELAY_INACTIVE_STATE);
-  digitalWrite(PIN_SG2, SG_RELAY_INACTIVE_STATE);
-  pinMode(PIN_SG1, OUTPUT);
-  pinMode(PIN_SG2, OUTPUT);
- 
-#endif
+  EEPROM.begin(sizeof(Config) + 16);
+  EEPROM.get(16, config);
+
+  configWifiEnabled = !config.configStored || config.startStandaloneWifi;
+
+  if(configWifiEnabled)
+  {
+    IPAddress local_ip(192, 168, 1, 1); 
+    IPAddress gateway(192, 168, 1, 1); 
+    IPAddress subnet(255, 255, 255, 0);
+    WiFi.softAP("ESPAltherma-Config-WiFi"); 
+    WiFi.softAPConfig(local_ip, gateway, subnet);
+    
+    WebUI_Init();
+    return;
+  }
+
+  initMQTTConfig(config);
+
+  setupScreen();
+  MySerial.begin(9600, SERIAL_8E1, config.PIN_RX, config.PIN_TX);
+  pinMode(config.PIN_THERM, OUTPUT);
+  digitalWrite(config.PIN_THERM, HIGH);
+
+  if(config.SG_ENABLED)
+  {
+    //Smartgrid pins - Set first to the inactive state, before configuring as outputs (avoid false triggering when initializing)
+    digitalWrite(config.PIN_SG1, SG_RELAY_INACTIVE_STATE);
+    digitalWrite(config.PIN_SG2, SG_RELAY_INACTIVE_STATE);
+    pinMode(config.PIN_SG1, OUTPUT);
+    pinMode(config.PIN_SG2, OUTPUT);
+  }
+
 #ifdef ARDUINO_M5Stick_C_Plus
   gpio_pulldown_dis(GPIO_NUM_25);
   gpio_pullup_dis(GPIO_NUM_25);
 #endif
 
-  EEPROM.begin(10);
   readEEPROM();//Restore previous state
   mqttSerial.print("Setting up wifi...");
   setup_wifi();
@@ -214,10 +244,10 @@ void setup()
   });
   ArduinoOTA.begin();
 
-  client.setServer(MQTT_SERVER, MQTT_PORT);
+  client.setServer(config.MQTT_SERVER, config.MQTT_PORT);
   client.setBufferSize(MAX_MSG_SIZE); //to support large json message
   client.setCallback(callback);
-  client.setServer(MQTT_SERVER, MQTT_PORT);
+  client.setServer(config.MQTT_SERVER, config.MQTT_PORT);
   mqttSerial.print("Connecting to MQTT server...");
   mqttSerial.begin(&client, "espaltherma/log");
   reconnect();
@@ -237,6 +267,11 @@ void waitLoop(uint ms){
 
 void loop()
 {
+  if(configWifiEnabled)
+  {
+    return;
+  }
+
   if (!client.connected())
   { //(re)connect to MQTT if needed
     reconnect();
@@ -259,6 +294,6 @@ void loop()
     }
   }
   sendValues();//Send the full json message
-  mqttSerial.printf("Done. Waiting %d sec...\n", FREQUENCY / 1000);
-  waitLoop(FREQUENCY);
+  mqttSerial.printf("Done. Waiting %d sec...\n", config.FREQUENCY / 1000);
+  waitLoop(config.FREQUENCY);
 }

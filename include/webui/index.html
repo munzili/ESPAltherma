@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESPAltherma Config</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <h1>ESPAltherma Config</h1>
+  <form action="/save" method="post">
+  <p>WIFI SSID: <input type="text" name="ssid" /></p>
+  <p>WIFI Password: <input type="password" name="ssid_password" /></p>
+  <p>WIFI use static IP: <input type="checkbox" name="ssid_staticip" /></p>
+  <p id="staticip">
+      WIFI IP: <input type="text" name="ssid_ip" /><br/>
+      WIFI Subnet: <input type="text" name="ssid_subnet" /><br/>
+      WIFI Gateway: <input type="text" name="ssid_gateway" /><br/>
+      Primary DNS: <input type="text" name="primary_dns" /><br/>
+      Secondary DNS: <input type="text" name="secondary_dns" />
+  </p>
+  <p>MQTT Server: <input type="text" name="mqtt_server" /></p>
+  <p>MQTT Username: <input type="text" name="mqtt_username" /></p>
+  <p>MQTT Password: <input type="password" name="mqtt_password" /></p>
+  <p>MQTT use JSON Table: <input type="checkbox" name="mqtt_jsontable" /></p>
+  <p>MQTT one Topic: <input type="checkbox" name="mqtt_onetopic" /></p>
+  <p>MQTT one Topic Name: <input type="text" name="mqtt_onetopic_name" /></p>
+  <p>MQTT Port: <input type="number" name="mqtt_port" /></p>
+  <p>Frequency: <input type="number" name="frequency" /></p>
+  <p>PIN_RX: <input type="number" name="pin_rx" /></p>
+  <p>PIN_TX: <input type="number" name="pin_tx" /></p>
+  <p>PIN_THERM: <input type="number" name="pin_therm" /></p>
+  <p>SmartGrid enabled: <input type="checkbox" name="sg_enabled" /></p>
+  <p>
+    PIN_SG1: <input type="number" name="pin_sg1" /><br/>
+    PIN_SG2: <input type="number" name="pin_sg2" /><br/>
+    SG Relay high trigger: <input type="checkbox" name="sg_relay_trigger" />
+  </p>  
+  <p>Model: <select></select></p>
+  <p>Language: <select></select></p>
+  <p>Parameters: <select></select></p>
+  <p>GPIO state: <strong> %STATE%</strong></p>
+  <p><input type="submit" class="button" value="SAVE" /></p>
+  </form>
+</body>
+</html>
