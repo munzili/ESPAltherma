@@ -5,8 +5,6 @@
 // Set web server port number to 80
 AsyncWebServer server(80);
 
-const String WEBUI_ROOTDIR = "/include/webui/";
-
 String processor(const String& var){
   Serial.println(var);
   if(var == "STATE"){
@@ -17,12 +15,12 @@ String processor(const String& var){
 
 void onIndex(AsyncWebServerRequest *request)
 {
-    request->send(SPIFFS, WEBUI_ROOTDIR + "index.html", String(), false, processor);
+    request->send(SPIFFS, "/index.html", "text/html", false, processor);
 }
 
-void onStyle(AsyncWebServerRequest *request)
+void onRequestPicoCSS(AsyncWebServerRequest *request)
 {
-    request->send(SPIFFS, WEBUI_ROOTDIR + "style.css", "text/css");
+    request->send(SPIFFS, "/pico.min.css", "text/css");
 }
 
 void onSave(AsyncWebServerRequest *request)
@@ -72,7 +70,7 @@ void WebUI_Init()
     }
     
     server.on("/", HTTP_GET, onIndex);
-    server.on("/style.css", HTTP_GET, onStyle);
+    server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
     server.on("/save", HTTP_POST, onSave);
     server.begin();     
 }

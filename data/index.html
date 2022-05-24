@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESPAltherma Config</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="pico.min.css">
+  <script>
+    function show(id)
+    {
+      var el = document.getElementById(id).style;
+
+      if(el.display == 'none')
+        el.display = 'block';
+      else
+        el.display = 'none';
+    }
+  </script>
+</head>
+<body>
+  <main class="container">
+    <header><h1>ESPAltherma Config</h1></header>    
+    <article>
+      <form action="/save" method="post">
+        <label for="ssid">WIFI SSID:</label>
+        <input type="text" id="ssid" name="ssid" required/>
+
+        <label for="ssid_password">WIFI Password:</label>
+        <input type="password" id="ssid_password" name="ssid_password"/>
+        <small>Leave empty for open networks</small> 
+
+        <label for="ssid_staticip" >          
+          <input type="checkbox" id="ssid_staticip" name="ssid_staticip" role="switch" onclick="show('staticip');"/>
+          WIFI use static IP
+        </label>
+
+        <article id="staticip" style="display: none">
+            <label for="ssid_ip">WIFI IP:</label>
+            <input type="text" id="ssid_ip" name="ssid_ip"/>
+
+            <label for="ssid_subnet">WIFI Subnet:</label>
+            <input type="text" id="ssid_subnet" name="ssid_subnet"/>
+
+            <label for="ssid_gateway">WIFI Gateway:</label>
+            <input type="text" id="ssid_gateway" name="ssid_gateway"/>
+
+            <label for="primary_dns">Primary DNS:</label>
+            <input type="text" id="primary_dns" name="primary_dns"/>
+            <small>Optional</small> 
+
+            <label for="secondary_dns">Secondary DNS:</label>
+            <input type="text" id="secondary_dns" name="secondary_dns"/>
+            <small>Optional</small> 
+        </article>
+
+        <label for="mqtt_server">MQTT Server:</label>
+        <input type="text" id="mqtt_server" name="mqtt_server" required/>
+
+        <label for="mqtt_username">MQTT Username:</label>
+        <input type="text" id="mqtt_username" name="mqtt_username" required/>
+
+        <label for="mqtt_password">MQTT Password:</label>
+        <input type="password" id="mqtt_password" name="mqtt_password" required/>
+
+        <label for="mqtt_jsontable" >          
+          <input type="checkbox" id="mqtt_jsontable" name="mqtt_jsontable" role="switch"/>
+          MQTT use JSON Table
+        </label>
+
+        <label for="mqtt_onetopic" >          
+          <input type="checkbox" id="mqtt_onetopic" name="mqtt_onetopic" role="switch" onclick="show('onetopic');"/>
+          MQTT one Topic
+        </label>
+
+        <article id="onetopic" style="display: none;  ">
+          <label for="mqtt_onetopic">MQTT one Topic:</label>
+          <input type="text" id="mqtt_onetopic" name="mqtt_onetopic"/>
+        </article>
+        
+        <label for="mqtt_port">MQTT Port:</label>
+        <input type="number" id="mqtt_port" name="mqtt_port" required/>
+
+        <label for="frequency">Frequency:</label>
+        <input type="number" id="frequency" name="frequency" required/>
+
+        <div class="grid">
+          <!-- Markup example 1: input is inside label -->
+          <label for="pin_rx">
+            PIN RX
+            <input type="number" id="pin_rx" name="pin_rx" required>
+          </label>
+
+          <label for="pin_tx">
+            PIN TX
+            <input type="number" id="pin_tx" name="pin_tx" required>
+          </label>
+        </div>
+
+        <label for="pin_therm">
+          PIN THERM
+          <input type="number" id="pin_therm" name="pin_therm" required>
+        </label>
+
+        <label for="sg_enabled" >          
+          <input type="checkbox" id="sg_enabled" name="sg_enabled" role="switch" onclick="show('smartgrid');"/>
+          SmartGrid enabled
+        </label>
+
+        <article id="smartgrid" style="display: none">
+          <div class="grid">
+            <label for="pin_sg1">
+              PIN SG1
+              <input type="number" id="pin_sg1" name="pin_sg1">
+            </label>
+            
+            <label for="pin_sg2">
+              PIN SG2
+              <input type="number" id="pin_sg2" name="pin_sg2">
+            </label>
+          </div>
+
+          <label for="sg_relay_trigger" >          
+            <input type="checkbox" id="sg_relay_trigger" name="sg_relay_trigger" role="switch"/>
+            SG Relay high trigger
+          </label>
+          <small>Enable if the relay gets enabled when output is giht on SG Pins</small>
+        </article>
+
+        <label for="pin_enable_config">
+          PIN CONFIG PAGE:
+          <input type="number" id="pin_enable_config" name="pin_enable_config" required>
+          <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the configuration mode (current mode).</small>
+        </label>
+
+        <label for="model">Model:</label>
+        <select id="model" name="model" required>
+          <option value="" selected>Select a model…</option>
+          <option>…</option>
+        </select>
+
+        <label for="language">Language:</label>
+        <select id="language" name="language" required>
+          <option value="" selected>Select a language…</option>
+          <option>…</option>
+        </select>
+
+        <label for="parameters">Parameters:</label>
+        <select id="parameters" name="parameters" required multiple>
+        </select>
+
+        <p>GPIO state: <strong> %STATE%</strong></p>
+        <p><input type="submit" value="SAVE" role="button" /></p>
+      </form>
+    </article>
+  </main>
+</body>
+</html>
