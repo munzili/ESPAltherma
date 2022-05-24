@@ -1,74 +1,74 @@
 [
     {
         "Name": "Altherma Bizone CB 4-8kW",
-        "File": "ALTHERMA(BIZONE_CB_04-08KW)"
+        "File": "ALT BIZ CB sm"
     },
     {
         "Name": "Altherma Bizone CB 11-16kW",
-        "File": "ALTHERMA(BIZONE_CB_11-16KW)"
+        "File": "ALT BIZ CB bg"
     },
     {
         "Name": "Altherma GSHP",
-        "File": "ALTHERMA(GSHP)"
+        "File": "ALT GSHP"
     },
     {
         "Name": "Altherma GSHP2",
-        "File": "ALTHERMA(GSHP2)"
+        "File": "ALT GSHP2"
     },
     {
         "Name": "Altherma HPSU Ultra",
-        "File": "ALTHERMA(HPPSU6_ULTRA)"
+        "File": "ALT HPSU6 ULTRA"
     },
     {
         "Name": "Altherma Hybrid",
-        "File": "ALTHERMA(HYBRID)"
+        "File": "ALT HYBRID"
     },
     {
         "Name": "Altherma LT 11-16kW Hydrosplit",
-        "File": "ALTHERMA(LT_11-16KW_HYDROSPLIT_HYDRO_UNIT)"
+        "File": "ALT LT 11 16 HYD"
     },
     {
         "Name": "Altherma LT CA CB 4-8kW",
-        "File": "ALTHERMA(LT_CA_CB_04-08KW)"
+        "File": "ALT LT CA CB sm"
     },
     {
         "Name": "Altherma LT CA CB 11-16kW",
-        "File": "ALTHERMA(LT_CA_CB_11-16KW)"
+        "File": "ALT LT CA CB bg"
     },
     {
         "Name": "Altherma LT DA 04-08kW",
-        "File": "ALTHERMA(LT_DA_04-08KW)"
+        "File": "ALT LT DA 04 08KW"
     },
     {
         "Name": "Altherma LT PAIR BML",
-        "File": "ALTHERMA(LT_DA_PAIR_BML)"
+        "File": "ALT LT DA PAIR BML"
     },
     {
         "Name": "Altherma LT GAS INJ",
-        "File": "ALTHERMA(LT_GAS_INJ)20200702"
+        "File": "ALT LT GAS INJ"
     },
     {
         "Name": "Altherma LT Multi DHWHP",
-        "File": "ALTHERMA(LT_MULTI_DHWHP)"
+        "File": "ALT LT MUL DHWHP"
     },
     {
         "Name": "Altherma LT Multi Hybrid",
-        "File": "ALTHERMA(LT_MULTI_HYBRID)"
+        "File": "ALT LT MUL HYB"
     },
     {
         "Name": "Altherma LT D7 E BML",
-        "File": "ALTHERMA(LT_D7_E_BML)"
+        "File": "ALT LT D7 E BML"
     },
     {
         "Name": "Altherma Monobloc CA 5-7kW",
-        "File": "ALTHERMA(MONOBLOC_CA_05-07KW)"
+        "File": "ALT MONO CA 05 07"
     },
     {
         "Name": "Altherma Top Grade",
-        "File": "ALTHERMA(TOP-GRADE)"
+        "File": "ALT TOP GRADE"
     },
     {
         "Name": "DAIKIN Mini Inverter Chiller 4-8kW ",
-        "File": "DAIKIN_MINI_INVERTER_CHILLER04-08KW"
+        "File": "DAI CHILLER 04 08"
     }   
 ]

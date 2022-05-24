@@ -15,3 +15,6 @@ public:
     LabelDef(){};
     LabelDef(int registryIDp, int offsetp, int convidp, int dataSizep, int dataTypep, const char *labelp) : convid(convidp), offset(offsetp), registryID(registryIDp), dataSize(dataSizep), dataType(dataTypep), label(labelp){};
 };
+
+// TODO: FIX AND REMOVE!!
+LabelDef PROGMEM labelDefs[] = {};

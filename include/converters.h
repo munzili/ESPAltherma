@@ -1,6 +1,7 @@
 //convert read registry value to the expected format based on convID
 // #include <registrys.h>
 #include <Arduino.h>
+#include "labeldef.h"
 char buff[64];
 class Converter
 {

@@ -14,7 +14,6 @@
 #include "config.h"
 #include "mqttConfig.h"
 //#include "setup.h" //<-- Configure your setup here
-#include "def/DEFAULT.h"
 #include "mqttserial.h"
 #include "converters.h"
 #include "comm.h"
