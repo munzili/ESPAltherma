@@ -6,11 +6,7 @@
 // Set web server port number to 80
 AsyncWebServer server(80);
 
-String processor(const String& var) {
-  Serial.println(var);
-  if(var == "STATE"){
-    return "ON";
-  }
+String processor(const String& var) {  
   if(var == "MODELS")
   {
     File file = SPIFFS.open("/def/models.json");

@@ -5,41 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" type="text/css" href="pico.min.css">
-  <script>
-    function show(id)
-    {
-      var el = document.getElementById(id).style;
-
-      if(el.display == 'none')
-        el.display = 'block';
-      else
-        el.display = 'none';
+  <script src="main.js"></script>
+  <style>
+    .row-selected {
+      background-color: rgb(233, 230, 230);
     }
-
-    function updateParameters()
-    {
-      var model = document.getElementById('model').value;
-      var language = document.getElementById('language').value;
-      var parameters = document.getElementById('parameters');
-
-      if(model != "" && language != "")
-      {
-        while (parameters.options.length > 0) {                
-          parameters.remove(0);
-        }    
-
-        var http = new XMLHttpRequest(); 
-        http.open("POST", "/loadParameters", true);
-        http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        http.onreadystatechange = function() {//Call a function when the state changes.
-          if(http.readyState == 4 && http.status == 200) {
-              alert(http.responseText);
-          }
-        }
-        http.send("model="+(model-1)+"&language="+language);
-      }
-    }
-  </script>
+  </style>
 </head>
 <body>
   <main class="container">
@@ -156,23 +127,90 @@
           <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the configuration mode (current mode).</small>
         </label>
 
-        <label for="model">Model:</label>
-        <select id="model" name="model" onchange="updateParameters()" required>
-          <option value="" selected>Select a model...</option>
-          %MODELS%
-        </select>
+        <div class="grid">
+          <div>
+            <label for="model">Model:</label>
+            <select id="model" name="model" onchange="updateParameters()" required>
+              <option value="" selected>Select a model...</option>
+              %MODELS%
+            </select>
 
-        <label for="language">Language:</label>
-        <select id="language" name="language" onchange="updateParameters()" required>
-          <option value="" selected>Select a language...</option>
-          %LANGUAGES%
-        </select>
+            <label for="language">Language:</label>
+            <select id="language" name="language" onchange="updateParameters()" required>
+              <option value="" selected>Select a language...</option>
+              %LANGUAGES%
+            </select>
 
-        <label for="parameters">Parameters:</label>
-        <select id="parameters" name="parameters" required multiple>
-        </select>
+            <label for="parameters">Parameters:</label>
+            <figure style="max-height: 500px">
+              <table id="parameters" style="white-space: nowrap;">
+                <tr>
+                  <td>Name</td>
+                  <td>ConvID</td>
+                  <td>Offset</td>
+                  <td>Data size</td>
+                  <td>Data type</td>
+                </tr>                
+              </table>
+            </figure>
+          </div>
+          <div style="text-align: center; margin-top: 20pt;">
+            <p><input type="button" onclick="" value="Add to selected parameters"></p>
+            <p><input type="button" onclick="removeSelectedParameters()" value="Remove from selected parameters"></p>
 
-        <p>GPIO state: <strong> %STATE%</strong></p>
+            <details>
+              <summary role="button">Add custom Parameter</summary>
+              <p>
+                <div class="grid">
+                  <div>
+                    <label for="convid">ConvID:</label>
+                    <input type="number" id="convid" name="convid"/>
+                  </div>
+                  <div>
+                    <label for="offset">Offset:</label>
+                    <input type="number" id="offset" name="offset"/>
+                  </div>
+                </div>
+                <div class="grid">
+                  <div>                  
+                    <label for="dataSize">Data size:</label>
+                    <input type="number" id="dataSize" name="dataSize"/>
+                  </div>
+                  <div>
+                    <label for="dataType">Data type:</label>
+                    <input type="number" id="dataType" name="dataType"/>
+                  </div>
+                </div>              
+
+                <label for="dataName">Data name:</label>
+                <input type="text" id="dataName" name="dataName"/>
+
+                <input type="button" onclick="addCustomParameter()" value="Add">
+              </p>
+            </details>
+          </div>
+          <div>
+            <label for="selectedParametersTable">Selected Parameters:</label>            
+            <figure style="max-height: 500px">
+              <table id="selectedParametersTable" style="white-space: nowrap;">
+                <tr>
+                  <td>Name</td>
+                  <td>ConvID</td>
+                  <td>Offset</td>
+                  <td>Data size</td>
+                  <td>Data type</td>
+                </tr>                
+              </table>
+            </figure>
+
+            <label for="parametersFile">Upload Parameters file:</label>
+            <input type="file" id="parametersFile" accept=".json" name="parametersFile"/>
+            <small>Add a model config file to the predefined model list</small>
+
+            <input type="button" onclick="uploadFile()" value="Upload">
+          </div>
+        </div>
+        
         <p><input type="submit" value="SAVE" role="button" /></p>
       </form>
     </article>
