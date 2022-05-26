@@ -1,4 +1,5 @@
 var definedParameters = [];
+var models = [];
 
 function show(id)
 {
@@ -23,7 +24,7 @@ async function updateParameters()
     }    
 
     let formData = new FormData();           
-    formData.append("model", model-1);
+    formData.append("model", model);
     formData.append("language", language);
     await fetch('/loadParameters', {
         method: "POST",
@@ -57,8 +58,8 @@ async function uploadFile() {
     })  
     .then(function(response) {
         if (response.status !== 200) {
-        alert('File upload failed! Message: ' + response.status);
-        return;
+            parametersFile.value = null;
+            refreshModels();
         }
     })
     .catch(function(err) {
@@ -133,7 +134,7 @@ function updateDefinedParametersList()
         let convidCell = row.insertCell(1);
         let offsetCell = row.insertCell(2);
         let dataSizeCell = row.insertCell(3);
-        let dataTypeCell = row.insertCell(4);
+        let dataTypeCell = row.insertCell(4);        
 
         nameCell.appendChild(document.createTextNode(data[4]));
         convidCell.appendChild(document.createTextNode(data[0]));
@@ -141,6 +142,11 @@ function updateDefinedParametersList()
         dataSizeCell.appendChild(document.createTextNode(data[2]));
         dataTypeCell.appendChild(document.createTextNode(data[3]));
         
+        if(data[5] != undefined)
+        {
+            let valueCell = row.insertCell(5);
+            valueCell.appendChild(document.createTextNode(data[5]));
+        }
     }
 }
 
@@ -169,4 +175,51 @@ function removeSelectedParameters()
     });
 
     updateDefinedParametersList();
+}
+
+function loadData(tableId)
+{
+    
+}
+
+async function refreshModels()
+{
+    await fetch('/loadModels', {
+        method: "GET"
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data){
+        models = data;
+
+        let modelSelect = document.getElementById('model');
+        
+        while (modelSelect.options.length > 1)
+            modelSelect.remove(1);
+
+        models.forEach(function(model, i) {
+            let option = document.createElement("option");
+            option.text = model.Name;
+            option.value = i;
+            modelSelect.add(option);
+        });
+    })
+    .catch(function(err) {
+        alert('Fetching models data failed! Message: ' + err);
+    });    
+}
+
+function refreshLanguages()
+{
+    let languageSelect = document.getElementById('language');
+    let selectedModel = document.getElementById('model').value;
+            
+    while (languageSelect.options.length > 1)
+        languageSelect.remove(1);
+
+    for (const [languageName, parametersFile] of Object.entries(models[selectedModel].Files)) {
+        let option = document.createElement("option");
+        option.text = languageName;
+        option.value = parametersFile;
+        languageSelect.add(option);
+    }
 }

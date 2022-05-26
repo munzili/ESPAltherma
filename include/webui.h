@@ -5,6 +5,8 @@
 
 #define CONFIG_FILE "/config.json"
 #define MODELS_FILE "/models.json"
+#define MODEL_DEFINITION_DOC_SIZE 1024*50
+#define MODELS_DOC_SIZE 1024*10
 
 // Set web server port number to 80
 AsyncWebServer server(80);
@@ -82,6 +84,76 @@ void onRequestMainJS(AsyncWebServerRequest *request)
     request->send_P(200, "text/javascript", mainJS_start);
 }
 
+void onLoadModels(AsyncWebServerRequest *request)
+{
+  request->send(LittleFS, MODELS_FILE, "text/json");
+}
+
+void onUpload(AsyncWebServerRequest *request)
+{
+  if(!request->hasParam("file", true, true))
+  {
+    request->send(422, "text/text", "Missing parameter file");
+      return;
+  }
+
+  AsyncWebParameter* uploadFile = request->getParam("file", true, true);
+
+  File modelsFile = LittleFS.open(MODELS_FILE, "w");
+
+  String fsFilename;
+  do
+  {
+    fsFilename = "/P" + millis();
+    fsFilename += ".json";
+  } while (LittleFS.exists(fsFilename));
+
+  DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
+  deserializeJson(modelsDoc, modelsFile); 
+  JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
+
+  DynamicJsonDocument uploadDoc(MODEL_DEFINITION_DOC_SIZE);
+  deserializeJson(uploadDoc, uploadFile->value()); 
+  
+  bool newModel = true;
+  for (JsonObject model : modelsDocArr) {
+    if(model["Model"] == uploadDoc["Model"])
+    {
+      newModel = false;
+
+      bool existingLanguage = false;
+      for (JsonPair kv : model["Files"].as<JsonObject>()) {
+        if(kv.key().c_str() == uploadDoc["Language"])
+        {
+          fsFilename = kv.value().as<char*>();
+          existingLanguage = true;
+          break;
+        }
+      }
+
+      if(!existingLanguage)
+      {
+        model["Files"][uploadDoc["Language"]] = fsFilename;
+      }
+    }    
+  }
+
+  if(newModel)
+  {
+    JsonObject newModelObect = modelsDocArr.createNestedObject();
+    newModelObect["Model"] = uploadDoc["Model"];
+    JsonObject filesDefinition = newModelObect["Files"].createNestedObject();
+    filesDefinition[uploadDoc["Language"].as<char *>()] = fsFilename;
+  }
+
+  serializeJson(modelsDocArr, modelsFile);
+  modelsFile.close();
+
+  File fileWriter = LittleFS.open(fsFilename, "w", true);
+  fileWriter.print(uploadFile->value());
+  fileWriter.close();
+}
+
 void onLoadParameters(AsyncWebServerRequest *request)
 {
     if(!request->hasParam("model", true) || !request->hasParam("language", true))
@@ -94,48 +166,26 @@ void onLoadParameters(AsyncWebServerRequest *request)
     AsyncWebParameter* parameterLanguage = request->getParam("language", true);
     
     byte model = parameterModel->value().toInt();
-    byte language = parameterLanguage->value().toInt();
+    String language = parameterLanguage->value();
+
     Serial.print("Found model: ");
     Serial.println(model);
     Serial.print("Found language: ");
     Serial.println(language);
 
-    File file = LittleFS.open("/def/models.json");
+    File file = LittleFS.open(MODELS_FILE);
 
-    StaticJsonDocument<1024*10> modelDoc;
+    DynamicJsonDocument modelDoc(MODELS_DOC_SIZE);
     deserializeJson(modelDoc, file); 
-    JsonObject obj = modelDoc.as<JsonArray>()[model];
-    const char* modelFile = obj["File"].as<const char*>();
+
+    String parametersfile = modelDoc[model]["Files"][language];
+    
+    Serial.print("Found parameters: ");
+    Serial.println(parametersfile);
 
     file.close();
 
-    String filename = "/def/";  
-
-    if(language != 1)
-    {
-      file = LittleFS.open("/def/languages.json");
-
-      StaticJsonDocument<512> languagesDoc;
-      deserializeJson(languagesDoc, file); 
-      const char* languageName = languagesDoc.as<JsonArray>()[language-2].as<const char*>();
-
-      file.close();
-
-      filename += languageName;
-      filename += "/";
-    }
-
-    filename += modelFile;
-    filename += ".json";
-
-    Serial.println("Searching: " + filename);
-    
-    if(!LittleFS.exists(filename))
-    {
-      filename = "/def/";  
-      filename += modelFile;
-      filename += ".json";
-    }
+    String filename = "/" + parametersfile;
 
     if(!LittleFS.exists(filename))
     {
@@ -206,6 +256,8 @@ void WebUI_Init()
     server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
     server.on("/main.js", HTTP_GET, onRequestMainJS);
     server.on("/loadParameters", HTTP_POST, onLoadParameters);
+    server.on("/upload", HTTP_POST, onUpload);
+    server.on("/loadModels", HTTP_GET, onLoadModels);
     server.on("/save", HTTP_POST, onSave);
     server.begin();     
 }
