@@ -1,15 +1,22 @@
 #include <WiFi.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include "ESPAsyncWebServer.h" 
 #include "ArduinoJson.h"
+
+#define CONFIG_FILE "/config.json"
+#define MODELS_FILE "/models.json"
 
 // Set web server port number to 80
 AsyncWebServer server(80);
 
+extern const char mainJS_start[] asm("_binary_webui_main_js_start");
+extern const char indexHTML_start[] asm("_binary_webui_index_html_start");
+extern const char picoCSS_start[] asm("_binary_webui_pico_min_css_start");
+
 String processor(const String& var) {  
   if(var == "MODELS")
   {
-    File file = SPIFFS.open("/def/models.json");
+    File file = LittleFS.open("/def/models.json");
 
     StaticJsonDocument<1024*10> modelDoc;
     deserializeJson(modelDoc, file); 
@@ -34,7 +41,7 @@ String processor(const String& var) {
   }
   if(var == "LANGUAGES")
   {
-    File file = SPIFFS.open("/def/languages.json");
+    File file = LittleFS.open("/def/languages.json");
 
     StaticJsonDocument<512> languagesDoc;
     deserializeJson(languagesDoc, file); 
@@ -62,12 +69,17 @@ String processor(const String& var) {
 
 void onIndex(AsyncWebServerRequest *request)
 {
-    request->send(SPIFFS, "/index.html", "text/html", false, processor);
+    request->send_P(200, "text/html", indexHTML_start, processor);
 }
 
 void onRequestPicoCSS(AsyncWebServerRequest *request)
 {
-    request->send(SPIFFS, "/pico.min.css", "text/css");
+    request->send_P(200, "text/css", picoCSS_start);
+}
+
+void onRequestMainJS(AsyncWebServerRequest *request)
+{
+    request->send_P(200, "text/javascript", mainJS_start);
 }
 
 void onLoadParameters(AsyncWebServerRequest *request)
@@ -88,7 +100,7 @@ void onLoadParameters(AsyncWebServerRequest *request)
     Serial.print("Found language: ");
     Serial.println(language);
 
-    File file = SPIFFS.open("/def/models.json");
+    File file = LittleFS.open("/def/models.json");
 
     StaticJsonDocument<1024*10> modelDoc;
     deserializeJson(modelDoc, file); 
@@ -101,7 +113,7 @@ void onLoadParameters(AsyncWebServerRequest *request)
 
     if(language != 1)
     {
-      file = SPIFFS.open("/def/languages.json");
+      file = LittleFS.open("/def/languages.json");
 
       StaticJsonDocument<512> languagesDoc;
       deserializeJson(languagesDoc, file); 
@@ -118,20 +130,20 @@ void onLoadParameters(AsyncWebServerRequest *request)
 
     Serial.println("Searching: " + filename);
     
-    if(!SPIFFS.exists(filename))
+    if(!LittleFS.exists(filename))
     {
       filename = "/def/";  
       filename += modelFile;
       filename += ".json";
     }
 
-    if(!SPIFFS.exists(filename))
+    if(!LittleFS.exists(filename))
     {
       request->send(400, "text/text", "Parameters file not found");
       return;
     }
 
-    request->send(SPIFFS, filename, "text/json");
+    request->send(LittleFS, filename, "text/json");
 }
 
 void onSave(AsyncWebServerRequest *request)
@@ -176,12 +188,23 @@ if(request->hasArg("download"))
 
 void WebUI_Init()
 {
-    if(!SPIFFS.begin(true)) {
+    if(!LittleFS.begin(true)) 
+    {
         Serial.println("An Error has occurred while mounting LittleFS");
+        return;
+    }
+
+    if(!LittleFS.exists(MODELS_FILE))
+    {
+      File file = LittleFS.open(MODELS_FILE, "w", true);
+      file.print("[]");
+      delay(1);
+      file.close();
     }
     
     server.on("/", HTTP_GET, onIndex);
     server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
+    server.on("/main.js", HTTP_GET, onRequestMainJS);
     server.on("/loadParameters", HTTP_POST, onLoadParameters);
     server.on("/save", HTTP_POST, onSave);
     server.begin();     
