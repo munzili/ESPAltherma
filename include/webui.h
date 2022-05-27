@@ -69,6 +69,21 @@ String processor(const String& var) {
   return String();
 }
 
+bool formatDefaultFS()
+{
+  bool result = LittleFS.format();
+
+  if(!result)
+    return false;
+
+  File file = LittleFS.open(MODELS_FILE, "w", true);
+  file.print("[]");
+  delay(1);
+  file.close();
+
+  return true;
+}
+
 void onIndex(AsyncWebServerRequest *request)
 {
     request->send_P(200, "text/html", indexHTML_start, processor);
@@ -82,6 +97,13 @@ void onRequestPicoCSS(AsyncWebServerRequest *request)
 void onRequestMainJS(AsyncWebServerRequest *request)
 {
     request->send_P(200, "text/javascript", mainJS_start);
+}
+
+void onFormat(AsyncWebServerRequest *request)
+{
+  bool result = formatDefaultFS();
+
+  request->send(200, "text/javascript", String(result));
 }
 
 void onLoadModels(AsyncWebServerRequest *request)
@@ -108,6 +130,8 @@ void onUpload(AsyncWebServerRequest *request)
     fsFilename += ".json";
   } while (LittleFS.exists(fsFilename));
 
+  Serial.printf("Found LitteFS Filename: %s\n", fsFilename);
+  
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
   deserializeJson(modelsDoc, modelsFile); 
   JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
@@ -119,13 +143,16 @@ void onUpload(AsyncWebServerRequest *request)
   for (JsonObject model : modelsDocArr) {
     if(model["Model"] == uploadDoc["Model"])
     {
+      Serial.printf("Found existing Model: %s\n", model["Model"]);
+
       newModel = false;
 
       bool existingLanguage = false;
       for (JsonPair kv : model["Files"].as<JsonObject>()) {
         if(kv.key().c_str() == uploadDoc["Language"])
         {
-          fsFilename = kv.value().as<char*>();
+          Serial.printf("Found existing Model file: %s\n", kv.key().c_str());
+          fsFilename = kv.value().as<const char*>();
           existingLanguage = true;
           break;
         }
@@ -133,6 +160,7 @@ void onUpload(AsyncWebServerRequest *request)
 
       if(!existingLanguage)
       {
+        Serial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"]);
         model["Files"][uploadDoc["Language"]] = fsFilename;
       }
     }    
@@ -140,10 +168,12 @@ void onUpload(AsyncWebServerRequest *request)
 
   if(newModel)
   {
+    Serial.printf("Found new Model: %s\n", uploadDoc["Model"]);
+
     JsonObject newModelObect = modelsDocArr.createNestedObject();
     newModelObect["Model"] = uploadDoc["Model"];
     JsonObject filesDefinition = newModelObect["Files"].createNestedObject();
-    filesDefinition[uploadDoc["Language"].as<char *>()] = fsFilename;
+    filesDefinition[uploadDoc["Language"].as<const char *>()] = fsFilename;
   }
 
   serializeJson(modelsDocArr, modelsFile);
@@ -246,10 +276,7 @@ void WebUI_Init()
 
     if(!LittleFS.exists(MODELS_FILE))
     {
-      File file = LittleFS.open(MODELS_FILE, "w", true);
-      file.print("[]");
-      delay(1);
-      file.close();
+      formatDefaultFS();
     }
     
     server.on("/", HTTP_GET, onIndex);
@@ -259,5 +286,6 @@ void WebUI_Init()
     server.on("/upload", HTTP_POST, onUpload);
     server.on("/loadModels", HTTP_GET, onLoadModels);
     server.on("/save", HTTP_POST, onSave);
+    server.on("/format", HTTP_GET, onFormat);
     server.begin();     
 }
