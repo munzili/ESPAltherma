@@ -20,7 +20,6 @@
 #include "mqtt.h"
 #include "webui.h"
 
-Converter converter;
 char registryIDs[32]; //Holds the registries to query
 bool busy = false;
 bool configWifiEnabled;
@@ -149,8 +148,10 @@ void initRegistries(){
   }
   
   int i = 0;
-  for (auto &&label : labelDefs)
-  {
+  for (int j = 0; j < labelDefsSize; j++)
+  {            
+    auto &&label = *labelDefs[j];
+
     if (!contains(registryIDs, sizeof(registryIDs), label.registryID))
     {
       mqttSerial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
@@ -212,7 +213,7 @@ void setup()
   initMQTTConfig(config);
 
   setupScreen();
-  MySerial.begin(9600, SERIAL_8E1, config.PIN_RX, config.PIN_TX);
+  SerialX10A.begin(9600, SERIAL_8E1, config.PIN_RX, config.PIN_TX);
   pinMode(config.PIN_THERM, OUTPUT);
   digitalWrite(config.PIN_THERM, HIGH);
 

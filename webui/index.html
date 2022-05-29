@@ -135,7 +135,7 @@
             </select>
 
             <label for="language">Language:</label>
-            <select id="language" name="language" onclick="refreshLanguages()" onchange="updateParameters()" required>
+            <select id="language" name="language" onchange="updateParameters()" required>
               <option value="" selected>Select a language...</option>
             </select>
 
@@ -143,9 +143,10 @@
             <figure style="max-height: 500px">
               <table id="parametersTable" style="white-space: nowrap;">
                 <tr>
-                  <td>Name</td>
-                  <td>ConvID</td>
+                  <td>Name</td>                  
                   <td>Offset</td>
+                  <td>RegID</td>
+                  <td>ConvID</td>
                   <td>Data size</td>
                   <td>Data type</td>
                   <td>Value</td>
@@ -156,7 +157,7 @@
             <input type="button" onclick="loadData('parametersTable')" value="Load model values">
           </div>
           <div style="text-align: center; margin-top: 20pt;">
-            <p><input type="button" onclick="" value="Add to selected parameters"></p>
+            <p><input type="button" onclick="addSelectedPredefinedParameters()" value="Add to selected parameters"></p>
             <p><input type="button" onclick="removeSelectedParameters()" value="Remove from selected parameters"></p>
 
             <details>
@@ -164,15 +165,19 @@
               <p>
                 <div class="grid">
                   <div>
-                    <label for="convid">ConvID:</label>
-                    <input type="number" id="convid" name="convid"/>
-                  </div>
-                  <div>
                     <label for="offset">Offset:</label>
                     <input type="number" id="offset" name="offset"/>
                   </div>
+                  <div>
+                    <label for="regid">RegID:</label>
+                    <input type="number" id="regid" name="regid"/>
+                  </div>                  
                 </div>
                 <div class="grid">
+                  <div >                    
+                    <label for="convid">ConvID:</label>
+                    <input type="number" id="convid" name="convid"/>
+                  </div>
                   <div>                  
                     <label for="dataSize">Data size:</label>
                     <input type="number" id="dataSize" name="dataSize"/>
@@ -195,9 +200,10 @@
             <figure style="max-height: 500px">
               <table id="selectedParametersTable" style="white-space: nowrap;">
                 <tr>
-                  <td>Name</td>
-                  <td>ConvID</td>
+                  <td>Name</td>                  
                   <td>Offset</td>
+                  <td>RegID</td>
+                  <td>ConvID</td>
                   <td>Data size</td>
                   <td>Data type</td>
                   <td>Value</td>

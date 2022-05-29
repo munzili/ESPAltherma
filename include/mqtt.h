@@ -1,3 +1,5 @@
+#ifndef mqtt_h
+#define mqtt_h
 #include <PubSubClient.h>
 #include <EEPROM.h>
 #include "config.h"
@@ -187,3 +189,4 @@ void callback(char *topic, byte *payload, unsigned int length)
     Serial.printf("Unknown topic: %s\n", topic);
   }
 }
+#endif

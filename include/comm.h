@@ -1,7 +1,9 @@
+#ifndef comm_h
+#define comm_h
 #include <Arduino.h>
 #include <HardwareSerial.h>
 
-HardwareSerial MySerial(1);
+HardwareSerial SerialX10A(1);
 #define SER_TIMEOUT 300 //leave 300ms for the machine to answer
 
 char getCRC(char *src, int len)
@@ -22,8 +24,8 @@ bool queryRegistry(char regID, char *buffer)
   prep[3] = getCRC(prep, 3);
 
   //Sending command to serial
-  MySerial.flush(); //Prevent possible pending info on the read
-  MySerial.write(prep, 4);
+  SerialX10A.flush(); //Prevent possible pending info on the read
+  SerialX10A.write(prep, 4);
   ulong start = millis();
 
   int len = 0;
@@ -31,9 +33,9 @@ bool queryRegistry(char regID, char *buffer)
   mqttSerial.printf("Querying register 0x%02x... ", regID);
   while ((len < buffer[2] + 2) && (millis() < (start + SER_TIMEOUT)))
   {
-    if (MySerial.available())
+    if (SerialX10A.available())
     {
-      buffer[len++] = MySerial.read();
+      buffer[len++] = SerialX10A.read();
     }
   }
   if (millis() >= (start + SER_TIMEOUT))
@@ -68,3 +70,4 @@ bool queryRegistry(char regID, char *buffer)
     return true;
   }
 }
+#endif

@@ -1,3 +1,5 @@
+#ifndef converters_h
+#define converters_h
 //convert read registry value to the expected format based on convID
 // #include <registrys.h>
 #include <Arduino.h>
@@ -9,8 +11,10 @@ public:
     void getLabels(char registryID, LabelDef *ret[], int &num)
     {
         num = 0;
-        for (auto &&label : labelDefs)
-        {
+        for (int i = 0; i < labelDefsSize; i++)
+        {            
+            auto &&label = *labelDefs[i];
+            
             if (label.registryID == registryID)
             {
                 ret[num++] = &label;
@@ -399,3 +403,6 @@ private:
         return result;
     }
 };
+
+Converter converter;
+#endif

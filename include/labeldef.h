@@ -1,3 +1,5 @@
+#ifndef labeldef_h
+#define labeldef_h
 #include <pgmspace.h>
 #define LABELDEF
 
@@ -17,4 +19,6 @@ public:
 };
 
 // TODO: FIX AND REMOVE!!
-LabelDef PROGMEM labelDefs[] = {};
+LabelDef** labelDefs;
+uint8_t labelDefsSize = 0;
+#endif

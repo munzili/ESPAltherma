@@ -1,7 +1,11 @@
+#ifndef webui_h
+#define webui_h
 #include <WiFi.h>
 #include <LittleFS.h>
 #include "ESPAsyncWebServer.h" 
 #include "ArduinoJson.h"
+#include "comm.h"
+#include "esp_task_wdt.h"
 
 #define CONFIG_FILE "/config.json"
 #define MODELS_FILE "/models.json"
@@ -15,70 +19,19 @@ extern const char mainJS_start[] asm("_binary_webui_main_js_start");
 extern const char indexHTML_start[] asm("_binary_webui_index_html_start");
 extern const char picoCSS_start[] asm("_binary_webui_pico_min_css_start");
 
-String processor(const String& var) {  
-  if(var == "MODELS")
-  {
-    File file = LittleFS.open("/def/models.json");
-
-    StaticJsonDocument<1024*10> modelDoc;
-    deserializeJson(modelDoc, file); 
-
-    String result = "";
-    uint8_t counter = 1;
-
-    // Loop through all the elements of the array
-    for (JsonObject repo : modelDoc.as<JsonArray>()) {
-      // Print the name, the number of stars, and the number of issues
-      result += "<option value='";
-      result += counter;
-      result += "'>";
-      result += repo["Name"].as<const char*>();
-      result += "</option>";
-      counter++;
-    }
-
-    file.close();
-
-    return result;
-  }
-  if(var == "LANGUAGES")
-  {
-    File file = LittleFS.open("/def/languages.json");
-
-    StaticJsonDocument<512> languagesDoc;
-    deserializeJson(languagesDoc, file); 
-
-    String result = "<option value='1'>GB/US</option>";
-    
-    uint8_t counter = 2;
-    // Loop through all the elements of the array
-    for (const char* arr : languagesDoc.as<JsonArray>()) {
-      // Print the name, the number of stars, and the number of issues
-      result += "<option value='";
-      result += counter;
-      result += "'>";
-      result += arr;
-      result += "</option>";
-      counter++;
-    }
-
-    file.close();
-
-    return result;
-  }
-  return String();
-}
+String lastUploadFileName;
 
 bool formatDefaultFS()
 {
+  LittleFS.end();
   bool result = LittleFS.format();
 
   if(!result)
     return false;
 
-  File file = LittleFS.open(MODELS_FILE, "w", true);
+  LittleFS.begin();
+  File file = LittleFS.open(MODELS_FILE, FILE_WRITE, true);
   file.print("[]");
-  delay(1);
   file.close();
 
   return true;
@@ -86,7 +39,7 @@ bool formatDefaultFS()
 
 void onIndex(AsyncWebServerRequest *request)
 {
-    request->send_P(200, "text/html", indexHTML_start, processor);
+    request->send_P(200, "text/html", indexHTML_start);
 }
 
 void onRequestPicoCSS(AsyncWebServerRequest *request)
@@ -104,6 +57,8 @@ void onFormat(AsyncWebServerRequest *request)
   bool result = formatDefaultFS();
 
   request->send(200, "text/javascript", String(result));
+
+  esp_restart();
 }
 
 void onLoadModels(AsyncWebServerRequest *request)
@@ -111,45 +66,75 @@ void onLoadModels(AsyncWebServerRequest *request)
   request->send(LittleFS, MODELS_FILE, "text/json");
 }
 
+void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t* data, size_t len, bool final)
+{
+  String logmessage;  
+  String fsFilename;
+  
+  if (!index) {
+      
+    do
+    {
+      fsFilename = "/P" + String(millis()) + ".json";
+    } while (LittleFS.exists(fsFilename));
+
+    logmessage = "Upload Start: " + String(filename);
+    // open the file on first call and store the file handle in the request object
+    request->_tempFile = LittleFS.open(fsFilename, "w");
+    Serial.println(logmessage);
+  }
+
+  if (len) {
+    // stream the incoming chunk to the opened file
+    request->_tempFile.write(data, len);    
+    logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
+    Serial.println(logmessage);
+  }
+
+  if (final) {       
+    lastUploadFileName = "/" + String(request->_tempFile.name());
+
+    logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
+    // close the file handle as the upload is now done
+    request->_tempFile.close();
+    Serial.println(logmessage);
+  }
+}
+
 void onUpload(AsyncWebServerRequest *request)
 {
   if(!request->hasParam("file", true, true))
   {
     request->send(422, "text/text", "Missing parameter file");
-      return;
-  }
-
-  AsyncWebParameter* uploadFile = request->getParam("file", true, true);
-
-  File modelsFile = LittleFS.open(MODELS_FILE, "w");
-
-  String fsFilename;
-  do
-  {
-    fsFilename = "/P" + millis();
-    fsFilename += ".json";
-  } while (LittleFS.exists(fsFilename));
-
+    return;
+  }  
+  
+  String fsFilename = lastUploadFileName;
   Serial.printf("Found LitteFS Filename: %s\n", fsFilename);
   
+  File modelsFile = LittleFS.open(MODELS_FILE, FILE_READ);
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
-  deserializeJson(modelsDoc, modelsFile); 
+  deserializeJson(modelsDoc, modelsFile.readString()); 
   JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
-
+  modelsFile.close();
+  
+  File uploadFileFS = LittleFS.open(fsFilename, FILE_READ);
   DynamicJsonDocument uploadDoc(MODEL_DEFINITION_DOC_SIZE);
-  deserializeJson(uploadDoc, uploadFile->value()); 
+  deserializeJson(uploadDoc, uploadFileFS.readString()); 
+  uploadFileFS.close();
   
   bool newModel = true;
   for (JsonObject model : modelsDocArr) {
-    if(model["Model"] == uploadDoc["Model"])
+    if(strcmp(model["Model"].as<const char*>(), uploadDoc["Model"].as<const char*>()) == 0)
     {
-      Serial.printf("Found existing Model: %s\n", model["Model"]);
+      Serial.printf("Found existing Model: %s\n", model["Model"].as<const char*>());
 
       newModel = false;
 
       bool existingLanguage = false;
-      for (JsonPair kv : model["Files"].as<JsonObject>()) {
-        if(kv.key().c_str() == uploadDoc["Language"])
+      for (JsonPair kv : model["Files"].as<JsonObject>()) 
+      {
+        if(strcmp(kv.key().c_str(), uploadDoc["Language"].as<const char*>()) == 0)
         {
           Serial.printf("Found existing Model file: %s\n", kv.key().c_str());
           fsFilename = kv.value().as<const char*>();
@@ -160,132 +145,172 @@ void onUpload(AsyncWebServerRequest *request)
 
       if(!existingLanguage)
       {
-        Serial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"]);
-        model["Files"][uploadDoc["Language"]] = fsFilename;
+        Serial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"].as<const char*>());
+        model["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
       }
     }    
   }
 
   if(newModel)
   {
-    Serial.printf("Found new Model: %s\n", uploadDoc["Model"]);
+    Serial.printf("Found new Model: %s\n", uploadDoc["Model"].as<const char*>());
 
     JsonObject newModelObect = modelsDocArr.createNestedObject();
-    newModelObect["Model"] = uploadDoc["Model"];
-    JsonObject filesDefinition = newModelObect["Files"].createNestedObject();
-    filesDefinition[uploadDoc["Language"].as<const char *>()] = fsFilename;
+    newModelObect["Model"] = uploadDoc["Model"].as<const char*>();
+    newModelObect["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
   }
+  
+  serializeJson(modelsDoc, Serial);
 
-  serializeJson(modelsDocArr, modelsFile);
+  modelsFile = LittleFS.open(MODELS_FILE, FILE_WRITE);
+  serializeJson(modelsDoc, modelsFile);
   modelsFile.close();
 
-  File fileWriter = LittleFS.open(fsFilename, "w", true);
-  fileWriter.print(uploadFile->value());
-  fileWriter.close();
+  request->send(200);
+}
+
+void onLoadValues(AsyncWebServerRequest *request)
+{
+  if(!request->hasParam("PIN_RX", true) || !request->hasParam("PIN_TX", true) || !request->hasParam("PARAMS", true))
+  {
+    request->send(422, "text/text", "Missing parameters PIN_RX, PIN_TX or PARAMS");
+    return;
+  }
+
+  esp_task_wdt_delete(NULL);
+  
+  if(SerialX10A)
+  {
+    Serial.println("Canceling current serial connction");
+    SerialX10A.end();
+  }
+
+  int8_t pinRx = request->getParam("PIN_RX", true)->value().toInt();
+  int8_t pinTx = request->getParam("PIN_TX", true)->value().toInt();
+  String params = request->getParam("PARAMS", true)->value();
+
+  Serial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", pinRx, pinTx);
+
+  SerialX10A.begin(
+    9600, 
+    SERIAL_8E1, 
+    pinRx, 
+    pinTx);
+
+  DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
+  deserializeJson(modelsDoc, params); 
+  JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
+
+  Serial.printf("Creating labelDefs %i\n", modelsDocArr.size());
+
+  // temp create new label definitions from request and afterwards restore old one
+  LabelDef ***oldLabelDefs = &labelDefs;
+  uint8_t oldLabelDefsSize = labelDefsSize;
+  labelDefsSize = modelsDocArr.size();
+  labelDefs = new LabelDef*[labelDefsSize];
+  
+  uint8_t counter = 0;
+  for (JsonArray model : modelsDocArr) {
+    labelDefs[counter] = new LabelDef(model[0], model[1], model[2], model[3], model[4], model[5]);
+    counter++;
+  }  
+
+  Serial.println("Fetching Values");
+
+  for (JsonArray model : modelsDocArr) {
+    char buff[64] = {0};
+    int tries = 0;
+    Serial.printf("Quering register %i\n", model[0].as<const uint8_t>());
+    while (tries++ < 3 && !queryRegistry(model[0].as<const uint8_t>(), buff))
+    {
+      mqttSerial.println("Retrying...");
+      delay(1000);
+    }
+    if (model[0].as<const uint8_t>() == buff[1]) //if replied registerID is coherent with the command
+    {
+      mqttSerial.println("Found value " + buff[1]);
+      converter.readRegistryValues(buff); //process all values from the register
+    }
+  }  
+
+  Serial.println("Returning Values");
+
+  DynamicJsonDocument resultDoc(modelsDocArr.size()*JSON_OBJECT_SIZE(2));
+  JsonArray obj = resultDoc.to<JsonArray>();
+  
+  for (uint8_t i = 0; i < counter; i++) {
+    obj.add(labelDefs[i]->asString);
+  } 
+
+  Serial.println("Delete tmp labelDefs");
+
+  while(counter >= 0)
+  {
+    delete[] labelDefs[counter];
+    counter--;
+  }
+
+  delete[] labelDefs;
+
+  Serial.println("Setting old labelDefs");
+
+  labelDefs = *oldLabelDefs;
+  labelDefsSize = oldLabelDefsSize;
+
+  String response;
+  serializeJson(resultDoc, response);
+
+  request->send(200, "application/json", response);
 }
 
 void onLoadParameters(AsyncWebServerRequest *request)
 {
-    if(!request->hasParam("model", true) || !request->hasParam("language", true))
+    if(!request->hasParam("parametersFile", true))
     {
-      request->send(422, "text/text", "Missing parameter model or language");
+      request->send(422, "text/text", "Missing parameter file");
       return;
     }
-
-    AsyncWebParameter* parameterModel = request->getParam("model", true);
-    AsyncWebParameter* parameterLanguage = request->getParam("language", true);
     
-    byte model = parameterModel->value().toInt();
-    String language = parameterLanguage->value();
+    String parametersFile = request->getParam("parametersFile", true)->value();
 
-    Serial.print("Found model: ");
-    Serial.println(model);
-    Serial.print("Found language: ");
-    Serial.println(language);
+    Serial.print("Found parameter file: ");
+    Serial.println(parametersFile);
 
-    File file = LittleFS.open(MODELS_FILE);
-
-    DynamicJsonDocument modelDoc(MODELS_DOC_SIZE);
-    deserializeJson(modelDoc, file); 
-
-    String parametersfile = modelDoc[model]["Files"][language];
-    
-    Serial.print("Found parameters: ");
-    Serial.println(parametersfile);
-
-    file.close();
-
-    String filename = "/" + parametersfile;
-
-    if(!LittleFS.exists(filename))
+    if(!LittleFS.exists(parametersFile))
     {
       request->send(400, "text/text", "Parameters file not found");
       return;
     }
 
-    request->send(LittleFS, filename, "text/json");
+    request->send(LittleFS, parametersFile, "text/json");
 }
 
 void onSave(AsyncWebServerRequest *request)
 {
-/*
-int params = request->params();
-for(int i=0;i<params;i++){
-  AsyncWebParameter* p = request->getParam(i);
-  if(p->isFile()){ //p->isPost() is also true
-    Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
-  } else if(p->isPost()){
-    Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-  } else {
-    Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
-  }
-}
-
-
-//Check if GET parameter exists
-if(request->hasParam("download"))
-  AsyncWebParameter* p = request->getParam("download");
-
-//Check if POST (but not File) parameter exists
-if(request->hasParam("download", true))
-  AsyncWebParameter* p = request->getParam("download", true);
-
-//Check if FILE was uploaded
-if(request->hasParam("download", true, true))
-  AsyncWebParameter* p = request->getParam("download", true, true);
-
-//List all parameters (Compatibility)
-int args = request->args();
-for(int i=0;i<args;i++){
-  Serial.printf("ARG[%s]: %s\n", request->argName(i).c_str(), request->arg(i).c_str());
-}
-
-//Check if parameter exists (Compatibility)
-if(request->hasArg("download"))
-  String arg = request->arg("download");
-*/
 }
 
 void WebUI_Init()
 {
-    if(!LittleFS.begin(true)) 
-    {
-        Serial.println("An Error has occurred while mounting LittleFS");
-        return;
-    }
+  if(!LittleFS.begin(true)) 
+  {
+      Serial.println("An Error has occurred while mounting LittleFS");
+      return;
+  }
 
-    if(!LittleFS.exists(MODELS_FILE))
-    {
-      formatDefaultFS();
-    }
-    
-    server.on("/", HTTP_GET, onIndex);
-    server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
-    server.on("/main.js", HTTP_GET, onRequestMainJS);
-    server.on("/loadParameters", HTTP_POST, onLoadParameters);
-    server.on("/upload", HTTP_POST, onUpload);
-    server.on("/loadModels", HTTP_GET, onLoadModels);
-    server.on("/save", HTTP_POST, onSave);
-    server.on("/format", HTTP_GET, onFormat);
-    server.begin();     
+  if(!LittleFS.exists(MODELS_FILE))
+  {
+    formatDefaultFS();
+  }
+  
+  server.on("/", HTTP_GET, onIndex);
+  server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
+  server.on("/main.js", HTTP_GET, onRequestMainJS);
+  server.on("/loadParameters", HTTP_POST, onLoadParameters);
+  server.on("/upload", HTTP_POST, onUpload, handleUpload);
+  server.on("/loadModels", HTTP_GET, onLoadModels);
+  server.on("/loadValues", HTTP_POST, onLoadValues);
+  server.on("/save", HTTP_POST, onSave);
+  server.on("/format", HTTP_GET, onFormat);
+  server.begin();     
 }
+#endif
