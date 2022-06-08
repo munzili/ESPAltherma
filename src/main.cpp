@@ -97,9 +97,9 @@ void setup_wifi()
 {
   delay(10);
   // We start by connecting to a WiFi network
-  mqttSerial.printf("Connecting to %s\n", config.SSID);
+  mqttSerial.printf("Connecting to %s\n", config->SSID);
 
-  if(config.SSID_STATIC_IP)
+  if(config->SSID_STATIC_IP)
   {
     IPAddress local_IP;
     IPAddress subnet;
@@ -107,18 +107,18 @@ void setup_wifi()
     IPAddress primaryDNS;
     IPAddress secondaryDNS;
 
-    local_IP.fromString(config.SSID_IP);
-    subnet.fromString(config.SSID_SUBNET);
-    gateway.fromString(config.SSID_GATEWAY);
+    local_IP.fromString(config->SSID_IP);
+    subnet.fromString(config->SSID_SUBNET);
+    gateway.fromString(config->SSID_GATEWAY);
 
-    if(config.SSID_PRIMARY_DNS != "")
+    if(config->SSID_PRIMARY_DNS != "")
     {
-      primaryDNS.fromString(config.SSID_PRIMARY_DNS);
+      primaryDNS.fromString(config->SSID_PRIMARY_DNS);
     }
 
-    if(config.SSID_SECONDARY_DNS != "")
+    if(config->SSID_SECONDARY_DNS != "")
     {
-      secondaryDNS.fromString(config.SSID_SECONDARY_DNS);
+      secondaryDNS.fromString(config->SSID_SECONDARY_DNS);
     }
 
     if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
@@ -126,7 +126,7 @@ void setup_wifi()
     }
   }
 
-  WiFi.begin(config.SSID, config.SSID_PASSWORD);
+  WiFi.begin(config->SSID, config->SSID_PASSWORD);
   int i = 0;
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -191,11 +191,18 @@ void setupScreen(){
 void setup()
 {
   Serial.begin(115200);
+  
+  if(!LittleFS.begin(true)) 
+  {
+      Serial.println("An Error has occurred while mounting LittleFS");
+      return;
+  }
+  
+  EEPROM.begin(16);
 
-  EEPROM.begin(sizeof(Config) + 16);
-  EEPROM.get(16, config);
+  readConfig();
 
-  configWifiEnabled = !config.configStored || config.startStandaloneWifi;
+  configWifiEnabled = !config->configStored || config->startStandaloneWifi;
 
   if(configWifiEnabled)
   {
@@ -213,17 +220,17 @@ void setup()
   initMQTTConfig(config);
 
   setupScreen();
-  SerialX10A.begin(9600, SERIAL_8E1, config.PIN_RX, config.PIN_TX);
-  pinMode(config.PIN_THERM, OUTPUT);
-  digitalWrite(config.PIN_THERM, HIGH);
+  SerialX10A.begin(9600, SERIAL_8E1, config->PIN_RX, config->PIN_TX);
+  pinMode(config->PIN_THERM, OUTPUT);
+  digitalWrite(config->PIN_THERM, HIGH);
 
-  if(config.SG_ENABLED)
+  if(config->SG_ENABLED)
   {
     //Smartgrid pins - Set first to the inactive state, before configuring as outputs (avoid false triggering when initializing)
-    digitalWrite(config.PIN_SG1, SG_RELAY_INACTIVE_STATE);
-    digitalWrite(config.PIN_SG2, SG_RELAY_INACTIVE_STATE);
-    pinMode(config.PIN_SG1, OUTPUT);
-    pinMode(config.PIN_SG2, OUTPUT);
+    digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
+    digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
+    pinMode(config->PIN_SG1, OUTPUT);
+    pinMode(config->PIN_SG2, OUTPUT);
   }
 
 #ifdef ARDUINO_M5Stick_C_Plus
@@ -245,10 +252,10 @@ void setup()
   });
   ArduinoOTA.begin();
 
-  client.setServer(config.MQTT_SERVER, config.MQTT_PORT);
+  client.setServer(config->MQTT_SERVER, config->MQTT_PORT);
   client.setBufferSize(MAX_MSG_SIZE); //to support large json message
   client.setCallback(callback);
-  client.setServer(config.MQTT_SERVER, config.MQTT_PORT);
+  client.setServer(config->MQTT_SERVER, config->MQTT_PORT);
   mqttSerial.print("Connecting to MQTT server...");
   mqttSerial.begin(&client, "espaltherma/log");
   reconnect();
@@ -295,6 +302,6 @@ void loop()
     }
   }
   sendValues();//Send the full json message
-  mqttSerial.printf("Done. Waiting %d sec...\n", config.FREQUENCY / 1000);
-  waitLoop(config.FREQUENCY);
+  mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);
+  waitLoop(config->FREQUENCY);
 }

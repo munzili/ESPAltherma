@@ -7,7 +7,6 @@
 #include "comm.h"
 #include "esp_task_wdt.h"
 
-#define CONFIG_FILE "/config.json"
 #define MODELS_FILE "/models.json"
 #define MODEL_DEFINITION_DOC_SIZE 1024*50
 #define MODELS_DOC_SIZE 1024*10
@@ -291,12 +290,6 @@ void onSave(AsyncWebServerRequest *request)
 
 void WebUI_Init()
 {
-  if(!LittleFS.begin(true)) 
-  {
-      Serial.println("An Error has occurred while mounting LittleFS");
-      return;
-  }
-
   if(!LittleFS.exists(MODELS_FILE))
   {
     formatDefaultFS();
