@@ -6,6 +6,7 @@
 #include "ArduinoJson.h"
 #include "comm.h"
 #include "esp_task_wdt.h"
+#include "config.h"
 
 #define MODELS_FILE "/models.json"
 #define MODEL_DEFINITION_DOC_SIZE 1024*50
@@ -264,28 +265,152 @@ void onLoadValues(AsyncWebServerRequest *request)
 
 void onLoadParameters(AsyncWebServerRequest *request)
 {
-    if(!request->hasParam("parametersFile", true))
-    {
-      request->send(422, "text/text", "Missing parameter file");
-      return;
-    }
-    
-    String parametersFile = request->getParam("parametersFile", true)->value();
+  if(!request->hasParam("parametersFile", true))
+  {
+    request->send(422, "text/text", "Missing parameter file");
+    return;
+  }
+  
+  String parametersFile = request->getParam("parametersFile", true)->value();
 
-    Serial.print("Found parameter file: ");
-    Serial.println(parametersFile);
+  Serial.print("Found parameter file: ");
+  Serial.println(parametersFile);
 
-    if(!LittleFS.exists(parametersFile))
-    {
-      request->send(400, "text/text", "Parameters file not found");
-      return;
-    }
+  if(!LittleFS.exists(parametersFile))
+  {
+    request->send(400, "text/text", "Parameters file not found");
+    return;
+  }
 
-    request->send(LittleFS, parametersFile, "text/json");
+  request->send(LittleFS, parametersFile, "text/json");
 }
 
 void onSave(AsyncWebServerRequest *request)
-{
+{  
+  #pragma region Validate_Input_Params  
+  if(!request->hasParam("ssid", true) || !request->hasParam("ssid_password", true))
+  {
+    request->send(422, "text/text", "Missing parameter(s) for ssid!");
+    return;
+  }
+
+  if(request->hasParam("ssid_staticip", true) && (!request->hasParam("ssid_ip", true) || 
+                                                  !request->hasParam("ssid_subnet", true) || 
+                                                  !request->hasParam("ssid_gateway", true) || 
+                                                  !request->hasParam("primary_dns", true) || 
+                                                  !request->hasParam("secondary_dns", true)))
+  {
+    request->send(422, "text/text", "Missing parameter(s) for static ip");
+    return;
+  }
+
+  if(!request->hasParam("mqtt_server", true) || !request->hasParam("mqtt_username", true) || !request->hasParam("mqtt_password", true) || !request->hasParam("mqtt_port", true) || !request->hasParam("frequency", true))
+  {
+    request->send(422, "text/text", "Missing parameter(s) for MQTT!");
+    return;
+  }
+
+  if(request->hasParam("mqtt_use_onetopic", true) && !request->hasParam("mqtt_onetopic", true))
+  {
+    request->send(422, "text/text", "Missing parameter(s) for MQTT onetopic");
+    return;
+  }
+
+  if(!request->hasParam("pin_rx", true) || !request->hasParam("pin_tx", true) || !request->hasParam("pin_therm", true))
+  {
+    request->send(422, "text/text", "Missing parameter(s) for MQTT onetopic");
+    return;
+  }
+
+  if(request->hasParam("sg_enabled", true) && (!request->hasParam("pin_sg1", true) || !request->hasParam("pin_sg2", true)))
+  {
+    request->send(422, "text/text", "Missing parameter(s) for SmartGrid");
+    return;
+  }
+
+  if(!request->hasParam("pin_enable_config", true))
+  {
+    request->send(422, "text/text", "Missing parameter pin to enable config");
+    return;
+  }
+
+  if(!request->hasParam("pin_enable_config", true))
+  {
+    request->send(422, "text/text", "Missing parameter pin to enable config");
+    return;
+  }
+
+  if(!request->hasParam("parameters", true))
+  {
+    request->send(422, "text/text", "Missing parameters definition");
+    return;
+  }
+  #pragma endregion Validate_Input_Params
+
+  if(config)
+    delete config;
+
+  config = new Config();
+  config->configStored = true;
+  config->startStandaloneWifi = false;
+  createArray(config->SSID, request->getParam("ssid", true)->value().c_str());
+  createArray(config->SSID_PASSWORD, request->getParam("ssid_password", true)->value().c_str());
+
+  config->SSID_STATIC_IP = request->hasParam("ssid_staticip", true);
+  if(config->SSID_STATIC_IP)
+  {
+    createArray(config->SSID_IP, request->getParam("ssid_ip", true)->value().c_str());
+    createArray(config->SSID_SUBNET, request->getParam("ssid_subnet", true)->value().c_str());
+    createArray(config->SSID_GATEWAY, request->getParam("ssid_gateway", true)->value().c_str());
+    createArray(config->SSID_PRIMARY_DNS, request->getParam("primary_dns", true)->value().c_str());
+    createArray(config->SSID_SECONDARY_DNS, request->getParam("secondary_dns", true)->value().c_str());
+  }
+  
+  createArray(config->MQTT_SERVER, request->getParam("mqtt_server", true)->value().c_str());
+  createArray(config->MQTT_USERNAME, request->getParam("mqtt_username", true)->value().c_str());
+  createArray(config->MQTT_PASSWORD, request->getParam("mqtt_password", true)->value().c_str());
+  config->FREQUENCY = request->getParam("frequency", true)->value().toInt();
+  config->MQTT_USE_JSONTABLE = request->hasParam("mqtt_jsontable", true);
+  config->MQTT_USE_ONETOPIC = request->hasParam("mqtt_use_onetopic", true);
+
+  if(config->MQTT_USE_ONETOPIC)
+  {
+    createArray(config->MQTT_ONETOPIC_NAME, request->getParam("mqtt_onetopic", true)->value().c_str());
+  }
+
+  config->MQTT_PORT = request->getParam("mqtt_port", true)->value().toInt();
+  config->PIN_RX = request->getParam("pin_rx", true)->value().toInt();
+  config->PIN_TX = request->getParam("pin_tx", true)->value().toInt();
+  config->PIN_THERM = request->getParam("pin_therm", true)->value().toInt();  
+  config->SG_ENABLED = request->hasParam("sg_enabled", true);
+
+  if(config->SG_ENABLED)
+  {
+    config->PIN_SG1 = request->getParam("pin_sg1", true)->value().toInt();
+    config->PIN_SG2 = request->getParam("pin_sg2", true)->value().toInt();
+  }
+
+  config->SG_RELAY_HIGH_TRIGGER = request->hasParam("sg_relay_trigger", true);
+  config->PIN_ENABLE_CONFIG = request->getParam("pin_enable_config", true)->value().toInt();
+  
+  DynamicJsonDocument jsonParameters(MODELS_CONFIG_SIZE);
+  deserializeJson(jsonParameters, request->getParam("parameters", true)->value()); 
+  JsonArray parametersArray = jsonParameters.as<JsonArray>();
+
+  config->PARAMETERS_LENGTH = parametersArray.size();
+  config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
+
+  int counter = 0;
+  for (JsonArray value : parametersArray) {
+    config->PARAMETERS[counter] = new LabelDef(
+      value[0].as<const int>(), 
+      value[1].as<const int>(), 
+      value[2].as<const int>(), 
+      value[3].as<const int>(), 
+      value[4].as<const int>(),
+      value[5].as<const char*>());
+    counter++;
+  }
 }
 
 void WebUI_Init()

@@ -10,24 +10,24 @@
 #define CONFIG_FILE "/config.json"
 #define MODELS_CONFIG_SIZE 1024*10
 
-typedef struct 
+struct Config
 {
     bool configStored;
     bool startStandaloneWifi;
-    char SSID[32];
-    char SSID_PASSWORD[32];
+    char* SSID;
+    char* SSID_PASSWORD;
     bool SSID_STATIC_IP;
-    char SSID_IP[15];
-    char SSID_SUBNET[15];
-    char SSID_GATEWAY[15];
-    char SSID_PRIMARY_DNS[15];
-    char SSID_SECONDARY_DNS[15];
-    char MQTT_SERVER[32];
-    char MQTT_USERNAME[32];
-    char MQTT_PASSWORD[32];
+    char* SSID_IP;
+    char* SSID_SUBNET;
+    char* SSID_GATEWAY;
+    char* SSID_PRIMARY_DNS;
+    char* SSID_SECONDARY_DNS;
+    char* MQTT_SERVER;
+    char* MQTT_USERNAME;
+    char* MQTT_PASSWORD;
     bool MQTT_USE_JSONTABLE;
     bool MQTT_USE_ONETOPIC;
-    char MQTT_ONETOPIC_NAME[32];
+    char* MQTT_ONETOPIC_NAME;
     uint16_t MQTT_PORT;
     uint32_t FREQUENCY;
     uint8_t PIN_RX;
@@ -37,31 +37,52 @@ typedef struct
     uint8_t PIN_SG1;
     uint8_t PIN_SG2;
     bool SG_RELAY_HIGH_TRIGGER;
-    uint8_t MODEL;
-    uint8_t LANGUAGE;
+    uint8_t PIN_ENABLE_CONFIG;
     size_t PARAMETERS_LENGTH;
     LabelDef** PARAMETERS;
-} Config;
+
+    ~Config()
+    {
+        if(SSID) delete[] SSID;
+        if(SSID_PASSWORD) delete[] SSID_PASSWORD;
+        if(SSID_IP) delete[] SSID_IP;
+        if(SSID_SUBNET) delete[] SSID_SUBNET;
+        if(SSID_GATEWAY) delete[] SSID_GATEWAY;
+        if(SSID_PRIMARY_DNS) delete[] SSID_PRIMARY_DNS;
+        if(SSID_SECONDARY_DNS) delete[] SSID_SECONDARY_DNS;
+        if(MQTT_SERVER) delete[] MQTT_SERVER;
+        if(MQTT_USERNAME) delete[] MQTT_USERNAME;
+        if(MQTT_PASSWORD) delete[] MQTT_PASSWORD;
+        if(MQTT_ONETOPIC_NAME) delete[] MQTT_ONETOPIC_NAME;
+
+        if(PARAMETERS_LENGTH)
+        {
+            for (size_t i = 0; i < PARAMETERS_LENGTH; i++)
+            {
+                delete PARAMETERS[i];
+            }
+            delete[] PARAMETERS;
+        }
+    }
+};
 
 Config* config = nullptr;
 
-void charPointerToArray(char* array, size_t length, const char* ptr)
+void createArray(char* array, const char* str)
 {
-    for(size_t i = 0; i < length; i++)
-    {
-        array[i] = ptr[i];
-        
-        if(ptr[i] == '\0')
-            return;            
-    }
+    array = new char[strlen(str)+1];
+    strcpy(array, str);
 }
 
 void readConfig()
 {
+    if(config != nullptr)
+        delete config;
+        
     config = new Config();
     
-    if(!LittleFS.exists(CONFIG_FILE))
-        return;
+    if(!LittleFS.exists(CONFIG_FILE))    
+        return;    
 
     File configFile = LittleFS.open(CONFIG_FILE, FILE_READ);
     DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
@@ -70,20 +91,26 @@ void readConfig()
 
     config->configStored = true;
     config->startStandaloneWifi = configDoc["startStandaloneWifi"].as<const bool>();
-    charPointerToArray(config->SSID, 32, configDoc["SSID"].as<const char*>());
-    charPointerToArray(config->SSID_PASSWORD, 32, configDoc["SSID_PASSWORD"].as<const char*>());
+    createArray(config->SSID, configDoc["SSID"].as<const char*>());
+    createArray(config->SSID_PASSWORD, configDoc["SSID_PASSWORD"].as<const char*>());
     config->SSID_STATIC_IP = configDoc["SSID_STATIC_IP"].as<const bool>();
-    charPointerToArray(config->SSID_IP, 15, configDoc["SSID_IP"].as<const char*>());
-    charPointerToArray(config->SSID_SUBNET, 15, configDoc["SSID_SUBNET"].as<const char*>());
-    charPointerToArray(config->SSID_GATEWAY, 15, configDoc["SSID_GATEWAY"].as<const char*>());
-    charPointerToArray(config->SSID_PRIMARY_DNS, 15, configDoc["SSID_PRIMARY_DNS"].as<const char*>());
-    charPointerToArray(config->SSID_SECONDARY_DNS, 15, configDoc["SSID_SECONDARY_DNS"].as<const char*>());
-    charPointerToArray(config->MQTT_SERVER, 32, configDoc["MQTT_SERVER"].as<const char*>());
-    charPointerToArray(config->MQTT_USERNAME, 32, configDoc["MQTT_USERNAME"].as<const char*>());
-    charPointerToArray(config->MQTT_PASSWORD, 32, configDoc["MQTT_PASSWORD"].as<const char*>());
+    if(config->SSID_STATIC_IP)
+    {
+        createArray(config->SSID_IP, configDoc["SSID_IP"].as<const char*>());
+        createArray(config->SSID_SUBNET, configDoc["SSID_SUBNET"].as<const char*>());
+        createArray(config->SSID_GATEWAY, configDoc["SSID_GATEWAY"].as<const char*>());
+        createArray(config->SSID_PRIMARY_DNS, configDoc["SSID_PRIMARY_DNS"].as<const char*>());
+        createArray(config->SSID_SECONDARY_DNS, configDoc["SSID_SECONDARY_DNS"].as<const char*>());
+    }
+    createArray(config->MQTT_SERVER, configDoc["MQTT_SERVER"].as<const char*>());
+    createArray(config->MQTT_USERNAME, configDoc["MQTT_USERNAME"].as<const char*>());
+    createArray(config->MQTT_PASSWORD, configDoc["MQTT_PASSWORD"].as<const char*>());
     config->MQTT_USE_JSONTABLE = configDoc["MQTT_USE_JSONTABLE"].as<const bool>();
     config->MQTT_USE_ONETOPIC = configDoc["MQTT_USE_ONETOPIC"].as<const bool>();
-    charPointerToArray(config->MQTT_ONETOPIC_NAME, 32, configDoc["MQTT_ONETOPIC_NAME"].as<const char*>());
+    if(config->MQTT_USE_ONETOPIC)
+    {
+        createArray(config->MQTT_ONETOPIC_NAME, configDoc["MQTT_ONETOPIC_NAME"].as<const char*>());
+    }
     config->MQTT_PORT = configDoc["MQTT_PORT"].as<uint16_t>();
     config->FREQUENCY = configDoc["FREQUENCY"].as<uint32_t>();
     config->PIN_RX = configDoc["PIN_RX"].as<uint8_t>();
@@ -93,8 +120,7 @@ void readConfig()
     config->PIN_SG1 = configDoc["PIN_SG1"].as<uint8_t>();
     config->PIN_SG2 = configDoc["PIN_SG2"].as<uint8_t>();
     config->SG_RELAY_HIGH_TRIGGER = configDoc["SG_RELAY_HIGH_TRIGGER"].as<const bool>();
-    config->MODEL = configDoc["MODEL"].as<uint8_t>();
-    config->LANGUAGE = configDoc["LANGUAGE"].as<uint8_t>();
+    config->PIN_ENABLE_CONFIG = configDoc["PIN_ENABLE_CONFIG"].as<uint8_t>();
 
     JsonArray parameters = configDoc["PARAMETERS"].as<JsonArray>();
     config->PARAMETERS_LENGTH = parameters.size();
@@ -120,17 +146,27 @@ void saveConfig()
     configDoc["SSID"] = config->SSID;
     configDoc["SSID_PASSWORD"] = config->SSID_PASSWORD;
     configDoc["SSID_STATIC_IP"] = config->SSID_STATIC_IP;
-    configDoc["SSID_IP"] = config->SSID_IP;
-    configDoc["SSID_SUBNET"] = config->SSID_SUBNET;
-    configDoc["SSID_GATEWAY"] = config->SSID_GATEWAY;
-    configDoc["SSID_PRIMARY_DNS"] = config->SSID_PRIMARY_DNS;
-    configDoc["SSID_SECONDARY_DNS"] = config->SSID_SECONDARY_DNS;
+
+    if(config->SSID_STATIC_IP)
+    {
+        configDoc["SSID_IP"] = config->SSID_IP;
+        configDoc["SSID_SUBNET"] = config->SSID_SUBNET;
+        configDoc["SSID_GATEWAY"] = config->SSID_GATEWAY;
+        configDoc["SSID_PRIMARY_DNS"] = config->SSID_PRIMARY_DNS;
+        configDoc["SSID_SECONDARY_DNS"] = config->SSID_SECONDARY_DNS;
+    }
+
     configDoc["MQTT_SERVER"] = config->MQTT_SERVER;
     configDoc["MQTT_USERNAME"] = config->MQTT_USERNAME;
     configDoc["MQTT_PASSWORD"] = config->MQTT_PASSWORD;
     configDoc["MQTT_USE_JSONTABLE"] = config->MQTT_USE_JSONTABLE;
     configDoc["MQTT_USE_ONETOPIC"] = config->MQTT_USE_ONETOPIC;
-    configDoc["MQTT_ONETOPIC_NAME"] = config->MQTT_ONETOPIC_NAME;
+    
+    if(config->MQTT_USE_ONETOPIC)
+    {
+        configDoc["MQTT_ONETOPIC_NAME"] = config->MQTT_ONETOPIC_NAME;
+    }
+
     configDoc["MQTT_PORT"] = config->MQTT_PORT;
     configDoc["FREQUENCY"] = config->FREQUENCY;
     configDoc["PIN_RX"] = config->PIN_RX;
@@ -140,8 +176,7 @@ void saveConfig()
     configDoc["PIN_SG1"] = config->PIN_SG1;
     configDoc["PIN_SG2"] = config->PIN_SG2;
     configDoc["SG_RELAY_HIGH_TRIGGER"] = config->SG_RELAY_HIGH_TRIGGER;
-    configDoc["MODEL"] = config->MODEL;
-    configDoc["LANGUAGE"] = config->LANGUAGE;
+    configDoc["PIN_ENABLE_CONFIG"] = config->PIN_ENABLE_CONFIG;
     
     JsonArray parameters = configDoc["PARAMETERS"].createNestedArray();
 
