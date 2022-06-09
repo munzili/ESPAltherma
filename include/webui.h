@@ -411,6 +411,8 @@ void onSave(AsyncWebServerRequest *request)
       value[5].as<const char*>());
     counter++;
   }
+
+  saveConfig();
 }
 
 void WebUI_Init()
