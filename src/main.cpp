@@ -13,14 +13,15 @@
 
 #include "config.h"
 #include "mqttConfig.h"
-//#include "setup.h" //<-- Configure your setup here
-#include "mqttserial.h"
+#include "mqttSerial.h"
 #include "converters.h"
 #include "comm.h"
 #include "mqtt.h"
 #include "webui.h"
 
-char registryIDs[32]; //Holds the registries to query
+size_t registryIDsSize;
+uint8_t *registryIDs; //Holds the registries to query
+
 bool busy = false;
 bool configWifiEnabled;
 
@@ -28,9 +29,9 @@ bool configWifiEnabled;
 long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
 #endif
 
-bool contains(char array[], int size, int value)
+bool contains(uint8_t array[], size_t size, uint8_t value)
 {
-  for (int i = 0; i < size; i++)
+  for (size_t i = 0; i < size; i++)
   {
     if (array[i] == value)
       return true;
@@ -140,27 +141,36 @@ void setup_wifi()
   mqttSerial.printf("Connected. IP Address: %s\n", WiFi.localIP().toString().c_str());
 }
 
-void initRegistries(){
-    //getting the list of registries to query from the selected values  
-  for (size_t i = 0; i < sizeof(registryIDs); i++)
-  {
-    registryIDs[i]=0xff;
-  }
-  
-  int i = 0;
-  for (int j = 0; j < labelDefsSize; j++)
-  {            
-    auto &&label = *labelDefs[j];
+void initRegistries()
+{
+  //getting the list of registries to query from the selected values  
+  registryIDsSize = 0;  
+  uint8_t* tempRegistryIDs = new uint8_t[config->PARAMETERS_LENGTH];
 
-    if (!contains(registryIDs, sizeof(registryIDs), label.registryID))
+  size_t i;
+  for (i = 0; i < config->PARAMETERS_LENGTH; i++)
+  {            
+    auto &&label = *config->PARAMETERS[i];
+
+    if (!contains(tempRegistryIDs, sizeof(tempRegistryIDs), label.registryID))
     {
       mqttSerial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
-      registryIDs[i++] = label.registryID;
+      tempRegistryIDs[registryIDsSize++] = label.registryID;
     }
   }
-  if (i == 0)
+
+  registryIDs = new uint8_t[registryIDsSize];
+
+  for(i = 0; i < registryIDsSize; i++)
   {
-    mqttSerial.printf("ERROR - No values selected in the include file. Stopping.\n");
+    registryIDs[i] = tempRegistryIDs[i];
+  }
+
+  delete[] tempRegistryIDs;
+
+  if (registryIDsSize == 0)
+  {
+    mqttSerial.printf("ERROR - No parameter definition selected in the config. Stopping.\n");
     while (true)
     {
       extraLoop();
@@ -284,8 +294,9 @@ void loop()
   { //(re)connect to MQTT if needed
     reconnect();
   }
+
   //Querying all registries
-  for (size_t i = 0; (i < 32) && registryIDs[i] != 0xFF; i++)
+  for (size_t i = 0; i < registryIDsSize; i++)
   {
     char buff[64] = {0};
     int tries = 0;

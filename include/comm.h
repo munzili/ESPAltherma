@@ -1,5 +1,5 @@
-#ifndef comm_h
-#define comm_h
+#ifndef COMM_H
+#define COMM_H
 #include <Arduino.h>
 #include <HardwareSerial.h>
 

@@ -1,11 +1,9 @@
-#ifndef config_h
-#define config_h
+#ifndef CONFIG_H
+#define CONFIG_H
 #include <stdint.h>
 #include "labeldef.h"
 #include "ArduinoJson.h"
 #include <LittleFS.h>
-
-#define MAX_MSG_SIZE 4096//max size of the json message sent in mqtt 
 
 #define CONFIG_FILE "/config.json"
 #define MODELS_CONFIG_SIZE 1024*10

@@ -1,5 +1,5 @@
-#ifndef converters_h
-#define converters_h
+#ifndef CONVERTERS_H
+#define CONVERTERS_H
 //convert read registry value to the expected format based on convID
 // #include <registrys.h>
 #include <Arduino.h>
@@ -11,9 +11,9 @@ public:
     void getLabels(char registryID, LabelDef *ret[], int &num)
     {
         num = 0;
-        for (int i = 0; i < labelDefsSize; i++)
+        for (int i = 0; i < config->PARAMETERS_LENGTH; i++)
         {            
-            auto &&label = *labelDefs[i];
+            auto &&label = *config->PARAMETERS[i];
             
             if (label.registryID == registryID)
             {

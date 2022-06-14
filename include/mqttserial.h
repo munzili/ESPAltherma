@@ -1,5 +1,5 @@
-#ifndef mqttSerial_h
-#define mqttSerial_h
+#ifndef MQTT_SERIAL_H
+#define MQTT_SERIAL_H
 #include "Stream.h"
 #include <PubSubClient.h>
 #ifdef ARDUINO_M5Stick_C_Plus

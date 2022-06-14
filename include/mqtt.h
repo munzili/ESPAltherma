@@ -1,5 +1,5 @@
-#ifndef mqtt_h
-#define mqtt_h
+#ifndef MQTT_H
+#define MQTT_H
 #include <PubSubClient.h>
 #include <EEPROM.h>
 #include "config.h"

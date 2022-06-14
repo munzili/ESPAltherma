@@ -1,5 +1,5 @@
-#ifndef webui_h
-#define webui_h
+#ifndef WEBUI_H
+#define WEBUI_H
 #include <WiFi.h>
 #include <LittleFS.h>
 #include "ESPAsyncWebServer.h" 
@@ -204,14 +204,14 @@ void onLoadValues(AsyncWebServerRequest *request)
   Serial.printf("Creating labelDefs %i\n", modelsDocArr.size());
 
   // temp create new label definitions from request and afterwards restore old one
-  LabelDef ***oldLabelDefs = &labelDefs;
-  uint8_t oldLabelDefsSize = labelDefsSize;
-  labelDefsSize = modelsDocArr.size();
-  labelDefs = new LabelDef*[labelDefsSize];
+  LabelDef ***oldLabelDefs = &config->PARAMETERS;
+  uint8_t oldLabelDefsSize = config->PARAMETERS_LENGTH;
+  config->PARAMETERS_LENGTH = modelsDocArr.size();
+  config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
   
   uint8_t counter = 0;
   for (JsonArray model : modelsDocArr) {
-    labelDefs[counter] = new LabelDef(model[0], model[1], model[2], model[3], model[4], model[5]);
+    config->PARAMETERS[counter] = new LabelDef(model[0], model[1], model[2], model[3], model[4], model[5]);
     counter++;
   }  
 
@@ -239,23 +239,23 @@ void onLoadValues(AsyncWebServerRequest *request)
   JsonArray obj = resultDoc.to<JsonArray>();
   
   for (uint8_t i = 0; i < counter; i++) {
-    obj.add(labelDefs[i]->asString);
+    obj.add(config->PARAMETERS[i]->asString);
   } 
 
   Serial.println("Delete tmp labelDefs");
 
   while(counter >= 0)
   {
-    delete[] labelDefs[counter];
+    delete[] config->PARAMETERS[counter];
     counter--;
   }
 
-  delete[] labelDefs;
+  delete[] config->PARAMETERS;
 
   Serial.println("Setting old labelDefs");
 
-  labelDefs = *oldLabelDefs;
-  labelDefsSize = oldLabelDefsSize;
+  config->PARAMETERS = *oldLabelDefs;
+  config->PARAMETERS_LENGTH = oldLabelDefsSize;
 
   String response;
   serializeJson(resultDoc, response);
