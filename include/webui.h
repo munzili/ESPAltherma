@@ -114,13 +114,13 @@ void onUpload(AsyncWebServerRequest *request)
   
   File modelsFile = LittleFS.open(MODELS_FILE, FILE_READ);
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
-  deserializeJson(modelsDoc, modelsFile.readString()); 
+  deserializeJson(modelsDoc, modelsFile); 
   JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
   modelsFile.close();
   
   File uploadFileFS = LittleFS.open(fsFilename, FILE_READ);
   DynamicJsonDocument uploadDoc(MODEL_DEFINITION_DOC_SIZE);
-  deserializeJson(uploadDoc, uploadFileFS.readString()); 
+  deserializeJson(uploadDoc, uploadFileFS); 
   uploadFileFS.close();
   
   bool newModel = true;
@@ -177,6 +177,7 @@ void onLoadValues(AsyncWebServerRequest *request)
     return;
   }
 
+  // disable watchdog of AsyncWebServer - WD will cancel this request becouse it tookes too long
   esp_task_wdt_delete(NULL);
   
   if(SerialX10A)

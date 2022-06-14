@@ -84,7 +84,7 @@ void readConfig()
 
     File configFile = LittleFS.open(CONFIG_FILE, FILE_READ);
     DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
-    deserializeJson(configDoc, configFile.readString()); 
+    deserializeJson(configDoc, configFile); 
     configFile.close();    
 
     config->configStored = true;
