@@ -19,8 +19,8 @@
 #include "mqtt.h"
 #include "webui.h"
 
-size_t registryIDsSize;
-uint8_t *registryIDs; //Holds the registries to query
+size_t registryBufferSize;
+RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
 
 bool busy = false;
 bool configWifiEnabled;
@@ -40,35 +40,33 @@ bool contains(uint8_t array[], size_t size, uint8_t value)
 }
 
 //Converts to string and add the value to the JSON message
-void updateValues(char regID)
+void updateValues(LabelDef *labelDef)
 {
-  LabelDef *labels[128];
-  int num = 0;
-  converter.getLabels(regID, labels, num);
-  for (size_t i = 0; i < num; i++)
+  bool alpha = false;
+  for (size_t j = 0; j < strlen(labelDef->asString); j++)
   {
-    bool alpha = false;
-    for (size_t j = 0; j < strlen(labels[i]->asString); j++)
+    char c = labelDef->asString[j];
+    if (!isdigit(c) && c!='.')
     {
-      char c = labels[i]->asString[j];
-      if (!isdigit(c) && c!='.'){
-        alpha = true;
-      }
+      alpha = true;
+      break;
     }
+  }
 
-    #ifdef ONEVAL_ONETOPIC
-    char topicBuff[128] = MQTT_OneTopic;
-    strcat(topicBuff,labels[i]->label);
-    client.publish(topicBuff, labels[i]->asString);
-    #endif
-    
-    if (alpha){      
-      snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":\"%s\",", labels[i]->label, labels[i]->asString);
-    }
-    else{//number, no quotes
-      snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":%s,", labels[i]->label, labels[i]->asString);
-
-    }
+  if(config->MQTT_USE_ONETOPIC)
+  {
+    char *topicBuff = config->MQTT_ONETOPIC_NAME;
+    strcat(topicBuff, labelDef->label);
+    client.publish(config->MQTT_ONETOPIC_NAME, labelDef->asString);
+  }
+  
+  if (alpha)
+  {      
+    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":\"%s\",", labelDef->label, labelDef->asString);
+  }
+  else //number, no quotes
+  {
+    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":%s,", labelDef->label, labelDef->asString);
   }
 }
 
@@ -144,7 +142,7 @@ void setup_wifi()
 void initRegistries()
 {
   //getting the list of registries to query from the selected values  
-  registryIDsSize = 0;  
+  registryBufferSize = 0;  
   uint8_t* tempRegistryIDs = new uint8_t[config->PARAMETERS_LENGTH];
 
   size_t i;
@@ -155,20 +153,20 @@ void initRegistries()
     if (!contains(tempRegistryIDs, sizeof(tempRegistryIDs), label.registryID))
     {
       mqttSerial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
-      tempRegistryIDs[registryIDsSize++] = label.registryID;
+      tempRegistryIDs[registryBufferSize++] = label.registryID;
     }
   }
 
-  registryIDs = new uint8_t[registryIDsSize];
+  registryBuffers = new RegistryBuffer[registryBufferSize];
 
-  for(i = 0; i < registryIDsSize; i++)
+  for(i = 0; i < registryBufferSize; i++)
   {
-    registryIDs[i] = tempRegistryIDs[i];
+    registryBuffers[i].RegistryID = tempRegistryIDs[i];
   }
 
   delete[] tempRegistryIDs;
 
-  if (registryIDsSize == 0)
+  if (registryBufferSize == 0)
   {
     mqttSerial.printf("ERROR - No parameter definition selected in the config. Stopping.\n");
     while (true)
@@ -295,23 +293,37 @@ void loop()
     reconnect();
   }
 
-  //Querying all registries
-  for (size_t i = 0; i < registryIDsSize; i++)
+  //Querying all registries and store results
+  for (size_t i = 0; i < registryBufferSize; i++)
   {
-    char buff[64] = {0};
     int tries = 0;
-    while (!queryRegistry(registryIDs[i], buff) && tries++ < 3)
+    while (!queryRegistry(&registryBuffers[i]) && tries++ < 3)
     {
       mqttSerial.println("Retrying...");
       waitLoop(1000);
     }
-    if (registryIDs[i] == buff[1]) //if replied registerID is coherent with the command
-    {
-      converter.readRegistryValues(buff); //process all values from the register
-      updateValues(registryIDs[i]);       //send them in mqtt
-      waitLoop(500);//wait .5sec between registries
-    }
   }
+
+  for (int i = 0; i < config->PARAMETERS_LENGTH; i++)
+  {            
+    auto &&label = *config->PARAMETERS[i];
+
+    for (size_t j = 0; j < registryBufferSize; j++)
+    {
+      if(label.registryID == registryBuffers[j].RegistryID)
+      {
+        char *input = registryBuffers[j].Buffer;
+        input += label.offset + 3;
+
+        converter.convert(&label, input); // convert buffer result of label offset to correct/usabel value
+
+        updateValues(&label);       //send them in mqtt
+        waitLoop(500);//wait .5sec between registries
+        break;
+      }
+    }
+  }  
+  
   sendValues();//Send the full json message
   mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);
   waitLoop(config->FREQUENCY);

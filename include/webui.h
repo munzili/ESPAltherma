@@ -218,20 +218,28 @@ void onLoadValues(AsyncWebServerRequest *request)
 
   Serial.println("Fetching Values");
 
+  uint8_t loopCounter = 0;
   for (JsonArray model : modelsDocArr) {
-    char buff[64] = {0};
+    RegistryBuffer buffer;
+    buffer.RegistryID = model[0].as<const uint8_t>();
     int tries = 0;
-    Serial.printf("Quering register %i\n", model[0].as<const uint8_t>());
-    while (tries++ < 3 && !queryRegistry(model[0].as<const uint8_t>(), buff))
+    Serial.printf("Quering register %i\n", buffer.RegistryID);
+    while (!queryRegistry(&buffer) && tries++ < 3)
     {
       mqttSerial.println("Retrying...");
       delay(1000);
     }
-    if (model[0].as<const uint8_t>() == buff[1]) //if replied registerID is coherent with the command
+    if (model[0].as<const uint8_t>() == buffer.Buffer[1]) //if replied registerID is coherent with the command
     {
-      mqttSerial.println("Found value " + buff[1]);
-      converter.readRegistryValues(buff); //process all values from the register
+      mqttSerial.println("Found value " + buffer.Buffer[1]);
+
+      char *input = buffer.Buffer;
+      input += config->PARAMETERS[loopCounter]->offset + 3;
+
+      converter.convert(config->PARAMETERS[loopCounter], input); // convert buffer result of label offset to correct/usabel value
     }
+
+    loopCounter++;
   }  
 
   Serial.println("Returning Values");

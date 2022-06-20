@@ -4,46 +4,10 @@
 // #include <registrys.h>
 #include <Arduino.h>
 #include "labeldef.h"
-char buff[64];
+
 class Converter
 {
 public:
-    void getLabels(char registryID, LabelDef *ret[], int &num)
-    {
-        num = 0;
-        for (int i = 0; i < config->PARAMETERS_LENGTH; i++)
-        {            
-            auto &&label = *config->PARAMETERS[i];
-            
-            if (label.registryID == registryID)
-            {
-                ret[num++] = &label;
-            }
-        }
-    }
-
-    // Extract all values from the registry data response
-    void readRegistryValues(char *data)
-    {
-        readRegistryValues(data[1], data);
-    }
-
-    void readRegistryValues(char registryID, char *data)
-    {
-
-        // Serial.printf("For registry %d, we have these labels:\n", registryID);
-        int num = 0;
-        LabelDef *labels[128];
-        getLabels(registryID, labels, num);
-
-        for (size_t i = 0; i < num; i++)
-        {
-            char *input = data;
-            input += labels[i]->offset + 3;
-            convert(labels[i], input);
-        }
-    }
-
     void convert(LabelDef *def, char *data)
     {
         def->asString[0] = {0};
