@@ -1,7 +1,6 @@
 #ifndef LABELDEF_H
 #define LABELDEF_H
 #include <pgmspace.h>
-#define LABELDEF
 
 struct LabelDef
 {

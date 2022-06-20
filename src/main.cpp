@@ -210,20 +210,17 @@ void setup()
 
   readConfig();
 
-  configWifiEnabled = !config->configStored || config->startStandaloneWifi;
-
-  if(configWifiEnabled)
+  if(config->startStandaloneWifi)
   {
     IPAddress local_ip(192, 168, 1, 1); 
     IPAddress gateway(192, 168, 1, 1); 
     IPAddress subnet(255, 255, 255, 0);
     WiFi.softAP("ESPAltherma-Config-WiFi");   
     WiFi.softAPConfig(local_ip, gateway, subnet);
-    WiFi.setHostname("ESPAltherma");
-    
-    WebUI_Init();
-    return;
+    WiFi.setHostname("ESPAltherma");    
   }
+  
+  WebUI_Init();
 
   initMQTTConfig(config);
 
@@ -247,8 +244,13 @@ void setup()
 #endif
 
   readEEPROM();//Restore previous state
-  mqttSerial.print("Setting up wifi...");
-  setup_wifi();
+
+  if(!config->startStandaloneWifi)
+  {
+    mqttSerial.print("Setting up wifi...");
+    setup_wifi();
+  }
+
   ArduinoOTA.setHostname("ESPAltherma");
   ArduinoOTA.onStart([]() {
     busy = true;
@@ -283,11 +285,6 @@ void waitLoop(uint ms){
 
 void loop()
 {
-  if(configWifiEnabled)
-  {
-    return;
-  }
-
   if (!client.connected())
   { //(re)connect to MQTT if needed
     reconnect();
