@@ -348,12 +348,6 @@ void onSave(AsyncWebServerRequest *request)
     request->send(422, "text/text", "Missing parameter pin to enable config");
     return;
   }
-
-  if(!request->hasParam("parameters", true))
-  {
-    request->send(422, "text/text", "Missing parameters definition");
-    return;
-  }
   #pragma endregion Validate_Input_Params
 
   if(config)
@@ -402,23 +396,31 @@ void onSave(AsyncWebServerRequest *request)
   config->SG_RELAY_HIGH_TRIGGER = request->hasParam("sg_relay_trigger", true);
   config->PIN_ENABLE_CONFIG = request->getParam("pin_enable_config", true)->value().toInt();
   
-  DynamicJsonDocument jsonParameters(MODELS_CONFIG_SIZE);
-  deserializeJson(jsonParameters, request->getParam("parameters", true)->value()); 
-  JsonArray parametersArray = jsonParameters.as<JsonArray>();
+  if(request->hasParam("parameters", true))
+  {
+    DynamicJsonDocument jsonParameters(MODELS_CONFIG_SIZE);
+    deserializeJson(jsonParameters, request->getParam("parameters", true)->value()); 
+    JsonArray parametersArray = jsonParameters.as<JsonArray>();
 
-  config->PARAMETERS_LENGTH = parametersArray.size();
-  config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
+    config->PARAMETERS_LENGTH = parametersArray.size();
+    config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
 
-  int counter = 0;
-  for (JsonArray value : parametersArray) {
-    config->PARAMETERS[counter] = new LabelDef(
-      value[0].as<const int>(), 
-      value[1].as<const int>(), 
-      value[2].as<const int>(), 
-      value[3].as<const int>(), 
-      value[4].as<const int>(),
-      value[5].as<const char*>());
-    counter++;
+    int counter = 0;
+    for (JsonArray value : parametersArray) {
+      config->PARAMETERS[counter] = new LabelDef(
+        value[0].as<const int>(), 
+        value[1].as<const int>(), 
+        value[2].as<const int>(), 
+        value[3].as<const int>(), 
+        value[4].as<const int>(),
+        value[5].as<const char*>());
+      counter++;
+    }
+  }
+  else
+  {
+    config->PARAMETERS_LENGTH = 0;
+    config->PARAMETERS = new LabelDef*[0];
   }
 
   saveConfig();
@@ -430,7 +432,7 @@ void WebUI_Init()
   {
     formatDefaultFS();
   }
-  
+
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
   server.on("/main.js", HTTP_GET, onRequestMainJS);
@@ -440,6 +442,6 @@ void WebUI_Init()
   server.on("/loadValues", HTTP_POST, onLoadValues);
   server.on("/save", HTTP_POST, onSave);
   server.on("/format", HTTP_GET, onFormat);
-  server.begin();     
+  server.begin();
 }
 #endif

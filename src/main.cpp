@@ -188,7 +188,7 @@ void setupScreen(){
   int xpos = M5.Lcd.width() / 2; // Half the screen width
   int ypos = M5.Lcd.height() / 2; // Half the screen width
   M5.Lcd.setTextColor(TFT_DARKGREY);
-  M5.Lcd.drawString("ESPAltherma", xpos,ypos,1);
+  M5.Lcd.drawString("ESPAltherma", xpos, ypos, 1);
   delay(2000);
   M5.Lcd.fillScreen(TFT_BLACK);
   M5.Lcd.setTextFont(1);
@@ -210,7 +210,7 @@ void setup()
 
   readConfig();
 
-  if(config->startStandaloneWifi)
+  if(config->startStandaloneWifi || !config->configStored)
   {
     IPAddress local_ip(192, 168, 1, 1); 
     IPAddress gateway(192, 168, 1, 1); 
@@ -225,6 +225,13 @@ void setup()
   initMQTTConfig(config);
 
   setupScreen();
+
+  if(!config->configStored)
+  {
+    mqttSerial.print("No config found, skip setup...");
+    return;
+  }
+
   SerialX10A.begin(9600, SERIAL_8E1, config->PIN_RX, config->PIN_TX);
   pinMode(config->PIN_THERM, OUTPUT);
   digitalWrite(config->PIN_THERM, HIGH);
@@ -285,6 +292,12 @@ void waitLoop(uint ms){
 
 void loop()
 {
+  if(!config->configStored)
+  {
+    extraLoop();
+    return;
+  }
+
   if (!client.connected())
   { //(re)connect to MQTT if needed
     reconnect();
