@@ -15,9 +15,12 @@
 // Set web server port number to 80
 AsyncWebServer server(80);
 
-extern const char mainJS_start[] asm("_binary_webui_main_js_gz_start");
-extern const char indexHTML_start[] asm("_binary_webui_index_html_gz_start");
-extern const char picoCSS_start[] asm("_binary_webui_pico_min_css_gz_start");
+extern const uint8_t mainJS_start[] asm("_binary_webui_main_js_gz_start");
+extern const uint8_t mainJS_end[] asm("_binary_webui_main_js_gz_end");
+extern const uint8_t indexHTML_start[] asm("_binary_webui_index_html_gz_start");
+extern const uint8_t indexHTML_end[] asm("_binary_webui_index_html_gz_end");
+extern const uint8_t picoCSS_start[] asm("_binary_webui_pico_min_css_gz_start");
+extern const uint8_t picoCSS_end[] asm("_binary_webui_pico_min_css_gz_end");
 
 String lastUploadFileName;
 
@@ -38,22 +41,22 @@ bool formatDefaultFS()
 }
 
 void onIndex(AsyncWebServerRequest *request)
-{
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "image/html", indexHTML_start);
+{    
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", indexHTML_start, indexHTML_end - indexHTML_start);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
 }
 
 void onRequestPicoCSS(AsyncWebServerRequest *request)
 {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "image/css", picoCSS_start);
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", picoCSS_start, picoCSS_end - picoCSS_start);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
 }
 
 void onRequestMainJS(AsyncWebServerRequest *request)
 {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "image/javascript", mainJS_start);
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", mainJS_start, mainJS_end - mainJS_start);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
 }
