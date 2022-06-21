@@ -1,4 +1,5 @@
 var definedParameters = [];
+var definedPresets = [];
 var predefinedParameters = [];
 var models = [];
 
@@ -12,25 +13,86 @@ function show(id)
         el.display = 'none';
 }
 
-async function updateParameters()
+async function updatePresets()
 {
-    var parametersFile = document.getElementById('language').value;
+    var modelFile = document.getElementById('language').value;
 
     let formData = new FormData();           
-    formData.append("parametersFile", parametersFile);
-    await fetch('/loadParameters', {
+    formData.append("modelFile", modelFile);
+    await fetch('/loadModel', {
         method: "POST",
         body: formData
     })
     .then(function(response) { return response.json(); })
     .then(function(data){
+        definedPresets = data['Presets'];
         predefinedParameters = data['Parameters'];
+        
+        let presetParametersSelect = document.getElementById('presetParameters');
+        
+        while (presetParametersSelect.options.length > 1)
+            presetParametersSelect.remove(1);
+
+        for (var key in definedPresets) {
+            if (definedPresets.hasOwnProperty(key)) {
+                let option = document.createElement("option");
+                option.text = key;
+                option.value = JSON.stringify(definedPresets[key]);
+                presetParametersSelect.add(option);
+            }
+        }
+
+        let optionAll = document.createElement("option");
+        optionAll.text = "All";
+        optionAll.value = "all";
+        presetParametersSelect.add(optionAll);
+
+        let optionCustom = document.createElement("option");
+        optionCustom.text = "Custom";
+        optionCustom.value = "custom";
+        presetParametersSelect.add(optionCustom);
 
         updateParametersTable('parametersTable', predefinedParameters);
     })
     .catch(function(err) {
         alert('Fetching parameter data failed! Message: ' + err);
     });    
+}
+
+async function updateParameters()
+{
+    let selectedPreset = document.getElementById('presetParameters').value;
+
+    if(selectedPreset == 'custom')
+    {
+        document.getElementById('containerParametersTable').style.display = 'block';
+        document.getElementById('containerCustomParameterForm').style.display = 'block';
+        document.getElementById('containerSelectedParameters').style.display = 'block';
+    }
+    else
+    {
+        document.getElementById('containerParametersTable').style.display = 'none';
+        document.getElementById('containerCustomParameterForm').style.display = 'none';
+        document.getElementById('containerSelectedParameters').style.display = 'none';
+    }
+
+    definedParameters = [];
+
+    if(selectedPreset == '')
+        return;
+
+    if(selectedPreset == 'all')
+    {
+        selectedPreset = [...Array(predefinedParameters.length).keys()];
+    }
+    else
+    {
+        selectedPreset = JSON.parse(selectedPreset);
+    }
+
+    selectedPreset.forEach((value) => {
+        definedParameters.push(predefinedParameters[value]);
+    });
 }
 
 async function uploadFile() {
@@ -85,8 +147,7 @@ function AddParameter(offset, regid, convid, dataSize, dataType, dataName)
 }
 
 function addCustomParameter()
-{
-    
+{    
     let offset = document.getElementById('offset');
     let regid = document.getElementById('regid');
     let convid = document.getElementById('convid');

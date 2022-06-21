@@ -296,26 +296,26 @@ void onLoadValues(AsyncWebServerRequest *request)
   request->send(200, "application/json", response);
 }
 
-void onLoadParameters(AsyncWebServerRequest *request)
+void onLoadModel(AsyncWebServerRequest *request)
 {
-  if(!request->hasParam("parametersFile", true))
+  if(!request->hasParam("modelFile", true))
   {
-    request->send(422, "text/text", "Missing parameter file");
+    request->send(422, "text/text", "Missing model file");
     return;
   }
   
-  String parametersFile = request->getParam("parametersFile", true)->value();
+  String modelFile = request->getParam("modelFile", true)->value();
 
-  Serial.print("Found parameter file: ");
-  Serial.println(parametersFile);
+  Serial.print("Found model file: ");
+  Serial.println(modelFile);
 
-  if(!LittleFS.exists(parametersFile))
+  if(!LittleFS.exists(modelFile))
   {
-    request->send(400, "text/text", "Parameters file not found");
+    request->send(400, "text/text", "Model file not found");
     return;
   }
 
-  request->send(LittleFS, parametersFile, "text/json");
+  request->send(LittleFS, modelFile, "text/json");
 }
 
 void onSave(AsyncWebServerRequest *request)
@@ -460,7 +460,7 @@ void WebUI_Init()
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
   server.on("/main.js", HTTP_GET, onRequestMainJS);
-  server.on("/loadParameters", HTTP_POST, onLoadParameters);
+  server.on("/loadModel", HTTP_POST, onLoadModel);
   server.on("/upload", HTTP_POST, onUpload, handleUpload);
   server.on("/loadModels", HTTP_GET, onLoadModels);
   server.on("/loadValues", HTTP_POST, onLoadValues);

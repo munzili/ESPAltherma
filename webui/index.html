@@ -135,28 +135,35 @@
             </select>
 
             <label for="language">Language:</label>
-            <select id="language" name="language" onchange="updateParameters()">
+            <select id="language" name="language" onchange="updatePresets()">
               <option value="" selected>Select a language...</option>
             </select>
 
-            <label for="parametersTable">Parameters:</label>
-            <figure style="max-height: 500px">
-              <table id="parametersTable" style="white-space: nowrap;">
-                <tr>
-                  <td>Name</td>                  
-                  <td>Offset</td>
-                  <td>RegID</td>
-                  <td>ConvID</td>
-                  <td>Data size</td>
-                  <td>Data type</td>
-                  <td>Value</td>
-                </tr>                
-              </table>
-            </figure>
+            <label for="language">Preset Parameters:</label>
+            <select id="presetParameters" name="presetParameters" onchange="updateParameters()">
+              <option value="" selected>Select a preset...</option>
+            </select>
 
-            <input type="button" onclick="loadData('parametersTable')" value="Load model values">
+            <div id="containerParametersTable" style="display: none">
+              <label for="parametersTable">Parameters:</label>
+              <figure style="max-height: 500px">
+                <table id="parametersTable" style="white-space: nowrap;">
+                  <tr>
+                    <td>Name</td>                  
+                    <td>Offset</td>
+                    <td>RegID</td>
+                    <td>ConvID</td>
+                    <td>Data size</td>
+                    <td>Data type</td>
+                    <td>Value</td>
+                  </tr>                
+                </table>
+              </figure>
+
+              <input type="button" onclick="loadData('parametersTable')" value="Load model values">
+            </div>
           </div>
-          <div style="text-align: center; margin-top: 20pt;">
+          <div id="containerCustomParameterForm" style="text-align: center; margin-top: 20pt; display: none">
             <p><input type="button" onclick="addSelectedPredefinedParameters()" value="Add to selected parameters"></p>
             <p><input type="button" onclick="removeSelectedParameters()" value="Remove from selected parameters"></p>
 
@@ -166,25 +173,80 @@
                 <div class="grid">
                   <div>
                     <label for="offset">Offset:</label>
-                    <input type="number" id="offset" name="offset"/>
+                    <input type="number" id="offset" name="offset" min="0" max="31"/>
                   </div>
                   <div>
                     <label for="regid">RegID:</label>
-                    <input type="number" id="regid" name="regid"/>
+                    <input type="number" id="regid" name="regid" min="0" max="127"/>
                   </div>                  
                 </div>
                 <div class="grid">
                   <div >                    
-                    <label for="convid">ConvID:</label>
-                    <input type="number" id="convid" name="convid"/>
+                    <label for="convid">Converter ID:</label>
+                    <select id="convid" name="convid">
+                      <option value="100">100</option>
+                      <option value="101">101</option>
+                      <option value="102">102</option>
+                      <option value="103">103</option>
+                      <option value="104">104</option>
+                      <option value="105">105</option>
+                      <option value="106">106</option>
+                      <option value="107">107</option>
+                      <option value="108">108</option>
+                      <option value="109">109</option>
+                      <option value="110">110</option>
+                      <option value="111">111</option>
+                      <option value="112">112</option>
+                      <option value="113">113</option>
+                      <option value="114">114</option>
+                      <option value="115">115</option>
+                      <option value="116">116</option>
+                      <option value="117">117</option>
+                      <option value="118">118</option>
+                      <option value="119">119</option>
+                      <option value="151">151</option>
+                      <option value="152">152</option>
+                      <option value="153">153</option>
+                      <option value="154">154</option>
+                      <option value="155">155</option>
+                      <option value="156">156</option>
+                      <option value="157">157</option>
+                      <option value="158">158</option>
+                      <option value="200">200</option>
+                      <option value="201">201</option>
+                      <option value="203">203</option>
+                      <option value="204">204</option>
+                      <option value="211">211</option>
+                      <option value="217">217</option>
+                      <option value="300">300</option>
+                      <option value="301">301</option>
+                      <option value="302">302</option>
+                      <option value="303">303</option>
+                      <option value="304">304</option>
+                      <option value="305">305</option>
+                      <option value="306">306</option>
+                      <option value="307">307</option>
+                      <option value="315">315</option>
+                      <option value="316">316</option>
+                    </select>
                   </div>
                   <div>                  
-                    <label for="dataSize">Data size:</label>
-                    <input type="number" id="dataSize" name="dataSize"/>
+                    <label for="dataSize">Data Size:</label>
+                    <select id="dataSize" name="dataSize">
+                      <option value="0">0</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </select>
                   </div>
                   <div>
-                    <label for="dataType">Data type:</label>
-                    <input type="number" id="dataType" name="dataType"/>
+                    <label for="dataType">Data Type:</label>
+                    <select id="dataType" name="dataType">
+                      <option value="-1">-1</option>
+                      <option value="0">0</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                    </select>
                   </div>
                 </div>              
 
@@ -196,22 +258,24 @@
             </details>
           </div>
           <div>
-            <label for="selectedParametersTable">Selected Parameters:</label>            
-            <figure style="max-height: 500px">
-              <table id="selectedParametersTable" style="white-space: nowrap;">
-                <tr>
-                  <td>Name</td>                  
-                  <td>Offset</td>
-                  <td>RegID</td>
-                  <td>ConvID</td>
-                  <td>Data size</td>
-                  <td>Data type</td>
-                  <td>Value</td>
-                </tr>                
-              </table>
-            </figure>
+            <div id="containerSelectedParameters" style="display: none">
+              <label for="selectedParametersTable">Selected Parameters:</label>            
+              <figure style="max-height: 500px">
+                <table id="selectedParametersTable" style="white-space: nowrap;">
+                  <tr>
+                    <td>Name</td>                  
+                    <td>Offset</td>
+                    <td>RegID</td>
+                    <td>ConvID</td>
+                    <td>Data size</td>
+                    <td>Data type</td>
+                    <td>Value</td>
+                  </tr>                
+                </table>
+              </figure>
 
-            <input type="button" onclick="loadData('selectedParametersTable')" value="Load parameter values">
+              <input type="button" onclick="loadData('selectedParametersTable')" value="Load parameter values">
+            </div>
 
             <label for="parametersFile">Upload Parameters file:</label>
             <input type="file" id="parametersFile" accept=".json" name="parametersFile"/>
