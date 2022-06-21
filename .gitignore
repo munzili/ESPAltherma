@@ -3,6 +3,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-src/setup.h
 private/
+webui/*.gz
 .vscode/settings.json
