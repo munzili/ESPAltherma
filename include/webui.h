@@ -9,7 +9,7 @@
 #include "config.h"
 
 #define MODELS_FILE "/models.json"
-#define MODEL_DEFINITION_DOC_SIZE 1024*50
+#define MODEL_DEFINITION_DOC_SIZE 1024*25
 #define MODELS_DOC_SIZE 1024*10
 
 // Set web server port number to 80
@@ -100,9 +100,24 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
   if (final) {       
     lastUploadFileName = "/" + String(request->_tempFile.name());
 
-    logmessage = "Upload Complete: " + String(filename) + ",size: " + String(index + len);
+    logmessage = "Upload Complete: " + String(filename) + ", size: " + String(index + len);    
+    Serial.println(logmessage);
+
     // close the file handle as the upload is now done
-    request->_tempFile.close();
+    request->_tempFile.close();    
+
+    // minimize json file
+    File modelsFile = LittleFS.open(lastUploadFileName, FILE_READ);
+    DynamicJsonDocument modelsDoc(MODEL_DEFINITION_DOC_SIZE);
+    deserializeJson(modelsDoc, modelsFile); 
+    modelsFile.close();
+
+    modelsFile = LittleFS.open(lastUploadFileName, FILE_WRITE);
+    serializeJson(modelsDoc, modelsFile);
+    size_t newFileSize = modelsFile.size();
+    modelsFile.close();
+
+    logmessage = "JSON Minify Complete: " + String(lastUploadFileName) + ", new size: " + String(newFileSize);    
     Serial.println(logmessage);
   }
 }
