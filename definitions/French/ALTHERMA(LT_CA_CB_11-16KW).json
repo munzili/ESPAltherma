@@ -1,6 +1,10 @@
 {
     "Model": "Altherma LT CA CB 11-16kW",
     "Language": "French",
+    "Presets": {
+        "Light": [130,131,132,133,134,135,136],
+        "Normal": [30,40,50,60,70,80,130,131,132,133,134,135,136]
+    },
     "Parameters": [
         [ 0,    	0,   	152,   	1,   	-1,	"Sensor Data Qty"],
         [ 0,    	1,   	152,   	1,   	-1,	"INV compressor Qty"],

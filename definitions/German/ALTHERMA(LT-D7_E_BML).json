@@ -1,6 +1,10 @@
 {
     "Model": "Altherma LT D7 E BML",
     "Language": "German",
+    "Presets": {
+        "Light": [143,144,145,146,147,148,149],
+        "Normal": [30,40,50,60,70,80,143,144,145,146,147,148,149]
+    },
     "Parameters": [
         [ 0,    	0,   	152,   	1,   	-1,	"Anzahl - Sensoren"],
         [ 0,    	1,   	152,   	1,   	-1,	"Anzahl - Inverterverdichter"],

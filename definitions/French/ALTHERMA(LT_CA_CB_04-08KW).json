@@ -1,6 +1,10 @@
 {
     "Model": "Altherma LT CA CB 4-8kW",
     "Language": "French",
+    "Presets": {
+        "Light": [142,143,144,145,146,147,148],
+        "Normal": [30,40,50,60,70,80,142,143,144,145,146,147,148]
+    },
     "Parameters": [
         [ 0,    	1,   	996,   	1,   	-1,	"Override CMD:0 N_INV=1"],
         [ 0,    	2,   	996,   	0,   	-1,	"Override CMD:0 N_STD=0"],

@@ -1,6 +1,10 @@
 {
     "Model": "Altherma LT 11-16kW Hydrosplit Hydro unit",
     "Language": "Spanish",
+    "Presets": {
+        "Light": [120,121,122,123,124,125,126],
+        "Normal": [30,40,50,60,70,80,120,121,122,123,124,125,126]
+    },
     "Parameters": [
         [ 0,    	0,   	152,   	1,   	-1,	"Sensor Data Qty"],
         [ 0,    	1,   	152,   	1,   	-1,	"INV compressor Qty"],

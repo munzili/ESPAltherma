@@ -1,6 +1,10 @@
 {
     "Model": "Daikin Mini Inverter Chiller 4-8kW",
     "Language": "English",
+    "Presets": {
+        "Light": [129,130,131,132,133,134,135],
+        "Normal": [30,40,50,60,70,80,129,130,131,132,133,134,135]
+    },
     "Parameters": [
         [ 0,    	1,   	996,   	1,   	-1,	"Override CMD:0 N_INV=1"],
         [ 0,    	2,   	996,   	0,   	-1,	"Override CMD:0 N_STD=0"],

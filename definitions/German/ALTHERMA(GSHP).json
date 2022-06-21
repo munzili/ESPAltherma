@@ -1,6 +1,10 @@
 {
     "Model": "Altherma GSHP",
     "Language": "German",
+    "Presets": {
+        "Light": [143,144,145,146,147,148,149],
+        "Normal": [30,40,50,60,70,80,143,144,145,146,147,148,149]
+    },    
     "Parameters": [
         [ 0,    	1,   	996,   	1,   	-1,	"Override CMD:0 N_INV=1"],
         [ 0,    	2,   	996,   	0,   	-1,	"Override CMD:0 N_STD=0"],
