@@ -143,8 +143,19 @@
             <select id="presetParameters" name="presetParameters" onchange="updateParameters()">
               <option value="" selected>Select a preset...</option>
             </select>
+          </div>          
+          <div>            
+            <label for="parametersFile">Upload Parameters file:</label>
+            <input type="file" id="parametersFile" accept=".json" name="parametersFile"/>
+            <small>Add a model config file to the predefined model list</small>
 
-            <div id="containerParametersTable" style="display: none">
+            <input type="button" onclick="uploadFile()" value="Upload">
+          </div>
+        </div>
+
+        <article id="containerCustomParameters" style="display: none">
+          <div class="grid">
+            <div style="border: 0.1em; border-style: dashed; border-radius: 0.5em; padding: 0.3em; margin-bottom: 0.5em;">
               <label for="parametersTable">Parameters:</label>
               <figure style="max-height: 500px">
                 <table id="parametersTable" style="white-space: nowrap;">
@@ -160,13 +171,31 @@
                 </table>
               </figure>
 
-              <input type="button" onclick="loadData('parametersTable')" value="Load model values">
+              <input type="button" onclick="addSelectedPredefinedParameters()" value="Add to selected parameters">
+              <input type="button" onclick="loadData('parametersTable')" value="Load model values">            
+            </div>          
+            <div style="border: 0.1em; border-style: dashed; border-radius: 0.5em; padding: 0.3em; margin-bottom: 0.5em;">
+              <label for="selectedParametersTable">Selected Parameters:</label>            
+              <figure style="max-height: 500px">
+                <table id="selectedParametersTable" style="white-space: nowrap;">
+                  <tr>
+                    <td>Name</td>                  
+                    <td>Offset</td>
+                    <td>RegID</td>
+                    <td>ConvID</td>
+                    <td>Data size</td>
+                    <td>Data type</td>
+                    <td>Value</td>
+                  </tr>                
+                </table>
+              </figure>
+
+              <input type="button" onclick="removeSelectedParameters()" value="Remove from selected parameters">
+              <input type="button" onclick="loadData('selectedParametersTable')" value="Load parameter values">            
             </div>
           </div>
-          <div id="containerCustomParameterForm" style="text-align: center; margin-top: 20pt; display: none">
-            <p><input type="button" onclick="addSelectedPredefinedParameters()" value="Add to selected parameters"></p>
-            <p><input type="button" onclick="removeSelectedParameters()" value="Remove from selected parameters"></p>
-
+          <div style="text-align: center; margin-top: 20pt">            
+            
             <details>
               <summary role="button">Add custom Parameter</summary>
               <p>
@@ -178,11 +207,9 @@
                   <div>
                     <label for="regid">RegID:</label>
                     <input type="number" id="regid" name="regid" min="0" max="127"/>
-                  </div>                  
-                </div>
-                <div class="grid">
+                  </div>              
                   <div >                    
-                    <label for="convid">Converter ID:</label>
+                    <label for="convid">ConvID:</label>
                     <select id="convid" name="convid">
                       <option value="100">100</option>
                       <option value="101">101</option>
@@ -231,7 +258,7 @@
                     </select>
                   </div>
                   <div>                  
-                    <label for="dataSize">Data Size:</label>
+                    <label for="dataSize">Data size:</label>
                     <select id="dataSize" name="dataSize">
                       <option value="0">0</option>
                       <option value="1">1</option>
@@ -240,7 +267,7 @@
                     </select>
                   </div>
                   <div>
-                    <label for="dataType">Data Type:</label>
+                    <label for="dataType">Data type:</label>
                     <select id="dataType" name="dataType">
                       <option value="-1">-1</option>
                       <option value="0">0</option>
@@ -257,33 +284,7 @@
               </p>
             </details>
           </div>
-          <div>
-            <div id="containerSelectedParameters" style="display: none">
-              <label for="selectedParametersTable">Selected Parameters:</label>            
-              <figure style="max-height: 500px">
-                <table id="selectedParametersTable" style="white-space: nowrap;">
-                  <tr>
-                    <td>Name</td>                  
-                    <td>Offset</td>
-                    <td>RegID</td>
-                    <td>ConvID</td>
-                    <td>Data size</td>
-                    <td>Data type</td>
-                    <td>Value</td>
-                  </tr>                
-                </table>
-              </figure>
-
-              <input type="button" onclick="loadData('selectedParametersTable')" value="Load parameter values">
-            </div>
-
-            <label for="parametersFile">Upload Parameters file:</label>
-            <input type="file" id="parametersFile" accept=".json" name="parametersFile"/>
-            <small>Add a model config file to the predefined model list</small>
-
-            <input type="button" onclick="uploadFile()" value="Upload">
-          </div>
-        </div>
+        </article>
         
         <p><input type="submit" value="SAVE" role="button" /></p>
       </form>

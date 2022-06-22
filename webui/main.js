@@ -48,7 +48,7 @@ async function updatePresets()
         presetParametersSelect.add(optionAll);
 
         let optionCustom = document.createElement("option");
-        optionCustom.text = "Custom";
+        optionCustom.text = "Custom (advanced user)";
         optionCustom.value = "custom";
         presetParametersSelect.add(optionCustom);
 
@@ -63,32 +63,14 @@ async function updateParameters()
 {
     let selectedPreset = document.getElementById('presetParameters').value;
 
-    if(selectedPreset == 'custom')
-    {
-        document.getElementById('containerParametersTable').style.display = 'block';
-        document.getElementById('containerCustomParameterForm').style.display = 'block';
-        document.getElementById('containerSelectedParameters').style.display = 'block';
-    }
-    else
-    {
-        document.getElementById('containerParametersTable').style.display = 'none';
-        document.getElementById('containerCustomParameterForm').style.display = 'none';
-        document.getElementById('containerSelectedParameters').style.display = 'none';
-    }
+    document.getElementById('containerCustomParameters').style.display = selectedPreset == 'custom' ? 'block' : 'none';
 
     definedParameters = [];
 
     if(selectedPreset == '')
         return;
 
-    if(selectedPreset == 'all')
-    {
-        selectedPreset = [...Array(predefinedParameters.length).keys()];
-    }
-    else
-    {
-        selectedPreset = JSON.parse(selectedPreset);
-    }
+    selectedPreset = selectedPreset == 'all' ? [...Array(predefinedParameters.length).keys()] : JSON.parse(selectedPreset);
 
     selectedPreset.forEach((value) => {
         definedParameters.push(predefinedParameters[value]);
