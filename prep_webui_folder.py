@@ -1,12 +1,12 @@
 Import("env")
 
 try:
-    from css_html_js_minify import process_single_html_file, process_single_js_file, process_single_css_file
+    import rcssmin
+    import htmlmin 
+    from jsmin import jsmin
 except ImportError:
-    env.Execute("$PYTHONEXE -m pip install css-html-js-minify htmlmin")    
+    env.Execute("$PYTHONEXE -m pip install rcssmin htmlmin jsmin")    
     
-from css_html_js_minify import process_single_html_file, process_single_js_file, process_single_css_file
-import htmlmin 
 import os
 import shutil
 import glob
@@ -34,17 +34,23 @@ for file in files_to_gzip:
     shutil.copyfile(srcFile, tmpFile)
 
     if extension == "js":
-        process_single_js_file(tmpFile, overwrite=True)
+        with open(tmpFile, 'r') as js_file:
+            minified = jsmin(js_file.read())
+
+        with open(tmpFile, 'w') as js_file:
+            js_file.write(minified)
     elif extension == "html":                
         with open(tmpFile,'r') as fileHandler:
-            htmlContent = fileHandler.read()
-        
-        htmlContent = htmlmin.minify(htmlContent)
+            htmlContent = htmlmin.minify(fileHandler.read())
 
         with open(tmpFile,'w') as fileHandler:
             fileHandler.write(htmlContent)
     elif extension == "css":
-        process_single_css_file(tmpFile, overwrite=True)
+        with open(tmpFile,'r') as fileHandler:
+            minified = rcssmin.cssmin(fileHandler.read())
+
+        with open(tmpFile,'w') as fileHandler:
+            fileHandler.write(minified)
         
     print('  GZipping file: ' + file)
     with open(tmpFile, "rb") as src, gzip.open(gzFile, 'wb') as dst:        

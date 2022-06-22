@@ -3,7 +3,7 @@ var definedPresets = [];
 var predefinedParameters = [];
 var models = [];
 
-window.addEventListener('load', function () {
+window.addEventListener('load', async function () {
     await fetch('/loadPins', {
         method: "GET"
     })
@@ -17,8 +17,8 @@ window.addEventListener('load', function () {
             if (models.hasOwnProperty(key)) {
                 pinSelects.forEach((select) => {
                     let option = document.createElement("option");
-                    option.text = model.Model;
-                    option.value = i;                
+                    option.text = models[key];
+                    option.value = key;                
                     select.add(option);
                 });            
             }
