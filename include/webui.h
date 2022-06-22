@@ -40,6 +40,71 @@ bool formatDefaultFS()
   return true;
 }
 
+void onLoadPins(AsyncWebServerRequest *request)
+{
+#if defined(ARDUINO_M5Stick_C)
+  const String response = "{"
+      "0: 'GPIO0 - RTC,ADC2_1,TOUCH1,BOOT,OD/IE/WPU',"
+      "26: 'GPIO26 - RTC,ADC2_9,DAC_2,OD/ID',"
+      "32: 'GPIO32 - RTC,ADC1_4,TOUCH9,32K_XP,OD/ID',"
+      "33: 'GPIO33 - RTC,ADC1_5,TOUCH8,32K_XN,OD/ID',"
+      "36: 'GPIO36 - RTC,ADC1_0,S_VP,OD/ID',"
+      "37: 'GPIO37 - BTN',"
+      "39: 'GPIO39 - BTN'"
+    "}";
+#elif defined(ARDUINO_M5Stick_C_Plus)
+  const String response = "{"
+      "0: 'GPIO0 - RTC,ADC2_1,TOUCH1,BOOT,OD/IE/WPU',"
+      "25: 'GPIO25 - RTC,ADC1_8,DAC_1,OD/ID',"
+      "26: 'GPIO26 - RTC,ADC2_9,DAC_2,OD/ID',"
+      "32: 'GPIO32 - RTC,ADC1_4,TOUCH9,32K_XP,OD/ID',"
+      "33: 'GPIO33 - RTC,ADC1_5,TOUCH8,32K_XN,OD/ID',"
+      "36: 'GPIO36 - RTC,ADC1_0,S_VP,OD/ID',"
+      "37: 'GPIO37 - BTN',"
+      "39: 'GPIO39 - BTN'"
+    "}";
+#elif defined(ESP32)
+  const String response = "{"
+    "0: 'GPIO0 - RTC,ADC2_1,TOUCH1,BOOT,OD/IE/WPU',"
+    "1: 'GPIO1 - U0TXD,SERIAL_TX,OD/IE/WPU',"
+    "2: 'GPIO2 - RTC,ADC2_2,TOUCH2,OD/IE/WPU',"
+    "3: 'GPIO3 - U0RXD,SERIAL_RX,OD/IE/WPU',"
+    "4: 'GPIO4 - RTC,ADC2_0,TOUCH0,OD/IE/WPU',"
+    "5: 'GPIO5 - VSPI_SS,SDIO,OD/IE/WPU',"
+    "6: 'GPIO6 - SCK,OD/IE/WPU',"
+    "7: 'GPIO7 - D0,OD/IE/WPU',"
+    "8: 'GPIO8 - D1,OD/IE/WPU',"
+    "9: 'GPIO9 - D2,OD/IE/WPU',"
+    "10: 'GPIO10 - D3,OD/IE/WPU',"
+    "11: 'GPIO11 - CMD,OD/IE/WPU',"
+    "12: 'GPIO12 - RTC,ADC2_5,TOUCH5,MTDI,HSPI_MISO,VDD_FLASH,OD/IE/WPU',"
+    "13: 'GPIO13 - RTC,ADC2_4,TOUCH4,MTCK,HSPI_MOSI,OD/IE/WPU',"
+    "14: 'GPIO14 - RTC,ADC2_6,TOUCH6,MTMS,HSPI_SCK,OD/IE/WPU',"
+    "15: 'GPIO15 - RTC,ADC2_3,TOUCH3,MTDO,HSPI_SS,LOG,OD/IE/WPU',"
+    "16: 'GPIO16 - OD/IE',"
+    "17: 'GPIO17 - OD/IE',"
+    "18: 'GPIO18 - VSPI_SCK,OD/IE',"
+    "19: 'GPIO19 - VSPI_MISO,OD/IE',"
+    "21: 'GPIO21 - WIRE_SDA,OD/IE',"
+    "22: 'GPIO22 - WIRE_SCL,OD/IE',"
+    "23: 'GPIO23 - VSPI_MOSI,SPI_MOSI,OD/IE',"
+    "25: 'GPIO25 - RTC,ADC1_8,DAC_1,OD/ID',"
+    "26: 'GPIO26 - RTC,ADC2_9,DAC_2,OD/ID',"
+    "27: 'GPIO27 - RTC,ADC2_7,TOUCH7,OD/ID',"
+    "32: 'GPIO32 - RTC,ADC1_4,TOUCH9,32K_XP,OD/ID',"
+    "33: 'GPIO33 - RTC,ADC1_5,TOUCH8,32K_XN,OD/ID',"
+    "34: 'GPIO34 - RTC,ADC1_6,VDET_1,OD/ID',"
+    "35: 'GPIO35 - RTC,ADC1_7,VDET_2,OD/ID',"
+    "36: 'GPIO36 - RTC,ADC1_0,S_VP,OD/ID',"
+    "39: 'GPIO39 - RTC,ADC1_3,S_VN,OD/ID'"
+  "}";
+#else
+  const String response = ""; 
+#endif
+
+  request->send(200, "application/json", response);
+}
+
 void onIndex(AsyncWebServerRequest *request)
 {    
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", indexHTML_start, indexHTML_end - indexHTML_start);
@@ -461,6 +526,7 @@ void WebUI_Init()
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
   server.on("/main.js", HTTP_GET, onRequestMainJS);
   server.on("/loadModel", HTTP_POST, onLoadModel);
+  server.on("/loadPins", HTTP_GET, onLoadPins);
   server.on("/upload", HTTP_POST, onUpload, handleUpload);
   server.on("/loadModels", HTTP_GET, onLoadModels);
   server.on("/loadValues", HTTP_POST, onLoadValues);

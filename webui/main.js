@@ -3,6 +3,32 @@ var definedPresets = [];
 var predefinedParameters = [];
 var models = [];
 
+window.addEventListener('load', function () {
+    await fetch('/loadPins', {
+        method: "GET"
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        models = data;
+
+        let pinSelects = document.querySelectorAll('select[data-pins]');
+        
+        for (var key in models) {
+            if (models.hasOwnProperty(key)) {
+                pinSelects.forEach((select) => {
+                    let option = document.createElement("option");
+                    option.text = model.Model;
+                    option.value = i;                
+                    select.add(option);
+                });            
+            }
+        };
+    })
+    .catch(function(err) {
+        alert('Fetching pins data failed! Message: ' + err);
+    }); 
+})
+
 function show(id)
 {
     var el = document.getElementById(id).style;

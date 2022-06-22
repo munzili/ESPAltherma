@@ -82,18 +82,18 @@
           <!-- Markup example 1: input is inside label -->
           <label for="pin_rx">
             PIN RX
-            <input type="number" id="pin_rx" name="pin_rx" required>
+            <select id="pin_rx" name="pin_rx" data-pins required></select>
           </label>
 
           <label for="pin_tx">
             PIN TX
-            <input type="number" id="pin_tx" name="pin_tx" required>
+            <select id="pin_tx" name="pin_tx" data-pins required></select>
           </label>
         </div>
 
         <label for="pin_therm">
           PIN THERM
-          <input type="number" id="pin_therm" name="pin_therm" required>
+          <select id="pin_therm" name="pin_therm" data-pins required></select>
         </label>
 
         <label for="sg_enabled" >          
@@ -105,12 +105,12 @@
           <div class="grid">
             <label for="pin_sg1">
               PIN SG1
-              <input type="number" id="pin_sg1" name="pin_sg1">
+              <select id="pin_sg1" name="pin_sg1" data-pins></select>
             </label>
             
             <label for="pin_sg2">
               PIN SG2
-              <input type="number" id="pin_sg2" name="pin_sg2">
+              <select id="pin_sg2" name="pin_sg2" data-pins></select>
             </label>
           </div>
 
@@ -123,7 +123,7 @@
 
         <label for="pin_enable_config">
           PIN CONFIG PAGE:
-          <input type="number" id="pin_enable_config" name="pin_enable_config" required>
+          <select id="pin_enable_config" name="pin_enable_config" data-pins required></select>
           <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the configuration mode (current mode).</small>
         </label>
 
