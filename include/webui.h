@@ -45,17 +45,9 @@ void onLoadPins(AsyncWebServerRequest *request)
 #if defined(ARDUINO_M5Stick_C)
   const String response = "{"
       "\"0\": \"GPIO0 - RTC,ADC2_1,TOUCH1,BOOT,OD/IE/WPU\","
-      "\"26\": \"GPIO26 - RTC,ADC2_9,DAC_2,OD/ID\","
-      "\"32\": \"GPIO32 - RTC,ADC1_4,TOUCH9,32K_XP,OD/ID\","
-      "\"33\": \"GPIO33 - RTC,ADC1_5,TOUCH8,32K_XN,OD/ID\","
-      "\"36\": \"GPIO36 - RTC,ADC1_0,S_VP,OD/ID\","
-      "\"37\": \"GPIO37 - BTN\","
-      "\"39\": \"GPIO39 - BTN\""
-    "}";
-#elif defined(ARDUINO_M5Stick_C_Plus)
-  const String response = "{"
-      "\"0\": \"GPIO0 - RTC,ADC2_1,TOUCH1,BOOT,OD/IE/WPU\","
-      "\"25\": \"GPIO25 - RTC,ADC1_8,DAC_1,OD/ID\","
+#if defined(ARDUINO_M5Stick_C_Plus)
+      "\"25\": \"GPIO25 - RTC,ADC1_8,DAC_1,OD/ID\","      
+#endif
       "\"26\": \"GPIO26 - RTC,ADC2_9,DAC_2,OD/ID\","
       "\"32\": \"GPIO32 - RTC,ADC1_4,TOUCH9,32K_XP,OD/ID\","
       "\"33\": \"GPIO33 - RTC,ADC1_5,TOUCH8,32K_XN,OD/ID\","
