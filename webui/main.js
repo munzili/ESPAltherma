@@ -4,6 +4,9 @@ var predefinedParameters = [];
 var models = [];
 
 window.addEventListener('load', async function () {
+
+    document.getElementById('submit').addEventListener('click', sendConfigData());
+    
     await fetch('/loadPins', {
         method: "GET"
     })
@@ -28,6 +31,32 @@ window.addEventListener('load', async function () {
         alert('Fetching pins data failed! Message: ' + err);
     }); 
 })
+
+async function sendConfigData(event)
+{
+    event.preventDefault();
+
+    const form = document.getElementById("configForm");
+    const formData = new FormData(form);
+
+    formData.append("definedParameters", JSON.stringify(definedParameters));
+    await fetch(form.getAttribute('action'), {
+        method: form.getAttribute('method'),
+        body: formData
+    })
+    .then(function(response) {         
+        if(response.status != 200)
+        {
+            alert("Error saving config: " + response.data);
+            return;
+        }
+
+        alert("Config successfully saved! ESP32 will restart now with new config");
+    })
+    .catch(function(err) {
+        alert('Saving config failed! Message: ' + err);
+    });    
+}
 
 function show(id)
 {

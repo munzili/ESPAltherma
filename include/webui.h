@@ -505,6 +505,10 @@ void onSave(AsyncWebServerRequest *request)
   }
 
   saveConfig();
+
+  request->send(200, "text/text", "OK");
+
+  esp_restart();
 }
 
 void WebUI_Init()

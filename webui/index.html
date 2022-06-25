@@ -16,7 +16,7 @@
   <main class="container">
     <header><h1>ESPAltherma Config</h1></header>    
     <article>
-      <form action="/save" method="post">
+      <form id="configForm" action="/save" method="post">
         <label for="ssid">WIFI SSID:</label>
         <input type="text" id="ssid" name="ssid" required/>
 
@@ -55,7 +55,7 @@
         <input type="text" id="mqtt_username" name="mqtt_username" required/>
 
         <label for="mqtt_password">MQTT Password:</label>
-        <input type="password" id="mqtt_password" name="mqtt_password" required/>
+        <input type="password" id="mqtt_password" name="mqtt_password"/>
 
         <label for="mqtt_jsontable" >          
           <input type="checkbox" id="mqtt_jsontable" name="mqtt_jsontable" role="switch"/>
@@ -93,8 +93,11 @@
 
         <label for="pin_therm">
           PIN THERM
-          <select id="pin_therm" name="pin_therm" data-pins required></select>
-        </label>
+          <select id="pin_therm" name="pin_therm" data-pins required>
+          </select>
+          
+                  
+        </label><a href="#" aria-busy="true">Generating link, please wait…</a>    
 
         <label for="sg_enabled" >          
           <input type="checkbox" id="sg_enabled" name="sg_enabled" role="switch" onclick="show('smartgrid');"/>
@@ -286,7 +289,7 @@
           </div>
         </article>
         
-        <p><input type="submit" value="SAVE" role="button" /></p>
+        <p><input type="submit" id="submit" value="SAVE" role="button" /></p>
       </form>
     </article>
   </main>
