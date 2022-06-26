@@ -3,16 +3,58 @@
 <head>
   <title>ESPAltherma Config</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="data:, ">
   <link rel="stylesheet" type="text/css" href="pico.min.css">
   <script src="main.js"></script>
   <style>
     .row-selected {
       background-color: rgb(233, 230, 230);
-    }  
+    }
+
+    .grid-wifi {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: 1fr;
+      grid-column-gap: 0px;
+      grid-row-gap: 0px;
+      margin-top: calc(var(--spacing) * .25);
+    }
+
+    .container-wifilist { 
+      grid-area: 1 / 1 / 2 / 2; 
+    }
+
+    .container-refreshBtn { 
+      grid-area: 1 / 2 / 2 / 3; 
+    }
+
+    .parametersSection {
+      border: 0.1em;
+      border-style: dashed; 
+      border-radius: 0.5em; 
+      padding: 0.3em;
+      margin-bottom: 0.5em;
+    }
+
+    .parametersSection figure {
+      max-height: 500px;
+    }
+
+    .parametersSection figure table {
+      white-space: nowrap;
+    }    
+
+    .customParameterSection {
+      text-align: center; 
+      margin-top: 20pt;
+    }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
-<body>
+<body>  
   <main class="container">
     <header><h1>ESPAltherma Config</h1></header>    
     <article>
@@ -23,14 +65,19 @@
             <input type="text" id="ssid" name="ssid"/>
           </div>
           
-          <div>
-            <label for="ssid_select" id="ssidSelectLabel">
-              Select a Wifi in range:
-              <select id="ssid_select" name="ssid_select">
-                <option value="" disabled selected>Select Wifi...</option>
-              </select>
-            </label>
-          </div>
+          <label for="ssid_select" id="ssidSelectLabel">
+            Select a Wifi in range            
+            <div class="grid-wifi"  >
+              <div class="container-wifilist">
+                  <select id="ssid_select" name="ssid_select">
+                    <option value="" disabled selected>Select Wifi...</option>
+                  </select>
+              </div>
+              <div class="container-refreshBtn">
+                <a href="#" role="button" id="btnWifiListRefresh">&#x21bb;</a>
+              </div>
+            </div>
+          </label>
         </div>
 
         <label for="ssid_password">WIFI Password:</label>
@@ -42,7 +89,7 @@
           WIFI use static IP
         </label>
 
-        <article id="staticip" style="display: none">
+        <article id="staticip" class="hidden">
           <div>
             <label for="ssid_ip">WIFI IP:</label>
             <input type="text" id="ssid_ip" name="ssid_ip"/>          
@@ -81,7 +128,7 @@
           MQTT one Topic
         </label>
 
-        <article id="onetopic" style="display: none;  ">
+        <article id="onetopic" class="hidden">
           <label for="mqtt_onetopic">MQTT one Topic:</label>
           <input type="text" id="mqtt_onetopic" name="mqtt_onetopic"/>
         </article>
@@ -124,7 +171,7 @@
           SmartGrid enabled
         </label>
 
-        <article id="smartgrid" style="display: none">
+        <article id="smartgrid" class="hidden">
           <div class="grid">
             <label for="pin_sg1">
               PIN SG1
@@ -176,12 +223,12 @@
           </div>
         </div>
 
-        <article id="containerCustomParameters" style="display: none">
+        <article id="containerCustomParameters" class="hidden">
           <div class="grid">
-            <div style="border: 0.1em; border-style: dashed; border-radius: 0.5em; padding: 0.3em; margin-bottom: 0.5em;">
+            <div class="parametersSection">
               <label for="parametersTable">Parameters:</label>
-              <figure style="max-height: 500px">
-                <table id="parametersTable" style="white-space: nowrap;">
+              <figure >
+                <table id="parametersTable">
                   <tr>
                     <td>Name</td>                  
                     <td>Offset</td>
@@ -197,10 +244,10 @@
               <input type="button" onclick="addSelectedPredefinedParameters()" value="Add to selected parameters">
               <input type="button" onclick="loadData('parametersTable')" value="Load model values">            
             </div>          
-            <div style="border: 0.1em; border-style: dashed; border-radius: 0.5em; padding: 0.3em; margin-bottom: 0.5em;">
+            <div class="parametersSection">
               <label for="selectedParametersTable">Selected Parameters:</label>            
-              <figure style="max-height: 500px">
-                <table id="selectedParametersTable" style="white-space: nowrap;">
+              <figure>
+                <table id="selectedParametersTable">
                   <tr>
                     <td>Name</td>                  
                     <td>Offset</td>
@@ -217,8 +264,7 @@
               <input type="button" onclick="loadData('selectedParametersTable')" value="Load parameter values">            
             </div>
           </div>
-          <div style="text-align: center; margin-top: 20pt">            
-            
+          <div class="customParameterSection">                        
             <details>
               <summary role="button">Add custom Parameter</summary>
               <p>

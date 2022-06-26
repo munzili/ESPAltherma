@@ -4,12 +4,10 @@ let definedPresets = [];
 let predefinedParameters = [];
 let models = [];
 
-let ssidSelectIsOpen = false;
 window.addEventListener('load', async function () {
 
     document.getElementById('submit').addEventListener('click', sendConfigData);
-    document.getElementById('ssid_select').addEventListener('click', loadWifiNetworks);
-    document.getElementById('ssid_select').addEventListener('blur', () => {ssidSelectIsOpen = false;});
+    document.getElementById('btnWifiListRefresh').addEventListener('click', loadWifiNetworks);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
     
     await fetch('/loadPins', {
@@ -17,14 +15,12 @@ window.addEventListener('load', async function () {
     })
     .then(function(response) { return response.json(); })
     .then(function(data) {
-        models = data;
-
-        let pinSelects = document.querySelectorAll('select[data-pins]');
+        const pinSelects = document.querySelectorAll('select[data-pins]');
         
-        for (let key in models) {
+        for (let key in data) {
             if (models.hasOwnProperty(key)) {
                 pinSelects.forEach((select) => {
-                    let option = document.createElement("option");
+                    const option = document.createElement("option");
                     option.text = models[key];
                     option.value = key;                
                     select.add(option);
@@ -36,7 +32,6 @@ window.addEventListener('load', async function () {
         alert('Fetching pins data failed! Message: ' + err);
     }); 
 })
-
 
 async function selectWifiNetwork(event)
 {    
@@ -52,16 +47,17 @@ async function selectWifiNetwork(event)
     }
 }
 
-async function loadWifiNetworks()
+async function loadWifiNetworks(event)
 {    
     const ssidSelect = document.getElementById('ssid_select');
-    const ssidSelectLabel = document.getElementById('ssidSelectLabel');
+    const btnWifiListRefresh = document.getElementById('btnWifiListRefresh');
 
-    if(ssidSelectLabel.getAttribute('aria-busy') == 'true' || ssidSelectIsOpen)
+    if(btnWifiListRefresh.getAttribute('aria-busy') == 'true')
         return;
-
-    ssidSelectLabel.setAttribute('aria-busy', 'true'); 
-    ssidSelectIsOpen = true;
+    
+    const btnValue = btnWifiListRefresh.text;
+    btnWifiListRefresh.text = '';
+    btnWifiListRefresh.setAttribute('aria-busy', 'true'); 
         
     while (ssidSelect.options.length > 1)
         ssidSelect.remove(1);
@@ -82,7 +78,8 @@ async function loadWifiNetworks()
         alert('Fetching wifi list failed! Message: ' + err);
     })       
 
-    ssidSelectLabel.setAttribute('aria-busy', 'false'); 
+    btnWifiListRefresh.setAttribute('aria-busy', 'false'); 
+    btnWifiListRefresh.text = btnValue;
 }
 
 async function sendConfigData(event)
@@ -226,19 +223,14 @@ function ValidateMQTTTopic(topicName)
 
 function show(id)
 {
-    let el = document.getElementById(id).style;
-
-    if(el.display == 'none')
-        el.display = 'block';
-    else
-        el.display = 'none';
+    document.getElementById(id).classList.toggle('hidden');
 }
 
 async function updatePresets()
 {
-    let modelFile = document.getElementById('language').value;
+    const modelFile = document.getElementById('language').value;
 
-    let formData = new FormData();           
+    const formData = new FormData();           
     formData.append("modelFile", modelFile);
     await fetch('/loadModel', {
         method: "POST",
@@ -249,26 +241,26 @@ async function updatePresets()
         definedPresets = data['Presets'];
         predefinedParameters = data['Parameters'];
         
-        let presetParametersSelect = document.getElementById('presetParameters');
+        const presetParametersSelect = document.getElementById('presetParameters');
         
         while (presetParametersSelect.options.length > 1)
             presetParametersSelect.remove(1);
 
         for (let key in definedPresets) {
             if (definedPresets.hasOwnProperty(key)) {
-                let option = document.createElement("option");
+                const option = document.createElement("option");
                 option.text = key;
                 option.value = JSON.stringify(definedPresets[key]);
                 presetParametersSelect.add(option);
             }
         }
 
-        let optionAll = document.createElement("option");
+        const optionAll = document.createElement("option");
         optionAll.text = "All";
         optionAll.value = "all";
         presetParametersSelect.add(optionAll);
 
-        let optionCustom = document.createElement("option");
+        const optionCustom = document.createElement("option");
         optionCustom.text = "Custom (advanced user)";
         optionCustom.value = "custom";
         presetParametersSelect.add(optionCustom);
@@ -308,7 +300,7 @@ async function uploadFile() {
     if(!file)
         return;
 
-    let formData = new FormData();           
+    const formData = new FormData();           
     formData.append("file", parametersFile.files[0]);
     await fetch('/upload', {
         method: "POST", 
@@ -347,7 +339,7 @@ function AddParameter(offset, regid, convid, dataSize, dataType, dataName)
         }
     }
 
-    let dataArray = [offset, regid, convid, dataSize, dataType, dataName];
+    const dataArray = [offset, regid, convid, dataSize, dataType, dataName];
 
     definedParameters.push(dataArray);
     return true;
@@ -355,12 +347,12 @@ function AddParameter(offset, regid, convid, dataSize, dataType, dataName)
 
 function addCustomParameter()
 {    
-    let offset = document.getElementById('offset');
-    let regid = document.getElementById('regid');
-    let convid = document.getElementById('convid');
-    let dataSize = document.getElementById('dataSize');
-    let dataType = document.getElementById('dataType');
-    let dataName = document.getElementById('dataName');
+    const offset = document.getElementById('offset');
+    const regid = document.getElementById('regid');
+    const convid = document.getElementById('convid');
+    const dataSize = document.getElementById('dataSize');
+    const dataType = document.getElementById('dataType');
+    const dataName = document.getElementById('dataName');
 
     if( offset.value == '' || isNaN(offset.value) ||
         regid.value == '' || isNaN(regid.value) ||
@@ -373,7 +365,7 @@ function addCustomParameter()
         return false;
     }
 
-    let result = AddParameter(offset.value, regid.value, convid.value, dataSize.value, dataType.value, dataName.value.trim());
+    const result = AddParameter(offset.value, regid.value, convid.value, dataSize.value, dataType.value, dataName.value.trim());
 
     if(!result)
         return;
@@ -390,26 +382,26 @@ function addCustomParameter()
 
 function updateParametersTable(tableId, parameters)
 {
-    let selectedParametersTable = document.getElementById(tableId);
+    const selectedParametersTable = document.getElementById(tableId);
 
     while (selectedParametersTable.rows.length > 1) {                
         selectedParametersTable.deleteRow(1);
     }
 
     for (let i in parameters) {
-        let data = parameters[i];
+        const data = parameters[i];
 
-        let row = selectedParametersTable.insertRow(-1);
+        const row = selectedParametersTable.insertRow(-1);
         row.setAttribute('data-row-index', i);
         row.addEventListener("click", function(event) {selectRow(tableId, i)});
         
-        let nameCell = row.insertCell(0);
+        const nameCell = row.insertCell(0);
        
-        let offsetCell = row.insertCell(1);
-        let regidCell = row.insertCell(2);
-        let convidCell = row.insertCell(3);
-        let dataSizeCell = row.insertCell(4);
-        let dataTypeCell = row.insertCell(5);        
+        const offsetCell = row.insertCell(1);
+        const regidCell = row.insertCell(2);
+        const convidCell = row.insertCell(3);
+        const dataSizeCell = row.insertCell(4);
+        const dataTypeCell = row.insertCell(5);        
 
         nameCell.appendChild(document.createTextNode(data[5]));
         offsetCell.appendChild(document.createTextNode(data[0]));
@@ -420,7 +412,7 @@ function updateParametersTable(tableId, parameters)
         
         if(data[6] != undefined)
         {
-            let valueCell = row.insertCell(6);
+            const valueCell = row.insertCell(6);
             valueCell.appendChild(document.createTextNode(data[6]));
         }
     }
@@ -429,11 +421,11 @@ function updateParametersTable(tableId, parameters)
 
 function selectRow(tableid, value)
 {
-    let el = document
+    const el = document
     .getElementById(tableid)
     .querySelector("[data-row-index='" + value + "']");
 
-    let classes = el.classList;
+    const classes = el.classList;
 
     if(classes.contains('row-selected'))
         classes.remove('row-selected');
@@ -447,8 +439,8 @@ function addSelectedPredefinedParameters()
     .getElementById('parametersTable')
     .querySelectorAll(".row-selected")
     .forEach(function(e) {
-        let id = parseInt(e.getAttribute('data-row-index'));
-        let paramToAdd = predefinedParameters[id];
+        const id = parseInt(e.getAttribute('data-row-index'));
+        const paramToAdd = predefinedParameters[id];
 
         AddParameter(paramToAdd[0], paramToAdd[1], paramToAdd[2], paramToAdd[3], paramToAdd[4], paramToAdd[5]);
         e.classList.remove('row-selected');
@@ -488,8 +480,8 @@ async function loadData(tableId)
     else
         params = predefinedParameters;
 
-    let pinRx =  document.getElementById('pin_rx').value;
-    let pinTx =  document.getElementById('pin_tx').value;
+    const pinRx =  document.getElementById('pin_rx').value;
+    const pinTx =  document.getElementById('pin_tx').value;
 
     if( pinRx == '' || isNaN(pinRx) ||
         pinTx == '' || isNaN(pinTx))
@@ -498,7 +490,7 @@ async function loadData(tableId)
         return;   
     }
         
-    let formData = new FormData();           
+    const formData = new FormData();           
     formData.append("PIN_RX", pinRx);
     formData.append("PIN_TX", pinTx);
     formData.append('PARAMS', JSON.stringify(params));
@@ -508,8 +500,6 @@ async function loadData(tableId)
     })  
     .then(function(response) { return response.json(); })
     .then(function(data){
-        let table = document.getElementById(tableid);
-
         params.forEach((model, index) => {
             model[6] = data[index];
         });
@@ -540,14 +530,12 @@ async function refreshModels()
     })
     .then(function(response) { return response.json(); })
     .then(function(data){
-        models = data;
-
-        let modelSelect = document.getElementById('model');
+        const modelSelect = document.getElementById('model');
         
         while (modelSelect.options.length > 1)
             modelSelect.remove(1);
 
-        models.forEach(function(model, i) {
+        data.forEach(function(model, i) {
             let option = document.createElement("option");
             option.text = model.Model;
             option.value = i;
@@ -561,8 +549,8 @@ async function refreshModels()
 
 function refreshLanguages()
 {
-    let languageSelect = document.getElementById('language');
-    let selectedModel = document.getElementById('model').value;
+    const languageSelect = document.getElementById('language');
+    const selectedModel = document.getElementById('model').value;
             
     while (languageSelect.options.length > 1)
         languageSelect.remove(1);
@@ -570,12 +558,11 @@ function refreshLanguages()
     if(selectedModel == '')
         return;
 
-    let languageFiles = models[selectedModel]["Files"];
-
+    const languageFiles = models[selectedModel]["Files"];
     const languageNames = Object.keys(languageFiles);
 
     languageNames.forEach((language, index) => {
-        let option = document.createElement("option");
+        const option = document.createElement("option");
         option.text = language;
         option.value = languageFiles[language];
         languageSelect.add(option);
