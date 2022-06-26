@@ -1,11 +1,16 @@
-var definedParameters = [];
-var definedPresets = [];
-var predefinedParameters = [];
-var models = [];
+"use strict";
+let definedParameters = [];
+let definedPresets = [];
+let predefinedParameters = [];
+let models = [];
 
+let ssidSelectIsOpen = false;
 window.addEventListener('load', async function () {
 
-    document.getElementById('submit').addEventListener('click', sendConfigData());
+    document.getElementById('submit').addEventListener('click', sendConfigData);
+    document.getElementById('ssid_select').addEventListener('click', loadWifiNetworks);
+    document.getElementById('ssid_select').addEventListener('blur', () => {ssidSelectIsOpen = false;});
+    document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
     
     await fetch('/loadPins', {
         method: "GET"
@@ -16,7 +21,7 @@ window.addEventListener('load', async function () {
 
         let pinSelects = document.querySelectorAll('select[data-pins]');
         
-        for (var key in models) {
+        for (let key in models) {
             if (models.hasOwnProperty(key)) {
                 pinSelects.forEach((select) => {
                     let option = document.createElement("option");
@@ -32,12 +37,144 @@ window.addEventListener('load', async function () {
     }); 
 })
 
+
+async function selectWifiNetwork(event)
+{    
+    event.preventDefault();
+    
+    const ssid = document.getElementById('ssid');
+    const ssidSelect = document.getElementById('ssid_select');
+
+    if(ssidSelect.value != '')
+    {
+        ssid.value = ssidSelect.value;
+        ssidSelect.value = '';
+    }
+}
+
+async function loadWifiNetworks()
+{    
+    const ssidSelect = document.getElementById('ssid_select');
+    const ssidSelectLabel = document.getElementById('ssidSelectLabel');
+
+    if(ssidSelectLabel.getAttribute('aria-busy') == 'true' || ssidSelectIsOpen)
+        return;
+
+    ssidSelectLabel.setAttribute('aria-busy', 'true'); 
+    ssidSelectIsOpen = true;
+        
+    while (ssidSelect.options.length > 1)
+        ssidSelect.remove(1);
+
+    await fetch('/loadWifiNetworks', {
+        method: "GET"
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        for (let key in data) {
+            let option = document.createElement("option");
+            option.text = data[key]["SSID"] + " (Quality:" + data[key]["RSSI"] + ") " + data[key]["EncryptionType"];
+            option.value = data[key]["SSID"];                
+            ssidSelect.add(option);
+        };
+    })
+    .catch(function(err) {
+        alert('Fetching wifi list failed! Message: ' + err);
+    })       
+
+    ssidSelectLabel.setAttribute('aria-busy', 'false'); 
+}
+
 async function sendConfigData(event)
 {
     event.preventDefault();
 
     const form = document.getElementById("configForm");
     const formData = new FormData(form);
+
+    const ssid = document.getElementById('ssid');
+    ssid.setAttribute('aria-invalid', ssid.value == '');
+
+    const ssid_staticip = document.getElementById('ssid_staticip');
+    if(ssid_staticip.checked)
+    {        
+        const ssid_ip = document.getElementById('ssid_ip');
+        ssid_ip.setAttribute('aria-invalid',  ssid_ip.value == '' || !ValidateIPaddress(ssid_ip.value));
+
+        const ssid_subnet = document.getElementById('ssid_subnet');
+        ssid_subnet.setAttribute('aria-invalid',  ssid_subnet.value == '' || !ValidateIPaddress(ssid_subnet.value));
+
+        const ssid_gateway = document.getElementById('ssid_gateway');
+        ssid_gateway.setAttribute('aria-invalid',  ssid_gateway.value == '' || !ValidateIPaddress(ssid_gateway.value));
+
+        const primary_dns = document.getElementById('primary_dns');
+        primary_dns.setAttribute('aria-invalid',  primary_dns.value != '' && !ValidateIPaddress(primary_dns.value));
+
+        const secondary_dns = document.getElementById('secondary_dns');
+        secondary_dns.setAttribute('aria-invalid',  secondary_dns.value != '' && !ValidateIPaddress(secondary_dns.value));
+    }
+    else
+    {
+        clearHiddenValidationResult('staticip');
+    }
+
+    const mqtt_server = document.getElementById('mqtt_server');
+    mqtt_server.setAttribute('aria-invalid', mqtt_server.value == '' || !ValidateIPOrHostname(mqtt_server.value));
+
+    const mqtt_username = document.getElementById('mqtt_username');
+    mqtt_username.setAttribute('aria-invalid', mqtt_username.value == '');
+
+    const mqtt_use_onetopic = document.getElementById('mqtt_use_onetopic');
+    if(mqtt_use_onetopic.checked)
+    { 
+        const mqtt_onetopic = document.getElementById('mqtt_onetopic');
+        mqtt_onetopic.setAttribute('aria-invalid', mqtt_onetopic.value == '' || !ValidateMQTTTopic(mqtt_onetopic.value));
+    }
+    else
+    {
+        clearHiddenValidationResult("onetopic");
+    }
+    
+    const mqtt_port = document.getElementById('mqtt_port');
+    mqtt_port.setAttribute('aria-invalid', mqtt_port.value == '' || mqtt_port.value < 0 || mqtt_port.value > 65535);
+
+    const frequency = document.getElementById('frequency');
+    frequency.setAttribute('aria-invalid', frequency.value == '');
+
+    const pin_rx = document.getElementById('pin_rx');
+    pin_rx.setAttribute('aria-invalid', pin_rx.value == '');
+
+    const pin_tx = document.getElementById('pin_tx');
+    pin_tx.setAttribute('aria-invalid', pin_tx.value == '');
+
+    const pin_therm = document.getElementById('pin_therm');
+    pin_therm.setAttribute('aria-invalid', pin_therm.value == '');
+    
+    const sg_enabled = document.getElementById('sg_enabled');
+    if(sg_enabled.checked)
+    { 
+        const pin_sg1 = document.getElementById('pin_sg1');
+        pin_sg1.setAttribute('aria-invalid', pin_sg1.value == '');
+
+        const pin_sg2 = document.getElementById('pin_sg2');
+        pin_sg2.setAttribute('aria-invalid', pin_sg2.value == '');
+    }
+    else
+    {
+        clearHiddenValidationResult("smartgrid");
+    }
+    
+    const pin_enable_config = document.getElementById('pin_enable_config');
+    pin_enable_config.setAttribute('aria-invalid', pin_enable_config.value == '');
+    
+    const validationErrorField = document.querySelector('[aria-invalid="true"]');
+    if(validationErrorField)
+    {
+        validationErrorField.focus();
+        await sleep(100);
+        alert("Please fill in all required fields!");
+        return;
+    }
 
     formData.append("definedParameters", JSON.stringify(definedParameters));
     await fetch(form.getAttribute('action'), {
@@ -58,9 +195,38 @@ async function sendConfigData(event)
     });    
 }
 
+function clearHiddenValidationResult(elementName)
+{
+    document.getElementById(elementName).querySelectorAll("[aria-invalid]").forEach((el) => el.removeAttribute('aria-invalid'));
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function ValidateIPaddress(ipaddress) 
+{
+    return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress);  
+}
+
+function ValidateHostname(hostname) 
+{
+    return /^[a-zA-Z][a-zA-Z\d-]{1,22}[a-zA-Z\d]$/.test(hostname);  
+}
+
+function ValidateIPOrHostname(input)
+{
+    return !(!ValidateIPaddress(input) && !ValidateHostname(input))
+}
+
+function ValidateMQTTTopic(topicName)
+{
+    return /^(?:(?:[a-z0-9_-]+)\/)*([a-z0-9_-]+)$/.test(topicName);  
+}
+
 function show(id)
 {
-    var el = document.getElementById(id).style;
+    let el = document.getElementById(id).style;
 
     if(el.display == 'none')
         el.display = 'block';
@@ -70,7 +236,7 @@ function show(id)
 
 async function updatePresets()
 {
-    var modelFile = document.getElementById('language').value;
+    let modelFile = document.getElementById('language').value;
 
     let formData = new FormData();           
     formData.append("modelFile", modelFile);
@@ -88,7 +254,7 @@ async function updatePresets()
         while (presetParametersSelect.options.length > 1)
             presetParametersSelect.remove(1);
 
-        for (var key in definedPresets) {
+        for (let key in definedPresets) {
             if (definedPresets.hasOwnProperty(key)) {
                 let option = document.createElement("option");
                 option.text = key;
@@ -133,8 +299,12 @@ async function updateParameters()
 }
 
 async function uploadFile() {
-    let file = parametersFile.files[0];
 
+    const parametersFile = document.getElementById('parametersFile');
+    const file = parametersFile.files[0];
+
+    parametersFile.setAttribute('aria-invalid', !file);
+    
     if(!file)
         return;
 
@@ -177,7 +347,7 @@ function AddParameter(offset, regid, convid, dataSize, dataType, dataName)
         }
     }
 
-    var dataArray = [offset, regid, convid, dataSize, dataType, dataName];
+    let dataArray = [offset, regid, convid, dataSize, dataType, dataName];
 
     definedParameters.push(dataArray);
     return true;
@@ -312,10 +482,11 @@ function removeSelectedParameters()
 
 async function loadData(tableId)
 {
+    let params;
     if (tableId == 'selectedParametersTable')
-        var params = definedParameters;
+        params = definedParameters;
     else
-        var params = predefinedParameters;
+        params = predefinedParameters;
 
     let pinRx =  document.getElementById('pin_rx').value;
     let pinTx =  document.getElementById('pin_tx').value;
@@ -395,6 +566,9 @@ function refreshLanguages()
             
     while (languageSelect.options.length > 1)
         languageSelect.remove(1);
+
+    if(selectedModel == '')
+        return;
 
     let languageFiles = models[selectedModel]["Files"];
 

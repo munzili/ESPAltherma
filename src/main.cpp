@@ -7,7 +7,6 @@
 #endif
 
 #include <HardwareSerial.h>
-#include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 
@@ -18,6 +17,7 @@
 #include "comm.h"
 #include "mqtt.h"
 #include "webui.h"
+#include "wireless.h"
 
 size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
@@ -56,6 +56,7 @@ void updateValues(LabelDef *labelDef)
   if(config->MQTT_USE_ONETOPIC)
   {
     char *topicBuff = config->MQTT_ONETOPIC_NAME;
+    strcat(topicBuff, "/");
     strcat(topicBuff, labelDef->label);
     client.publish(config->MQTT_ONETOPIC_NAME, labelDef->asString);
   }
@@ -90,53 +91,6 @@ void extraLoop()
   }
   M5.update();
 #endif
-}
-
-void setup_wifi()
-{
-  delay(10);
-  // We start by connecting to a WiFi network
-  mqttSerial.printf("Connecting to %s\n", config->SSID);
-
-  if(config->SSID_STATIC_IP)
-  {
-    IPAddress local_IP;
-    IPAddress subnet;
-    IPAddress gateway;
-    IPAddress primaryDNS;
-    IPAddress secondaryDNS;
-
-    local_IP.fromString(config->SSID_IP);
-    subnet.fromString(config->SSID_SUBNET);
-    gateway.fromString(config->SSID_GATEWAY);
-
-    if(config->SSID_PRIMARY_DNS != "")
-    {
-      primaryDNS.fromString(config->SSID_PRIMARY_DNS);
-    }
-
-    if(config->SSID_SECONDARY_DNS != "")
-    {
-      secondaryDNS.fromString(config->SSID_SECONDARY_DNS);
-    }
-
-    if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-        mqttSerial.println("Failed to set static ip!");
-    }
-  }
-
-  WiFi.begin(config->SSID, config->SSID_PASSWORD);
-  int i = 0;
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-    if (i++ == 100)
-    {
-      esp_restart();
-    }
-  }
-  mqttSerial.printf("Connected. IP Address: %s\n", WiFi.localIP().toString().c_str());
 }
 
 void initRegistries()
@@ -212,12 +166,7 @@ void setup()
 
   if(config->startStandaloneWifi || !config->configStored)
   {
-    IPAddress local_ip(192, 168, 1, 1); 
-    IPAddress gateway(192, 168, 1, 1); 
-    IPAddress subnet(255, 255, 255, 0);
-    WiFi.softAP("ESPAltherma-Config-WiFi");   
-    WiFi.softAPConfig(local_ip, gateway, subnet);
-    WiFi.setHostname("ESPAltherma");    
+    start_standalone_wifi();
   }
   
   WebUI_Init();

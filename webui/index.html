@@ -9,7 +9,7 @@
   <style>
     .row-selected {
       background-color: rgb(233, 230, 230);
-    }
+    }  
   </style>
 </head>
 <body>
@@ -17,8 +17,21 @@
     <header><h1>ESPAltherma Config</h1></header>    
     <article>
       <form id="configForm" action="/save" method="post">
-        <label for="ssid">WIFI SSID:</label>
-        <input type="text" id="ssid" name="ssid" required/>
+        <div class="grid">
+          <div>
+            <label for="ssid">WIFI SSID:</label>
+            <input type="text" id="ssid" name="ssid"/>
+          </div>
+          
+          <div>
+            <label for="ssid_select" id="ssidSelectLabel">
+              Select a Wifi in range:
+              <select id="ssid_select" name="ssid_select">
+                <option value="" disabled selected>Select Wifi...</option>
+              </select>
+            </label>
+          </div>
+        </div>
 
         <label for="ssid_password">WIFI Password:</label>
         <input type="password" id="ssid_password" name="ssid_password"/>
@@ -30,8 +43,9 @@
         </label>
 
         <article id="staticip" style="display: none">
+          <div>
             <label for="ssid_ip">WIFI IP:</label>
-            <input type="text" id="ssid_ip" name="ssid_ip"/>
+            <input type="text" id="ssid_ip" name="ssid_ip"/>          
 
             <label for="ssid_subnet">WIFI Subnet:</label>
             <input type="text" id="ssid_subnet" name="ssid_subnet"/>
@@ -49,10 +63,10 @@
         </article>
 
         <label for="mqtt_server">MQTT Server:</label>
-        <input type="text" id="mqtt_server" name="mqtt_server" required/>
+        <input type="text" id="mqtt_server" name="mqtt_server"/>
 
         <label for="mqtt_username">MQTT Username:</label>
-        <input type="text" id="mqtt_username" name="mqtt_username" required/>
+        <input type="text" id="mqtt_username" name="mqtt_username"/>
 
         <label for="mqtt_password">MQTT Password:</label>
         <input type="password" id="mqtt_password" name="mqtt_password"/>
@@ -73,31 +87,37 @@
         </article>
         
         <label for="mqtt_port">MQTT Port:</label>
-        <input type="number" id="mqtt_port" name="mqtt_port" required/>
+        <input type="number" id="mqtt_port" name="mqtt_port" min="0" max="65535"/>
 
-        <label for="frequency">Frequency:</label>
-        <input type="number" id="frequency" name="frequency" required/>
+        <label for="frequency">
+          Frequency:
+          <select id="frequency" name="frequency">
+            <option value="10000">10 sec</option>
+            <option value="15000">15 sec</option>
+            <option value="13000">30 sec</option>
+            <option value="60000">1 min</option>
+            <option value="300000">5 min</option>
+            <option value="600000">10 min</option>
+          </select>
+        </label>
 
         <div class="grid">
-          <!-- Markup example 1: input is inside label -->
           <label for="pin_rx">
             PIN RX
-            <select id="pin_rx" name="pin_rx" data-pins required></select>
+            <select id="pin_rx" name="pin_rx" data-pins></select>
           </label>
 
           <label for="pin_tx">
             PIN TX
-            <select id="pin_tx" name="pin_tx" data-pins required></select>
+            <select id="pin_tx" name="pin_tx" data-pins></select>
           </label>
         </div>
 
         <label for="pin_therm">
           PIN THERM
-          <select id="pin_therm" name="pin_therm" data-pins required>
-          </select>
-          
-                  
-        </label><a href="#" aria-busy="true">Generating link, please wait…</a>    
+          <select id="pin_therm" name="pin_therm" data-pins>
+          </select>                            
+        </label>
 
         <label for="sg_enabled" >          
           <input type="checkbox" id="sg_enabled" name="sg_enabled" role="switch" onclick="show('smartgrid');"/>
@@ -126,7 +146,7 @@
 
         <label for="pin_enable_config">
           PIN CONFIG PAGE:
-          <select id="pin_enable_config" name="pin_enable_config" data-pins required></select>
+          <select id="pin_enable_config" name="pin_enable_config" data-pins></select>
           <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the configuration mode (current mode).</small>
         </label>
 
