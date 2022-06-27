@@ -131,6 +131,7 @@
         <article id="onetopic" class="hidden">
           <label for="mqtt_onetopic">MQTT one Topic:</label>
           <input type="text" id="mqtt_onetopic" name="mqtt_onetopic"/>
+          <small>Needs to end with a slash</small>
         </article>
         
         <label for="mqtt_port">MQTT Port:</label>
@@ -141,7 +142,7 @@
           <select id="frequency" name="frequency">
             <option value="10000">10 sec</option>
             <option value="15000">15 sec</option>
-            <option value="13000">30 sec</option>
+            <option value="30000">30 sec</option>
             <option value="60000">1 min</option>
             <option value="300000">5 min</option>
             <option value="600000">10 min</option>
@@ -194,13 +195,13 @@
         <label for="pin_enable_config">
           PIN CONFIG PAGE:
           <select id="pin_enable_config" name="pin_enable_config" data-pins></select>
-          <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the configuration mode (current mode).</small>
+          <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the standalone wifi mode.</small>
         </label>
 
         <div class="grid">
           <div>
             <label for="model">Model:</label>
-            <select id="model" name="model" onclick="refreshModels()" onchange="refreshLanguages()">
+            <select id="model" name="model" onchange="refreshLanguages()">
               <option value="" selected>Select a model...</option>
             </select>
 

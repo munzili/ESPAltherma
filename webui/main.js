@@ -4,34 +4,57 @@ let definedPresets = [];
 let predefinedParameters = [];
 let models = [];
 
+let boardDefaults = {};
 window.addEventListener('load', async function () {
 
     document.getElementById('submit').addEventListener('click', sendConfigData);
     document.getElementById('btnWifiListRefresh').addEventListener('click', loadWifiNetworks);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
     
-    await fetch('/loadPins', {
+    await fetch('/loadBoardInfo', {
         method: "GET"
     })
     .then(function(response) { return response.json(); })
     .then(function(data) {
         const pinSelects = document.querySelectorAll('select[data-pins]');
+
+        const pins = data["Pins"];
         
-        for (let key in data) {
-            if (models.hasOwnProperty(key)) {
+        for (let key in pins) {
+            if (pins.hasOwnProperty(key)) {
                 pinSelects.forEach((select) => {
                     const option = document.createElement("option");
-                    option.text = models[key];
+                    option.text = pins[key];
                     option.value = key;                
                     select.add(option);
                 });            
             }
         };
+
+        boardDefaults = data['Default'];
+        resetToDefaults();
     })
     .catch(function(err) {
         alert('Fetching pins data failed! Message: ' + err);
     }); 
+
+    await refreshModels();
 })
+
+async function resetToDefaults()
+{
+    if(!Object.keys(boardDefaults).length)
+        return;
+
+    document.getElementById('pin_rx').value = boardDefaults['pin_rx']; 
+    document.getElementById('pin_tx').value = boardDefaults['pin_tx']; 
+    document.getElementById('pin_therm').value = boardDefaults['pin_therm']; 
+    document.getElementById('pin_sg1').value = boardDefaults['pin_sg1']; 
+    document.getElementById('pin_sg2').value = boardDefaults['pin_sg2']; 
+    document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config']; 
+    document.getElementById('frequency').value = boardDefaults['frequency']; 
+    document.getElementById('mqtt_onetopic').value = boardDefaults['mqtt_onetopic']; 
+}
 
 async function selectWifiNetwork(event)
 {    
@@ -218,7 +241,7 @@ function ValidateIPOrHostname(input)
 
 function ValidateMQTTTopic(topicName)
 {
-    return /^(?:(?:[a-z0-9_-]+)\/)*([a-z0-9_-]+)$/.test(topicName);  
+    return /^(?:(?:[a-zA-Z0-9_-]+)\/)*([a-zA-Z0-9_-]+\/)$/.test(topicName);  
 }
 
 function show(id)
@@ -229,6 +252,23 @@ function show(id)
 async function updatePresets()
 {
     const modelFile = document.getElementById('language').value;
+
+    if(modelFile == '')
+    {                
+        definedPresets = [];
+        predefinedParameters = [];
+        
+        const presetParametersSelect = document.getElementById('presetParameters');        
+
+        presetParametersSelect.value = '';
+        
+        while (presetParametersSelect.options.length > 1)
+            presetParametersSelect.remove(1);
+
+        updateParametersTable('parametersTable', predefinedParameters);
+        updateParameters();
+        return;
+    }
 
     const formData = new FormData();           
     formData.append("modelFile", modelFile);
@@ -280,7 +320,7 @@ async function updateParameters()
 
     definedParameters = [];
 
-    if(selectedPreset == '')
+    if(selectedPreset == '' || selectedPreset == 'custom')
         return;
 
     selectedPreset = selectedPreset == 'all' ? [...Array(predefinedParameters.length).keys()] : JSON.parse(selectedPreset);
@@ -307,7 +347,8 @@ async function uploadFile() {
         body: formData
     })  
     .then(function(response) {
-        if (response.status !== 200) {
+        if (response.status == 200) {
+            parametersFile.removeAttribute('aria-invalid');
             parametersFile.value = null;
             models = [];
             refreshModels();
@@ -522,14 +563,13 @@ async function loadData(tableId)
 
 async function refreshModels()
 {
-    if(models.length > 0)
-        return;
-
     await fetch('/loadModels', {
         method: "GET"
     })
     .then(function(response) { return response.json(); })
     .then(function(data){
+        models = data;
+
         const modelSelect = document.getElementById('model');
         
         while (modelSelect.options.length > 1)
@@ -556,7 +596,10 @@ function refreshLanguages()
         languageSelect.remove(1);
 
     if(selectedModel == '')
+    {
+        updatePresets();
         return;
+    }
 
     const languageFiles = models[selectedModel]["Files"];
     const languageNames = Object.keys(languageFiles);
