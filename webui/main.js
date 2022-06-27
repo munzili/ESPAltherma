@@ -68,8 +68,52 @@ async function loadConfig()
         // if no config exists yet
         if(Object.keys(data).length == 0)
             return;
+            
+        document.getElementById('ssid').value = data['SSID'];
+        document.getElementById('ssid_password').value = data['SSID_PASSWORD'];
+        document.getElementById('ssid_staticip').checked = data['SSID_STATIC_IP'];
 
-        // todo apply config data to values
+        if(data['SSID_STATIC_IP'])
+        {        
+            document.getElementById('ssid_ip').value = data['SSID_IP'];
+            document.getElementById('ssid_subnet').value = data['SSID_SUBNET'];
+            document.getElementById('ssid_gateway').value = data['SSID_GATEWAY'];
+            document.getElementById('primary_dns').value = data['SSID_PRIMARY_DNS'];
+            document.getElementById('secondary_dns').value = data['SSID_SECONDARY_DNS'];
+        }
+
+        document.getElementById('mqtt_server').value = data['MQTT_SERVER'];
+        document.getElementById('mqtt_username').value = data['MQTT_USERNAME'];
+        document.getElementById('mqtt_password').value = data['MQTT_PASSWORD'];
+        document.getElementById('mqtt_use_onetopic').checked = data['MQTT_USE_JSONTABLE'];
+        document.getElementById('mqtt_jsontable').checked = data['MQTT_USE_ONETOPIC'];
+
+        if(data['MQTT_USE_ONETOPIC'])
+        { 
+            document.getElementById('mqtt_onetopic').value = data['MQTT_ONETOPIC_NAME'];
+        }
+
+        document.getElementById('mqtt_port').value = data['MQTT_PORT'];
+        document.getElementById('frequency').value = data['FREQUENCY'];
+        document.getElementById('pin_rx').value = data['PIN_RX'];
+        document.getElementById('pin_tx').value = data['PIN_TX'];
+        document.getElementById('pin_therm').value = data['PIN_THERM'];
+        document.getElementById('sg_enabled').checked = data['SG_ENABLED'];
+        
+        if(data['SG_ENABLED'])
+        { 
+            document.getElementById('pin_sg1').value = data['PIN_SG1'];
+            document.getElementById('pin_sg2').value = data['PIN_SG2'];
+            document.getElementById('sg_relay_trigger').checked = data['SG_RELAY_HIGH_TRIGGER'];
+        }
+        
+        document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];   
+        
+        definedParameters = data['PARAMETERS'];
+        addCustomOptionToPresetsList();
+        updateParametersTable('selectedParametersTable', definedParameters);
+        document.getElementById('presetParameters').value = 'custom';
+        updateParameters();
     })
     .catch(function(err) {
         alert('Fetching config failed! Message: ' + err);
@@ -320,11 +364,7 @@ async function updatePresets()
         optionAll.value = "all";
         presetParametersSelect.add(optionAll);
 
-        const optionCustom = document.createElement("option");
-        optionCustom.text = "Custom (advanced user)";
-        optionCustom.value = "custom";
-        presetParametersSelect.add(optionCustom);
-
+        addCustomOptionToPresetsList();
         updateParametersTable('parametersTable', predefinedParameters);
     })
     .catch(function(err) {
@@ -332,11 +372,21 @@ async function updatePresets()
     });    
 }
 
+function addCustomOptionToPresetsList()
+{    
+    const presetParametersSelect = document.getElementById('presetParameters');
+
+    const optionCustom = document.createElement("option");
+    optionCustom.text = "Custom (advanced user)";
+    optionCustom.value = "custom";
+    presetParametersSelect.add(optionCustom);
+}
+
 async function updateParameters()
 {
     let selectedPreset = document.getElementById('presetParameters').value;
 
-    document.getElementById('containerCustomParameters').style.display = selectedPreset == 'custom' ? 'block' : 'none';
+    document.getElementById('containerCustomParameters').classList.toggle('hidden');
 
     definedParameters = [];
 

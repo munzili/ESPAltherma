@@ -80,7 +80,6 @@ void extraLoop()
   { //Stop processing during OTA
     ArduinoOTA.handle();
   }
-
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   if (M5.BtnA.wasPressed()){//Turn back ON screen
     M5.Axp.ScreenBreath(12);
@@ -231,11 +230,11 @@ void setup()
 }
 
 void waitLoop(uint ms){
-      unsigned long start = millis();
-      while (millis() < start + ms) //wait .5sec between registries
-      {
-        extraLoop();
-      }
+  unsigned long start = millis();
+  while (millis() < start + ms) //wait .5sec between registries
+  {
+    extraLoop();
+  }
 }
 
 void loop()
