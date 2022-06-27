@@ -11,6 +11,7 @@ HardwareSerial SerialX10A(1);
 struct RegistryBuffer {
   char RegistryID;
   char Buffer[MAX_BUFFER_SIZE];
+  bool Success;
   char CRC;
 };
 
@@ -29,6 +30,7 @@ bool queryRegistry(RegistryBuffer *registryBuffer)
   // clear buffer first
   memset(registryBuffer->Buffer, 0, sizeof(registryBuffer->Buffer));
   registryBuffer->CRC = 0;
+  registryBuffer->Success = false;
 
   //preparing command:
   char prep[] = {0x03, 0x40, registryBuffer->RegistryID, 0x00};
@@ -81,6 +83,7 @@ bool queryRegistry(RegistryBuffer *registryBuffer)
   else
   {
     Serial.println(".. CRC OK!");
+    registryBuffer->Success = true;
     return true;
   }
 }

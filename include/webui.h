@@ -88,7 +88,8 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"pin_sg2\": 33,"
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
-        "\"mqtt_onetopic\": \"espaltherma/OneATTR/\""
+        "\"mqtt_onetopic\": \"espaltherma/OneATTR/\","
+        "\"mqtt_port\": 1883"
       "}"
     "}";
 #elif defined(ESP32)
@@ -136,7 +137,8 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"pin_sg2\": 33,"
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
-        "\"mqtt_onetopic\": \"espaltherma/OneATTR/\""
+        "\"mqtt_onetopic\": \"espaltherma/OneATTR/\","
+        "\"mqtt_port\": 1883"        
       "}"
     "}";
 #else
@@ -424,7 +426,18 @@ void onLoadModel(AsyncWebServerRequest *request)
   request->send(LittleFS, modelFile, "text/json");
 }
 
-void onSave(AsyncWebServerRequest *request)
+void onLoadConfig(AsyncWebServerRequest *request)
+{  
+  if(!LittleFS.exists(CONFIG_FILE))
+  {    
+    request->send(200, "application/json", "{}");
+    return;
+  }
+
+  request->send(LittleFS, CONFIG_FILE, "text/json");
+}
+
+void onSaveConfig(AsyncWebServerRequest *request)
 {  
   #pragma region Validate_Input_Params  
   if(!request->hasParam("ssid", true) || !request->hasParam("ssid_password", true))
@@ -482,33 +495,33 @@ void onSave(AsyncWebServerRequest *request)
 
   if(config)
     delete config;
-
+  
   config = new Config();
   config->configStored = true;
   config->startStandaloneWifi = false;
-  createArray(config->SSID, request->getParam("ssid", true)->value().c_str());
-  createArray(config->SSID_PASSWORD, request->getParam("ssid_password", true)->value().c_str());
+  config->SSID = (char *)request->getParam("ssid", true)->value().c_str();
+  config->SSID_PASSWORD = (char *)request->getParam("ssid_password", true)->value().c_str();
 
   config->SSID_STATIC_IP = request->hasParam("ssid_staticip", true);
   if(config->SSID_STATIC_IP)
   {
-    createArray(config->SSID_IP, request->getParam("ssid_ip", true)->value().c_str());
-    createArray(config->SSID_SUBNET, request->getParam("ssid_subnet", true)->value().c_str());
-    createArray(config->SSID_GATEWAY, request->getParam("ssid_gateway", true)->value().c_str());
-    createArray(config->SSID_PRIMARY_DNS, request->getParam("primary_dns", true)->value().c_str());
-    createArray(config->SSID_SECONDARY_DNS, request->getParam("secondary_dns", true)->value().c_str());
+    config->SSID_IP = (char *)request->getParam("ssid_ip", true)->value().c_str();
+    config->SSID_SUBNET = (char *)request->getParam("ssid_subnet", true)->value().c_str();
+    config->SSID_GATEWAY = (char *)request->getParam("ssid_gateway", true)->value().c_str();
+    config->SSID_PRIMARY_DNS = (char *)request->getParam("primary_dns", true)->value().c_str();
+    config->SSID_SECONDARY_DNS = (char *)request->getParam("secondary_dns", true)->value().c_str();
   }
   
-  createArray(config->MQTT_SERVER, request->getParam("mqtt_server", true)->value().c_str());
-  createArray(config->MQTT_USERNAME, request->getParam("mqtt_username", true)->value().c_str());
-  createArray(config->MQTT_PASSWORD, request->getParam("mqtt_password", true)->value().c_str());
+  config->MQTT_SERVER = (char *)request->getParam("mqtt_server", true)->value().c_str();
+  config->MQTT_USERNAME = (char *)request->getParam("mqtt_username", true)->value().c_str();
+  config->MQTT_PASSWORD = (char *)request->getParam("mqtt_password", true)->value().c_str();
   config->FREQUENCY = request->getParam("frequency", true)->value().toInt();
   config->MQTT_USE_JSONTABLE = request->hasParam("mqtt_jsontable", true);
   config->MQTT_USE_ONETOPIC = request->hasParam("mqtt_use_onetopic", true);
 
   if(config->MQTT_USE_ONETOPIC)
   {
-    createArray(config->MQTT_ONETOPIC_NAME, request->getParam("mqtt_onetopic", true)->value().c_str());
+    config->MQTT_ONETOPIC_NAME = (char *)request->getParam("mqtt_onetopic", true)->value().c_str();
   }
 
   config->MQTT_PORT = request->getParam("mqtt_port", true)->value().toInt();
@@ -526,10 +539,10 @@ void onSave(AsyncWebServerRequest *request)
   config->SG_RELAY_HIGH_TRIGGER = request->hasParam("sg_relay_trigger", true);
   config->PIN_ENABLE_CONFIG = request->getParam("pin_enable_config", true)->value().toInt();
   
-  if(request->hasParam("parameters", true))
+  if(request->hasParam("definedParameters", true))
   {
     DynamicJsonDocument jsonParameters(MODELS_CONFIG_SIZE);
-    deserializeJson(jsonParameters, request->getParam("parameters", true)->value()); 
+    deserializeJson(jsonParameters, request->getParam("definedParameters", true)->value()); 
     JsonArray parametersArray = jsonParameters.as<JsonArray>();
 
     config->PARAMETERS_LENGTH = parametersArray.size();
@@ -550,9 +563,9 @@ void onSave(AsyncWebServerRequest *request)
   else
   {
     config->PARAMETERS_LENGTH = 0;
-    config->PARAMETERS = new LabelDef*[0];
+    config->PARAMETERS = nullptr;
   }
-
+  
   saveConfig();
 
   request->send(200, "text/text", "OK");
@@ -575,7 +588,8 @@ void WebUI_Init()
   server.on("/upload", HTTP_POST, onUpload, handleUpload);
   server.on("/loadModels", HTTP_GET, onLoadModels);
   server.on("/loadValues", HTTP_POST, onLoadValues);
-  server.on("/save", HTTP_POST, onSave);
+  server.on("/saveConfig", HTTP_POST, onSaveConfig);
+  server.on("/loadConfig", HTTP_GET, onLoadConfig);
   server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
   server.on("/format", HTTP_GET, onFormat);
   server.begin();

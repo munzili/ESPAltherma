@@ -59,6 +59,13 @@ void readEEPROM(){
 
 void reconnect()
 {
+  //in case loopback as server is set, skip connecting (debug purpose)
+  if(strcmp(config->MQTT_SERVER, "127.0.0.1") == 0)
+  {
+    mqttSerial.print("Found loopback MQTT server, skiping connection...");
+    return;
+  }
+
   // Loop until we're reconnected
   int i = 0;
   while (!client.connected())
@@ -91,8 +98,10 @@ void reconnect()
       }
 
       if (i++ == 100)
+      {
         Serial.printf("Tried for 500 sec, rebooting now.");
         esp_restart();
+      }
     }
   }
 }

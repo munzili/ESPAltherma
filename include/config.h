@@ -66,12 +66,6 @@ struct Config
 
 Config* config = nullptr;
 
-void createArray(char* array, const char* str)
-{
-    array = new char[strlen(str)+1];
-    strcpy(array, str);
-}
-
 void readConfig()
 {
     if(config != nullptr)
@@ -84,30 +78,30 @@ void readConfig()
 
     File configFile = LittleFS.open(CONFIG_FILE, FILE_READ);
     DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
-    deserializeJson(configDoc, configFile); 
+    deserializeJson(configDoc, configFile);     
     configFile.close();    
 
     config->configStored = true;
     config->startStandaloneWifi = configDoc["startStandaloneWifi"].as<const bool>();
-    createArray(config->SSID, configDoc["SSID"].as<const char*>());
-    createArray(config->SSID_PASSWORD, configDoc["SSID_PASSWORD"].as<const char*>());
+    config->SSID = (char *)configDoc["SSID"].as<const char*>();
+    config->SSID_PASSWORD = (char *)configDoc["SSID_PASSWORD"].as<const char*>();
     config->SSID_STATIC_IP = configDoc["SSID_STATIC_IP"].as<const bool>();
     if(config->SSID_STATIC_IP)
     {
-        createArray(config->SSID_IP, configDoc["SSID_IP"].as<const char*>());
-        createArray(config->SSID_SUBNET, configDoc["SSID_SUBNET"].as<const char*>());
-        createArray(config->SSID_GATEWAY, configDoc["SSID_GATEWAY"].as<const char*>());
-        createArray(config->SSID_PRIMARY_DNS, configDoc["SSID_PRIMARY_DNS"].as<const char*>());
-        createArray(config->SSID_SECONDARY_DNS, configDoc["SSID_SECONDARY_DNS"].as<const char*>());
+        config->SSID_IP = (char *)configDoc["SSID_IP"].as<const char*>();
+        config->SSID_SUBNET = (char *)configDoc["SSID_SUBNET"].as<const char*>();
+        config->SSID_GATEWAY = (char *)configDoc["SSID_GATEWAY"].as<const char*>();
+        config->SSID_PRIMARY_DNS = (char *)configDoc["SSID_PRIMARY_DNS"].as<const char*>();
+        config->SSID_SECONDARY_DNS = (char *)configDoc["SSID_SECONDARY_DNS"].as<const char*>();
     }
-    createArray(config->MQTT_SERVER, configDoc["MQTT_SERVER"].as<const char*>());
-    createArray(config->MQTT_USERNAME, configDoc["MQTT_USERNAME"].as<const char*>());
-    createArray(config->MQTT_PASSWORD, configDoc["MQTT_PASSWORD"].as<const char*>());
+    config->MQTT_SERVER = (char *)configDoc["MQTT_SERVER"].as<const char*>();
+    config->MQTT_USERNAME = (char *)configDoc["MQTT_USERNAME"].as<const char*>();
+    config->MQTT_PASSWORD = (char *)configDoc["MQTT_PASSWORD"].as<const char*>();
     config->MQTT_USE_JSONTABLE = configDoc["MQTT_USE_JSONTABLE"].as<const bool>();
     config->MQTT_USE_ONETOPIC = configDoc["MQTT_USE_ONETOPIC"].as<const bool>();
     if(config->MQTT_USE_ONETOPIC)
     {
-        createArray(config->MQTT_ONETOPIC_NAME, configDoc["MQTT_ONETOPIC_NAME"].as<const char*>());
+        config->MQTT_ONETOPIC_NAME = (char *)configDoc["MQTT_ONETOPIC_NAME"].as<const char*>();
     }
     config->MQTT_PORT = configDoc["MQTT_PORT"].as<uint16_t>();
     config->FREQUENCY = configDoc["FREQUENCY"].as<uint32_t>();
@@ -176,7 +170,7 @@ void saveConfig()
     configDoc["SG_RELAY_HIGH_TRIGGER"] = config->SG_RELAY_HIGH_TRIGGER;
     configDoc["PIN_ENABLE_CONFIG"] = config->PIN_ENABLE_CONFIG;
     
-    JsonArray parameters = configDoc["PARAMETERS"].createNestedArray();
+    JsonArray parameters = configDoc.createNestedArray("PARAMETERS");
 
     for(size_t i = 0; i < config->PARAMETERS_LENGTH; i++)
     {
@@ -190,6 +184,7 @@ void saveConfig()
     }
     
     File configFile = LittleFS.open(CONFIG_FILE, FILE_WRITE);
+    serializeJsonPretty(configDoc, Serial);
     serializeJson(configDoc, configFile);
     configFile.close();    
 }

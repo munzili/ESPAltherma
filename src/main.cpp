@@ -56,7 +56,6 @@ void updateValues(LabelDef *labelDef)
   if(config->MQTT_USE_ONETOPIC)
   {
     char *topicBuff = config->MQTT_ONETOPIC_NAME;
-    strcat(topicBuff, "/");
     strcat(topicBuff, labelDef->label);
     client.publish(config->MQTT_ONETOPIC_NAME, labelDef->asString);
   }
@@ -166,13 +165,12 @@ void setup()
 
   if(config->startStandaloneWifi || !config->configStored)
   {
-    start_standalone_wifi();
+    start_standalone_wifi();    
+    WebUI_Init();
   }
   
-  WebUI_Init();
-
   initMQTTConfig(config);
-
+  
   setupScreen();
 
   if(!config->configStored)
@@ -205,6 +203,7 @@ void setup()
   {
     mqttSerial.print("Setting up wifi...");
     setup_wifi();
+    WebUI_Init();
   }
 
   ArduinoOTA.setHostname("ESPAltherma");
@@ -263,13 +262,13 @@ void loop()
     }
   }
 
-  for (int i = 0; i < config->PARAMETERS_LENGTH; i++)
+  for (size_t i = 0; i < config->PARAMETERS_LENGTH; i++)
   {            
     auto &&label = *config->PARAMETERS[i];
 
     for (size_t j = 0; j < registryBufferSize; j++)
     {
-      if(label.registryID == registryBuffers[j].RegistryID)
+      if(registryBuffers[j].Success && label.registryID == registryBuffers[j].RegistryID)
       {
         char *input = registryBuffers[j].Buffer;
         input += label.offset + 3;

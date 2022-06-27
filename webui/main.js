@@ -39,6 +39,7 @@ window.addEventListener('load', async function () {
     }); 
 
     await refreshModels();
+    await loadConfig();
 })
 
 async function resetToDefaults()
@@ -54,6 +55,25 @@ async function resetToDefaults()
     document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config']; 
     document.getElementById('frequency').value = boardDefaults['frequency']; 
     document.getElementById('mqtt_onetopic').value = boardDefaults['mqtt_onetopic']; 
+    document.getElementById('mqtt_port').value = boardDefaults['mqtt_port']; 
+}
+
+async function loadConfig()
+{
+    await fetch('/loadConfig', {
+        method: "GET"
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data){
+        // if no config exists yet
+        if(Object.keys(data).length == 0)
+            return;
+
+        // todo apply config data to values
+    })
+    .catch(function(err) {
+        alert('Fetching config failed! Message: ' + err);
+    });    
 }
 
 async function selectWifiNetwork(event)
