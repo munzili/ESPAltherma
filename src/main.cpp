@@ -164,6 +164,7 @@ void setup()
 
   if(config->startStandaloneWifi || !config->configStored)
   {
+    mqttSerial.println("Start in standalone mode..");
     start_standalone_wifi();    
     WebUI_Init();
   }

@@ -38,6 +38,7 @@ struct Config
     uint8_t PIN_ENABLE_CONFIG;
     size_t PARAMETERS_LENGTH;
     LabelDef** PARAMETERS;
+    char* WEBUI_SELECTION_VALUES;
 
     ~Config()
     {
@@ -52,6 +53,7 @@ struct Config
         if(MQTT_USERNAME) delete[] MQTT_USERNAME;
         if(MQTT_PASSWORD) delete[] MQTT_PASSWORD;
         if(MQTT_ONETOPIC_NAME) delete[] MQTT_ONETOPIC_NAME;
+        if(WEBUI_SELECTION_VALUES) delete[] WEBUI_SELECTION_VALUES;
 
         if(PARAMETERS_LENGTH)
         {
@@ -79,21 +81,27 @@ void readConfig()
     File configFile = LittleFS.open(CONFIG_FILE, FILE_READ);
     DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
     deserializeJson(configDoc, configFile);     
+    serializeJsonPretty(configDoc, Serial);
     configFile.close();    
 
     config->configStored = true;
     config->startStandaloneWifi = configDoc["startStandaloneWifi"].as<const bool>();
-    config->SSID = (char *)configDoc["SSID"].as<const char*>();
-    config->SSID_PASSWORD = (char *)configDoc["SSID_PASSWORD"].as<const char*>();
-    config->SSID_STATIC_IP = configDoc["SSID_STATIC_IP"].as<const bool>();
-    if(config->SSID_STATIC_IP)
+    
+    if(!config->startStandaloneWifi)
     {
-        config->SSID_IP = (char *)configDoc["SSID_IP"].as<const char*>();
-        config->SSID_SUBNET = (char *)configDoc["SSID_SUBNET"].as<const char*>();
-        config->SSID_GATEWAY = (char *)configDoc["SSID_GATEWAY"].as<const char*>();
-        config->SSID_PRIMARY_DNS = (char *)configDoc["SSID_PRIMARY_DNS"].as<const char*>();
-        config->SSID_SECONDARY_DNS = (char *)configDoc["SSID_SECONDARY_DNS"].as<const char*>();
+        config->SSID = (char *)configDoc["SSID"].as<const char*>();
+        config->SSID_PASSWORD = (char *)configDoc["SSID_PASSWORD"].as<const char*>();
+        config->SSID_STATIC_IP = configDoc["SSID_STATIC_IP"].as<const bool>();
+        if(config->SSID_STATIC_IP)
+        {
+            config->SSID_IP = (char *)configDoc["SSID_IP"].as<const char*>();
+            config->SSID_SUBNET = (char *)configDoc["SSID_SUBNET"].as<const char*>();
+            config->SSID_GATEWAY = (char *)configDoc["SSID_GATEWAY"].as<const char*>();
+            config->SSID_PRIMARY_DNS = (char *)configDoc["SSID_PRIMARY_DNS"].as<const char*>();
+            config->SSID_SECONDARY_DNS = (char *)configDoc["SSID_SECONDARY_DNS"].as<const char*>();
+        }
     }
+
     config->MQTT_SERVER = (char *)configDoc["MQTT_SERVER"].as<const char*>();
     config->MQTT_USERNAME = (char *)configDoc["MQTT_USERNAME"].as<const char*>();
     config->MQTT_PASSWORD = (char *)configDoc["MQTT_PASSWORD"].as<const char*>();
@@ -129,23 +137,29 @@ void readConfig()
             parameter[4].as<const int>(), 
             parameter[5].as<const char*>());
     }
+
+    config->WEBUI_SELECTION_VALUES = (char *)configDoc["WEBUI_SELECTION_VALUES"].as<const char*>();
 }
 
 void saveConfig()
 {
     DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
     configDoc["startStandaloneWifi"] = config->startStandaloneWifi;
-    configDoc["SSID"] = config->SSID;
-    configDoc["SSID_PASSWORD"] = config->SSID_PASSWORD;
-    configDoc["SSID_STATIC_IP"] = config->SSID_STATIC_IP;
 
-    if(config->SSID_STATIC_IP)
+    if(!config->startStandaloneWifi)
     {
-        configDoc["SSID_IP"] = config->SSID_IP;
-        configDoc["SSID_SUBNET"] = config->SSID_SUBNET;
-        configDoc["SSID_GATEWAY"] = config->SSID_GATEWAY;
-        configDoc["SSID_PRIMARY_DNS"] = config->SSID_PRIMARY_DNS;
-        configDoc["SSID_SECONDARY_DNS"] = config->SSID_SECONDARY_DNS;
+        configDoc["SSID"] = config->SSID;
+        configDoc["SSID_PASSWORD"] = config->SSID_PASSWORD;
+        configDoc["SSID_STATIC_IP"] = config->SSID_STATIC_IP;
+
+        if(config->SSID_STATIC_IP)
+        {
+            configDoc["SSID_IP"] = config->SSID_IP;
+            configDoc["SSID_SUBNET"] = config->SSID_SUBNET;
+            configDoc["SSID_GATEWAY"] = config->SSID_GATEWAY;
+            configDoc["SSID_PRIMARY_DNS"] = config->SSID_PRIMARY_DNS;
+            configDoc["SSID_SECONDARY_DNS"] = config->SSID_SECONDARY_DNS;
+        }
     }
 
     configDoc["MQTT_SERVER"] = config->MQTT_SERVER;
@@ -182,6 +196,8 @@ void saveConfig()
         parameter.add(config->PARAMETERS[i]->dataType);
         parameter.add(config->PARAMETERS[i]->label);
     }
+
+    configDoc["WEBUI_SELECTION_VALUES"] = config->WEBUI_SELECTION_VALUES;    
     
     File configFile = LittleFS.open(CONFIG_FILE, FILE_WRITE);
     serializeJsonPretty(configDoc, Serial);

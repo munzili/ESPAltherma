@@ -11,6 +11,7 @@
 #define MODELS_FILE "/models.json"
 #define MODEL_DEFINITION_DOC_SIZE 1024*25
 #define MODELS_DOC_SIZE 1024*10
+#define WEBUI_SELECTION_VALUE_SIZE 1024
 
 // Set web server port number to 80
 AsyncWebServer server(80);
@@ -440,20 +441,23 @@ void onLoadConfig(AsyncWebServerRequest *request)
 void onSaveConfig(AsyncWebServerRequest *request)
 {  
   #pragma region Validate_Input_Params  
-  if(!request->hasParam("ssid", true) || !request->hasParam("ssid_password", true))
+  if(!request->hasParam("standalone_wifi", true))
   {
-    request->send(422, "text/text", "Missing parameter(s) for ssid!");
-    return;
-  }
+    if(!request->hasParam("ssid", true) || !request->hasParam("ssid_password", true))
+    {
+      request->send(422, "text/text", "Missing parameter(s) for ssid!");
+      return;
+    }
 
-  if(request->hasParam("ssid_staticip", true) && (!request->hasParam("ssid_ip", true) || 
-                                                  !request->hasParam("ssid_subnet", true) || 
-                                                  !request->hasParam("ssid_gateway", true) || 
-                                                  !request->hasParam("primary_dns", true) || 
-                                                  !request->hasParam("secondary_dns", true)))
-  {
-    request->send(422, "text/text", "Missing parameter(s) for static ip");
-    return;
+    if(request->hasParam("ssid_staticip", true) && (!request->hasParam("ssid_ip", true) || 
+                                                    !request->hasParam("ssid_subnet", true) || 
+                                                    !request->hasParam("ssid_gateway", true) || 
+                                                    !request->hasParam("primary_dns", true) || 
+                                                    !request->hasParam("secondary_dns", true)))
+    {
+      request->send(422, "text/text", "Missing parameter(s) for static ip");
+      return;
+    }
   }
 
   if(!request->hasParam("mqtt_server", true) || !request->hasParam("mqtt_username", true) || !request->hasParam("mqtt_password", true) || !request->hasParam("mqtt_port", true) || !request->hasParam("frequency", true))
@@ -498,18 +502,22 @@ void onSaveConfig(AsyncWebServerRequest *request)
   
   config = new Config();
   config->configStored = true;
-  config->startStandaloneWifi = false;
-  config->SSID = (char *)request->getParam("ssid", true)->value().c_str();
-  config->SSID_PASSWORD = (char *)request->getParam("ssid_password", true)->value().c_str();
+  config->startStandaloneWifi = request->hasParam("standalone_wifi", true);
 
-  config->SSID_STATIC_IP = request->hasParam("ssid_staticip", true);
-  if(config->SSID_STATIC_IP)
+  if(!config->startStandaloneWifi)
   {
-    config->SSID_IP = (char *)request->getParam("ssid_ip", true)->value().c_str();
-    config->SSID_SUBNET = (char *)request->getParam("ssid_subnet", true)->value().c_str();
-    config->SSID_GATEWAY = (char *)request->getParam("ssid_gateway", true)->value().c_str();
-    config->SSID_PRIMARY_DNS = (char *)request->getParam("primary_dns", true)->value().c_str();
-    config->SSID_SECONDARY_DNS = (char *)request->getParam("secondary_dns", true)->value().c_str();
+    config->SSID = (char *)request->getParam("ssid", true)->value().c_str();
+    config->SSID_PASSWORD = (char *)request->getParam("ssid_password", true)->value().c_str();
+
+    config->SSID_STATIC_IP = request->hasParam("ssid_staticip", true);
+    if(config->SSID_STATIC_IP)
+    {
+      config->SSID_IP = (char *)request->getParam("ssid_ip", true)->value().c_str();
+      config->SSID_SUBNET = (char *)request->getParam("ssid_subnet", true)->value().c_str();
+      config->SSID_GATEWAY = (char *)request->getParam("ssid_gateway", true)->value().c_str();
+      config->SSID_PRIMARY_DNS = (char *)request->getParam("primary_dns", true)->value().c_str();
+      config->SSID_SECONDARY_DNS = (char *)request->getParam("secondary_dns", true)->value().c_str();
+    }
   }
   
   config->MQTT_SERVER = (char *)request->getParam("mqtt_server", true)->value().c_str();
@@ -565,6 +573,15 @@ void onSaveConfig(AsyncWebServerRequest *request)
     config->PARAMETERS_LENGTH = 0;
     config->PARAMETERS = nullptr;
   }
+
+  DynamicJsonDocument webuiSelectionValues(WEBUI_SELECTION_VALUE_SIZE);
+  webuiSelectionValues["model"] = (char *)request->getParam("model", true)->value().c_str();
+  webuiSelectionValues["language"] = (char *)request->getParam("language", true)->value().c_str();
+  webuiSelectionValues["presetParameters"] = (char *)request->getParam("presetParameters", true)->value().c_str();
+
+  String serializedWebuiSelectionValues;
+  serializeJson(webuiSelectionValues, serializedWebuiSelectionValues);
+  config->WEBUI_SELECTION_VALUES = (char *)serializedWebuiSelectionValues.c_str();
   
   saveConfig();
 

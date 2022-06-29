@@ -59,6 +59,10 @@
     <header><h1>ESPAltherma Config</h1></header>    
     <article>
       <form id="configForm" action="/saveConfig" method="post">
+        <label for="standalone_wifi" >          
+          <input type="checkbox" id="standalone_wifi" name="standalone_wifi" role="switch" onclick="updateWifiFields()"/>
+          Use standalone WiFi
+        </label>
         <div class="grid">
           <div>
             <label for="ssid">WIFI SSID:</label>

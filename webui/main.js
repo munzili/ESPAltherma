@@ -42,6 +42,24 @@ window.addEventListener('load', async function () {
     await loadConfig();
 })
 
+async function updateWifiFields()
+{
+    let useStandalone = document.getElementById('standalone_wifi').checked;    
+
+    document.getElementById('ssid').toggleAttribute("disabled");
+    document.getElementById('ssid_select').toggleAttribute("disabled");
+    document.getElementById('btnWifiListRefresh').toggleAttribute("disabled");
+    document.getElementById('ssid_password').toggleAttribute("disabled");
+    
+    if(useStandalone && document.getElementById('ssid_staticip').checked)
+    {
+        document.getElementById('ssid_staticip').checked = false;        
+        show('staticip');
+    }
+
+    document.getElementById('ssid_staticip').toggleAttribute("disabled");
+}
+
 async function resetToDefaults()
 {
     if(!Object.keys(boardDefaults).length)
@@ -108,6 +126,11 @@ async function loadConfig()
         }
         
         document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];   
+
+        let webuiSelectionValues = JSON.parse(data['WEBUI_SELECTION_VALUES']);
+        document.getElementById('model').value = webuiSelectionValues['model'];   
+        document.getElementById('language').value = webuiSelectionValues['language'];   
+        document.getElementById('presetParameters').value = webuiSelectionValues['presetParameters'];   
         
         definedParameters = data['PARAMETERS'];
         addCustomOptionToPresetsList();
@@ -176,29 +199,41 @@ async function sendConfigData(event)
     const form = document.getElementById("configForm");
     const formData = new FormData(form);
 
-    const ssid = document.getElementById('ssid');
-    ssid.setAttribute('aria-invalid', ssid.value == '');
+    const standalone_wifi = document.getElementById('standalone_wifi').checked;
 
-    const ssid_staticip = document.getElementById('ssid_staticip');
-    if(ssid_staticip.checked)
-    {        
-        const ssid_ip = document.getElementById('ssid_ip');
-        ssid_ip.setAttribute('aria-invalid',  ssid_ip.value == '' || !ValidateIPaddress(ssid_ip.value));
+    if(!standalone_wifi)
+    {
+        const ssid = document.getElementById('ssid');
+        ssid.setAttribute('aria-invalid', ssid.value == '');
 
-        const ssid_subnet = document.getElementById('ssid_subnet');
-        ssid_subnet.setAttribute('aria-invalid',  ssid_subnet.value == '' || !ValidateIPaddress(ssid_subnet.value));
+        const ssid_staticip = document.getElementById('ssid_staticip');
+        if(ssid_staticip.checked)
+        {        
+            const ssid_ip = document.getElementById('ssid_ip');
+            ssid_ip.setAttribute('aria-invalid',  ssid_ip.value == '' || !ValidateIPaddress(ssid_ip.value));
 
-        const ssid_gateway = document.getElementById('ssid_gateway');
-        ssid_gateway.setAttribute('aria-invalid',  ssid_gateway.value == '' || !ValidateIPaddress(ssid_gateway.value));
+            const ssid_subnet = document.getElementById('ssid_subnet');
+            ssid_subnet.setAttribute('aria-invalid',  ssid_subnet.value == '' || !ValidateIPaddress(ssid_subnet.value));
 
-        const primary_dns = document.getElementById('primary_dns');
-        primary_dns.setAttribute('aria-invalid',  primary_dns.value != '' && !ValidateIPaddress(primary_dns.value));
+            const ssid_gateway = document.getElementById('ssid_gateway');
+            ssid_gateway.setAttribute('aria-invalid',  ssid_gateway.value == '' || !ValidateIPaddress(ssid_gateway.value));
 
-        const secondary_dns = document.getElementById('secondary_dns');
-        secondary_dns.setAttribute('aria-invalid',  secondary_dns.value != '' && !ValidateIPaddress(secondary_dns.value));
+            const primary_dns = document.getElementById('primary_dns');
+            primary_dns.setAttribute('aria-invalid',  primary_dns.value != '' && !ValidateIPaddress(primary_dns.value));
+
+            const secondary_dns = document.getElementById('secondary_dns');
+            secondary_dns.setAttribute('aria-invalid',  secondary_dns.value != '' && !ValidateIPaddress(secondary_dns.value));
+        }
+        else
+        {
+            clearHiddenValidationResult('staticip');
+        }
     }
     else
     {
+        const ssid = document.getElementById('ssid');
+        ssid.removeAttribute('aria-invalid');
+
         clearHiddenValidationResult('staticip');
     }
 
