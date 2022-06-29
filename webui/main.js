@@ -6,7 +6,6 @@ let models = [];
 
 let boardDefaults = {};
 window.addEventListener('load', async function () {
-
     document.getElementById('submit').addEventListener('click', sendConfigData);
     document.getElementById('btnWifiListRefresh').addEventListener('click', loadWifiNetworks);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
@@ -40,6 +39,8 @@ window.addEventListener('load', async function () {
 
     await refreshModels();
     await loadConfig();
+
+    document.getElementById('loading-dialog').removeAttribute('open');
 })
 
 async function updateWifiFields()
@@ -82,7 +83,7 @@ async function loadConfig()
         method: "GET"
     })
     .then(function(response) { return response.json(); })
-    .then(function(data){
+    .then(async function(data){
         // if no config exists yet
         if(Object.keys(data).length == 0)
             return;
@@ -137,14 +138,11 @@ async function loadConfig()
         document.getElementById('model').value = webuiSelectionValues['model'];
         refreshLanguages();   
         document.getElementById('language').value = webuiSelectionValues['language'];  
-        updatePresets(); 
+        await updatePresets(); 
         document.getElementById('presetParameters').value = webuiSelectionValues['presetParameters'];   
         
         definedParameters = data['PARAMETERS'];
-        addCustomOptionToPresetsList();
         updateParametersTable('selectedParametersTable', definedParameters);
-        document.getElementById('presetParameters').value = 'custom';
-        updateParameters();
     })
     .catch(function(err) {
         alert('Fetching config failed! Message: ' + err);
@@ -406,23 +404,17 @@ async function updatePresets()
         optionAll.text = "All";
         optionAll.value = "all";
         presetParametersSelect.add(optionAll);
+        
+        const optionCustom = document.createElement("option");
+        optionCustom.text = "Custom (advanced user)";
+        optionCustom.value = "custom";
+        presetParametersSelect.add(optionCustom);
 
-        addCustomOptionToPresetsList();
         updateParametersTable('parametersTable', predefinedParameters);
     })
     .catch(function(err) {
         alert('Fetching parameter data failed! Message: ' + err);
     });    
-}
-
-function addCustomOptionToPresetsList()
-{    
-    const presetParametersSelect = document.getElementById('presetParameters');
-
-    const optionCustom = document.createElement("option");
-    optionCustom.text = "Custom (advanced user)";
-    optionCustom.value = "custom";
-    presetParametersSelect.add(optionCustom);
 }
 
 async function updateParameters()

@@ -56,6 +56,11 @@
 </head>
 <body>  
   <main class="container">
+    <dialog id="loading-dialog" open>
+      <article aria-busy="true">
+        Loading, please wait...
+      </article>
+    </dialog>
     <header><h1>ESPAltherma Config</h1></header>    
     <article>
       <form id="configForm" action="/saveConfig" method="post">
