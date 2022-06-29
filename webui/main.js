@@ -86,18 +86,24 @@ async function loadConfig()
         // if no config exists yet
         if(Object.keys(data).length == 0)
             return;
-            
-        document.getElementById('ssid').value = data['SSID'];
-        document.getElementById('ssid_password').value = data['SSID_PASSWORD'];
-        document.getElementById('ssid_staticip').checked = data['SSID_STATIC_IP'];
 
-        if(data['SSID_STATIC_IP'])
-        {        
-            document.getElementById('ssid_ip').value = data['SSID_IP'];
-            document.getElementById('ssid_subnet').value = data['SSID_SUBNET'];
-            document.getElementById('ssid_gateway').value = data['SSID_GATEWAY'];
-            document.getElementById('primary_dns').value = data['SSID_PRIMARY_DNS'];
-            document.getElementById('secondary_dns').value = data['SSID_SECONDARY_DNS'];
+        document.getElementById('standalone_wifi').checked = data['startStandaloneWifi'];
+        updateWifiFields();
+            
+        if(!data['startStandaloneWifi'])
+        {
+            document.getElementById('ssid').value = data['SSID'];
+            document.getElementById('ssid_password').value = data['SSID_PASSWORD'];
+            document.getElementById('ssid_staticip').checked = data['SSID_STATIC_IP'];
+
+            if(data['SSID_STATIC_IP'])
+            {        
+                document.getElementById('ssid_ip').value = data['SSID_IP'];
+                document.getElementById('ssid_subnet').value = data['SSID_SUBNET'];
+                document.getElementById('ssid_gateway').value = data['SSID_GATEWAY'];
+                document.getElementById('primary_dns').value = data['SSID_PRIMARY_DNS'];
+                document.getElementById('secondary_dns').value = data['SSID_SECONDARY_DNS'];
+            }
         }
 
         document.getElementById('mqtt_server').value = data['MQTT_SERVER'];
@@ -128,8 +134,10 @@ async function loadConfig()
         document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];   
 
         let webuiSelectionValues = JSON.parse(data['WEBUI_SELECTION_VALUES']);
-        document.getElementById('model').value = webuiSelectionValues['model'];   
-        document.getElementById('language').value = webuiSelectionValues['language'];   
+        document.getElementById('model').value = webuiSelectionValues['model'];
+        refreshLanguages();   
+        document.getElementById('language').value = webuiSelectionValues['language'];  
+        updatePresets(); 
         document.getElementById('presetParameters').value = webuiSelectionValues['presetParameters'];   
         
         definedParameters = data['PARAMETERS'];
@@ -421,7 +429,10 @@ async function updateParameters()
 {
     let selectedPreset = document.getElementById('presetParameters').value;
 
-    document.getElementById('containerCustomParameters').classList.toggle('hidden');
+    if(selectedPreset == 'custom')
+        document.getElementById('containerCustomParameters').classList.remove('hidden');
+    else
+        document.getElementById('containerCustomParameters').classList.add('hidden');
 
     definedParameters = [];
 
