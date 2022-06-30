@@ -1,15 +1,24 @@
 "use strict";
-let definedParameters = [];
-let definedPresets = [];
-let predefinedParameters = [];
+let customParametersList = [];
+let selectedModelPresets = [];
+let selectedModelParameters = [];
 let models = [];
-
 let boardDefaults = {};
+
 window.addEventListener('load', async function () {
     document.getElementById('submit').addEventListener('click', sendConfigData);
     document.getElementById('btnWifiListRefresh').addEventListener('click', loadWifiNetworks);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
     
+    await loadBoardDefaults();
+    await refreshModels();
+    await loadConfig();
+
+    document.getElementById('loading-dialog').close();
+});
+
+async function loadBoardDefaults()
+{
     await fetch('/loadBoardInfo', {
         method: "GET"
     })
@@ -36,12 +45,7 @@ window.addEventListener('load', async function () {
     .catch(function(err) {
         alert('Fetching pins data failed! Message: ' + err);
     }); 
-
-    await refreshModels();
-    await loadConfig();
-
-    document.getElementById('loading-dialog').removeAttribute('open');
-})
+}
 
 async function updateWifiFields()
 {
@@ -88,10 +92,10 @@ async function loadConfig()
         if(Object.keys(data).length == 0)
             return;
 
-        document.getElementById('standalone_wifi').checked = data['startStandaloneWifi'];
+        document.getElementById('standalone_wifi').checked = data['STANDALONE_WIFI'];
         updateWifiFields();
             
-        if(!data['startStandaloneWifi'])
+        if(!data['STANDALONE_WIFI'])
         {
             document.getElementById('ssid').value = data['SSID'];
             document.getElementById('ssid_password').value = data['SSID_PASSWORD'];
@@ -136,13 +140,16 @@ async function loadConfig()
 
         let webuiSelectionValues = JSON.parse(data['WEBUI_SELECTION_VALUES']);
         document.getElementById('model').value = webuiSelectionValues['model'];
-        refreshLanguages();   
+        await refreshLanguages();   
         document.getElementById('language').value = webuiSelectionValues['language'];  
         await updatePresets(); 
         document.getElementById('presetParameters').value = webuiSelectionValues['presetParameters'];   
         
-        definedParameters = data['PARAMETERS'];
-        updateParametersTable('selectedParametersTable', definedParameters);
+        if(webuiSelectionValues['presetParameters'] == 'custom')
+        {            
+            customParametersList = data['PARAMETERS'];
+            updateParametersTable('selectedParametersTable', customParametersList);
+        }
     })
     .catch(function(err) {
         alert('Fetching config failed! Message: ' + err);
@@ -301,7 +308,24 @@ async function sendConfigData(event)
         return;
     }
 
-    formData.append("definedParameters", JSON.stringify(definedParameters));
+    let presetParametersSelect = document.getElementById('presetParameters').value;
+    if(presetParametersSelect == 'custom')
+    {
+        formData.append("definedParameters", JSON.stringify(customParametersList));
+    }
+    else
+    {
+        presetParametersSelect = presetParametersSelect == 'all' ? [...Array(selectedModelParameters.length).keys()] : JSON.parse(presetParametersSelect);
+        const presetParametersSelectLength = presetParametersSelect.length;
+
+        for(let i = 0; i < presetParametersSelectLength; i++)
+        {
+            presetParametersSelect[i] = selectedModelParameters[presetParametersSelect[i]];
+        }
+
+        formData.append("definedParameters", JSON.stringify(presetParametersSelect));
+    }
+
     await fetch(form.getAttribute('action'), {
         method: form.getAttribute('method'),
         body: formData
@@ -360,8 +384,8 @@ async function updatePresets()
 
     if(modelFile == '')
     {                
-        definedPresets = [];
-        predefinedParameters = [];
+        selectedModelPresets = [];
+        selectedModelParameters = [];
         
         const presetParametersSelect = document.getElementById('presetParameters');        
 
@@ -370,7 +394,7 @@ async function updatePresets()
         while (presetParametersSelect.options.length > 1)
             presetParametersSelect.remove(1);
 
-        updateParametersTable('parametersTable', predefinedParameters);
+        updateParametersTable('parametersTable', selectedModelParameters);
         updateParameters();
         return;
     }
@@ -383,19 +407,19 @@ async function updatePresets()
     })
     .then(function(response) { return response.json(); })
     .then(function(data){
-        definedPresets = data['Presets'];
-        predefinedParameters = data['Parameters'];
+        selectedModelPresets = data['Presets'];
+        selectedModelParameters = data['Parameters'];
         
         const presetParametersSelect = document.getElementById('presetParameters');
         
         while (presetParametersSelect.options.length > 1)
             presetParametersSelect.remove(1);
 
-        for (let key in definedPresets) {
-            if (definedPresets.hasOwnProperty(key)) {
+        for (let key in selectedModelPresets) {
+            if (selectedModelPresets.hasOwnProperty(key)) {
                 const option = document.createElement("option");
                 option.text = key;
-                option.value = JSON.stringify(definedPresets[key]);
+                option.value = JSON.stringify(selectedModelPresets[key]);
                 presetParametersSelect.add(option);
             }
         }
@@ -410,7 +434,7 @@ async function updatePresets()
         optionCustom.value = "custom";
         presetParametersSelect.add(optionCustom);
 
-        updateParametersTable('parametersTable', predefinedParameters);
+        updateParametersTable('parametersTable', selectedModelParameters);
     })
     .catch(function(err) {
         alert('Fetching parameter data failed! Message: ' + err);
@@ -419,23 +443,12 @@ async function updatePresets()
 
 async function updateParameters()
 {
-    let selectedPreset = document.getElementById('presetParameters').value;
+    let presetParametersSelect = document.getElementById('presetParameters').value;
 
-    if(selectedPreset == 'custom')
+    if(presetParametersSelect == 'custom')
         document.getElementById('containerCustomParameters').classList.remove('hidden');
     else
         document.getElementById('containerCustomParameters').classList.add('hidden');
-
-    definedParameters = [];
-
-    if(selectedPreset == '' || selectedPreset == 'custom')
-        return;
-
-    selectedPreset = selectedPreset == 'all' ? [...Array(predefinedParameters.length).keys()] : JSON.parse(selectedPreset);
-
-    selectedPreset.forEach((value) => {
-        definedParameters.push(predefinedParameters[value]);
-    });
 }
 
 async function uploadFile() {
@@ -470,27 +483,21 @@ async function uploadFile() {
 function AddParameter(offset, regid, convid, dataSize, dataType, dataName)
 {
     
-    for (let i in definedParameters) {
-        if(definedParameters[i][0] == offset && 
-           definedParameters[i][1] == regid && 
-           definedParameters[i][2] == convid && 
-           definedParameters[i][3] == dataSize && 
-           definedParameters[i][4] == dataType)
+    for (let i in customParametersList) {
+        if(customParametersList[i][0] == offset && 
+           customParametersList[i][1] == regid && 
+           customParametersList[i][2] == convid && 
+           customParametersList[i][3] == dataSize && 
+           customParametersList[i][4] == dataType)
         {
             alert("Parameter settings of '" + dataName + "' already exists. Skip adding");
-            return false;
-        }
-
-        if(definedParameters[i][5] == dataName)
-        {
-            alert("Parameter name '" + dataName + "' already exists. Skip adding");
             return false;
         }
     }
 
     const dataArray = [offset, regid, convid, dataSize, dataType, dataName];
 
-    definedParameters.push(dataArray);
+    customParametersList.push(dataArray);
     return true;
 }
 
@@ -526,7 +533,7 @@ function addCustomParameter()
     dataType.value = '';
     dataName.value = '';
 
-    updateParametersTable('selectedParametersTable', definedParameters);
+    updateParametersTable('selectedParametersTable', customParametersList);
 }
 
 function updateParametersTable(tableId, parameters)
@@ -589,16 +596,16 @@ function addSelectedPredefinedParameters()
     .querySelectorAll(".row-selected")
     .forEach(function(e) {
         const id = parseInt(e.getAttribute('data-row-index'));
-        const paramToAdd = predefinedParameters[id];
+        const paramToAdd = selectedModelParameters[id];
 
         AddParameter(paramToAdd[0], paramToAdd[1], paramToAdd[2], paramToAdd[3], paramToAdd[4], paramToAdd[5]);
         e.classList.remove('row-selected');
     });
 
-    updateParametersTable('selectedParametersTable', definedParameters);
+    updateParametersTable('selectedParametersTable', customParametersList);
 }
 
-function removeSelectedParameters()
+function removeSelectedCustomParameters()
 {    
     let counterRun = 0;
 
@@ -608,7 +615,7 @@ function removeSelectedParameters()
     .forEach(function(e) {
         let id = parseInt(e.getAttribute('data-row-index'));
         id -= counterRun;
-        definedParameters = definedParameters.filter(function(value, index){ 
+        customParametersList = customParametersList.filter(function(value, index){ 
             let keep = index != id;
 
             if(!keep)
@@ -618,16 +625,22 @@ function removeSelectedParameters()
         });
     });
 
-    updateParametersTable('selectedParametersTable', definedParameters);
+    updateParametersTable('selectedParametersTable', customParametersList);
+}
+
+function clearCustomParameters()
+{    
+    customParametersList = [];
+    updateParametersTable('selectedParametersTable', customParametersList);
 }
 
 async function loadData(tableId)
 {
     let params;
     if (tableId == 'selectedParametersTable')
-        params = definedParameters;
+        params = customParametersList;
     else
-        params = predefinedParameters;
+        params = selectedModelParameters;
 
     const pinRx =  document.getElementById('pin_rx').value;
     const pinTx =  document.getElementById('pin_tx').value;
@@ -655,13 +668,13 @@ async function loadData(tableId)
 
         if (tableId == 'selectedParametersTable')
         {
-            definedParameters = params;
-            updateParametersTable(tableId, definedParameters);
+            customParametersList = params;
+            updateParametersTable(tableId, customParametersList);
         }
         else
         {
-            predefinedParameters = params;     
-            updateParametersTable(tableId, predefinedParameters);   
+            selectedModelParameters = params;     
+            updateParametersTable(tableId, selectedModelParameters);   
         }
     })
     .catch(function(err) {
@@ -695,19 +708,13 @@ async function refreshModels()
     });    
 }
 
-function refreshLanguages()
+async function refreshLanguages()
 {
     const languageSelect = document.getElementById('language');
     const selectedModel = document.getElementById('model').value;
             
     while (languageSelect.options.length > 1)
         languageSelect.remove(1);
-
-    if(selectedModel == '')
-    {
-        updatePresets();
-        return;
-    }
 
     const languageFiles = models[selectedModel]["Files"];
     const languageNames = Object.keys(languageFiles);
@@ -718,4 +725,6 @@ function refreshLanguages()
         option.value = languageFiles[language];
         languageSelect.add(option);
     });
+    
+    await updatePresets();
 }

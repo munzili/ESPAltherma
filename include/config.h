@@ -11,7 +11,7 @@
 struct Config
 {
     bool configStored;
-    bool startStandaloneWifi;
+    bool STANDALONE_WIFI;
     char* SSID;
     char* SSID_PASSWORD;
     bool SSID_STATIC_IP;
@@ -85,9 +85,9 @@ void readConfig()
     configFile.close();    
 
     config->configStored = true;
-    config->startStandaloneWifi = configDoc["startStandaloneWifi"].as<const bool>();
+    config->STANDALONE_WIFI = configDoc["STANDALONE_WIFI"].as<const bool>();
     
-    if(!config->startStandaloneWifi)
+    if(!config->STANDALONE_WIFI)
     {
         config->SSID = (char *)configDoc["SSID"].as<const char*>();
         config->SSID_PASSWORD = (char *)configDoc["SSID_PASSWORD"].as<const char*>();
@@ -144,9 +144,9 @@ void readConfig()
 void saveConfig()
 {
     DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
-    configDoc["startStandaloneWifi"] = config->startStandaloneWifi;
+    configDoc["STANDALONE_WIFI"] = config->STANDALONE_WIFI;
 
-    if(!config->startStandaloneWifi)
+    if(!config->STANDALONE_WIFI)
     {
         configDoc["SSID"] = config->SSID;
         configDoc["SSID_PASSWORD"] = config->SSID_PASSWORD;

@@ -22,8 +22,7 @@
 size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
 
-bool busy = false;
-bool configWifiEnabled;
+bool arduinoOTAIsBusy = false;
 
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
 long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
@@ -76,7 +75,7 @@ void extraLoop()
 {
   client.loop();
   ArduinoOTA.handle();
-  while (busy)
+  while (arduinoOTAIsBusy)
   { //Stop processing during OTA
     ArduinoOTA.handle();
   }
@@ -148,6 +147,12 @@ void setupScreen(){
 #endif
 }
 
+void IRAM_ATTR restartInStandaloneWifi() {
+    config->STANDALONE_WIFI = true;
+    saveConfig();
+    esp_restart();
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -162,7 +167,7 @@ void setup()
 
   readConfig();
 
-  if(config->startStandaloneWifi || !config->configStored)
+  if(config->STANDALONE_WIFI || !config->configStored)
   {
     mqttSerial.println("Start in standalone mode..");
     start_standalone_wifi();    
@@ -199,7 +204,7 @@ void setup()
 
   readEEPROM();//Restore previous state
 
-  if(!config->startStandaloneWifi)
+  if(!config->STANDALONE_WIFI)
   {
     mqttSerial.print("Setting up wifi...");
     setup_wifi();
@@ -208,7 +213,7 @@ void setup()
 
   ArduinoOTA.setHostname("ESPAltherma");
   ArduinoOTA.onStart([]() {
-    busy = true;
+    arduinoOTAIsBusy = true;
   });
 
   ArduinoOTA.onError([](ota_error_t error) {
@@ -216,6 +221,9 @@ void setup()
     esp_restart();
   });
   ArduinoOTA.begin();
+
+  pinMode(config->PIN_ENABLE_CONFIG, INPUT_PULLUP);
+  attachInterrupt(config->PIN_ENABLE_CONFIG, restartInStandaloneWifi, FALLING);
 
   client.setServer(config->MQTT_SERVER, config->MQTT_PORT);
   client.setBufferSize(MAX_MSG_SIZE); //to support large json message

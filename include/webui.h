@@ -22,6 +22,8 @@ extern const uint8_t indexHTML_start[] asm("_binary_webui_index_html_gz_start");
 extern const uint8_t indexHTML_end[] asm("_binary_webui_index_html_gz_end");
 extern const uint8_t picoCSS_start[] asm("_binary_webui_pico_min_css_gz_start");
 extern const uint8_t picoCSS_end[] asm("_binary_webui_pico_min_css_gz_end");
+extern const uint8_t mainCSS_start[] asm("_binary_webui_main_css_gz_start");
+extern const uint8_t mainCSS_end[] asm("_binary_webui_main_css_gz_end");
 
 String lastUploadFileName;
 
@@ -159,6 +161,13 @@ void onIndex(AsyncWebServerRequest *request)
 void onRequestPicoCSS(AsyncWebServerRequest *request)
 {
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", picoCSS_start, picoCSS_end - picoCSS_start);
+    response->addHeader("Content-Encoding", "gzip");
+    request->send(response);
+}
+
+void onRequestMainCSS(AsyncWebServerRequest *request)
+{
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", mainCSS_start, mainCSS_end - mainCSS_start);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
 }
@@ -502,9 +511,9 @@ void onSaveConfig(AsyncWebServerRequest *request)
   
   config = new Config();
   config->configStored = true;
-  config->startStandaloneWifi = request->hasParam("standalone_wifi", true);
+  config->STANDALONE_WIFI = request->hasParam("standalone_wifi", true);
 
-  if(!config->startStandaloneWifi)
+  if(!config->STANDALONE_WIFI)
   {
     config->SSID = (char *)request->getParam("ssid", true)->value().c_str();
     config->SSID_PASSWORD = (char *)request->getParam("ssid_password", true)->value().c_str();
@@ -599,6 +608,7 @@ void WebUI_Init()
 
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
+  server.on("/main.css", HTTP_GET, onRequestMainCSS);
   server.on("/main.js", HTTP_GET, onRequestMainJS);
   server.on("/loadModel", HTTP_POST, onLoadModel);
   server.on("/loadBoardInfo", HTTP_GET, onLoadBoardInfo);
