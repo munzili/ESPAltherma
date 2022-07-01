@@ -37,7 +37,7 @@ async function loadBoardDefaults()
                     select.add(option);
                 });            
             }
-        };
+        }
 
         boardDefaults = data['Default'];
         resetToDefaults();
@@ -195,11 +195,11 @@ async function loadWifiNetworks(event)
             option.text = data[key]["SSID"] + " (Quality:" + data[key]["RSSI"] + ") " + data[key]["EncryptionType"];
             option.value = data[key]["SSID"];                
             ssidSelect.add(option);
-        };
+        }
     })
     .catch(function(err) {
         alert('Fetching wifi list failed! Message: ' + err);
-    })       
+    });       
 
     btnWifiListRefresh.setAttribute('aria-busy', 'false'); 
     btnWifiListRefresh.text = btnValue;
@@ -365,7 +365,7 @@ function ValidateHostname(hostname)
 
 function ValidateIPOrHostname(input)
 {
-    return !(!ValidateIPaddress(input) && !ValidateHostname(input))
+    return !(!ValidateIPaddress(input) && !ValidateHostname(input));
 }
 
 function ValidateMQTTTopic(topicName)
@@ -549,7 +549,7 @@ function updateParametersTable(tableId, parameters)
 
         const row = selectedParametersTable.insertRow(-1);
         row.setAttribute('data-row-index', i);
-        row.addEventListener("click", function(event) {selectRow(tableId, i)});
+        row.addEventListener("click", function(event) {selectRow(tableId, i);});
         
         const nameCell = row.insertCell(0);
        
