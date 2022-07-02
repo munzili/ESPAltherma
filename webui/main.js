@@ -49,20 +49,35 @@ async function loadBoardDefaults()
 
 async function updateWifiFields()
 {
-    let useStandalone = document.getElementById('standalone_wifi').checked;    
+    let useStandalone = document.getElementById('standalone_wifi').checked;        
+    let localUpdateFunction = function(fieldId) {
+        if(useStandalone)        
+            document.getElementById(fieldId).setAttribute("disabled", true);
+        else
+            document.getElementById(fieldId).removeAttribute("disabled");
+    }
 
-    document.getElementById('ssid').toggleAttribute("disabled");
-    document.getElementById('ssid_select').toggleAttribute("disabled");
-    document.getElementById('btnWifiListRefresh').toggleAttribute("disabled");
-    document.getElementById('ssid_password').toggleAttribute("disabled");
+    localUpdateFunction('ssid');
+    localUpdateFunction('ssid_select');
+    localUpdateFunction('btnWifiListRefresh');
+    localUpdateFunction('ssid_password');    
     
     if(useStandalone && document.getElementById('ssid_staticip').checked)
     {
         document.getElementById('ssid_staticip').checked = false;        
-        show('staticip');
+        show('staticip', true);
+    }
+    else
+    {
+        show('staticip', !document.getElementById('ssid_staticip').checked);
     }
 
-    document.getElementById('ssid_staticip').toggleAttribute("disabled");
+    localUpdateFunction('ssid_staticip');
+    localUpdateFunction('ssid_ip');
+    localUpdateFunction('ssid_subnet');
+    localUpdateFunction('ssid_gateway');
+    localUpdateFunction('primary_dns');
+    localUpdateFunction('secondary_dns');
 }
 
 async function resetToDefaults()
@@ -92,8 +107,7 @@ async function loadConfig()
         if(Object.keys(data).length == 0)
             return;
 
-        document.getElementById('standalone_wifi').checked = data['STANDALONE_WIFI'];
-        updateWifiFields();
+        document.getElementById('standalone_wifi').checked = data['STANDALONE_WIFI'];      
             
         if(!data['STANDALONE_WIFI'])
         {
@@ -111,15 +125,18 @@ async function loadConfig()
             }
         }
 
+        updateWifiFields();
+
         document.getElementById('mqtt_server').value = data['MQTT_SERVER'];
         document.getElementById('mqtt_username').value = data['MQTT_USERNAME'];
-        document.getElementById('mqtt_password').value = data['MQTT_PASSWORD'];
-        document.getElementById('mqtt_use_onetopic').checked = data['MQTT_USE_JSONTABLE'];
-        document.getElementById('mqtt_jsontable').checked = data['MQTT_USE_ONETOPIC'];
+        document.getElementById('mqtt_password').value = data['MQTT_PASSWORD'];    
+        document.getElementById('mqtt_jsontable').checked = data['MQTT_USE_JSONTABLE'];
+        document.getElementById('mqtt_use_onetopic').checked = data['MQTT_USE_ONETOPIC'];
 
         if(data['MQTT_USE_ONETOPIC'])
         { 
             document.getElementById('mqtt_onetopic').value = data['MQTT_ONETOPIC_NAME'];
+            show('onetopic');
         }
 
         document.getElementById('mqtt_port').value = data['MQTT_PORT'];
@@ -134,6 +151,7 @@ async function loadConfig()
             document.getElementById('pin_sg1').value = data['PIN_SG1'];
             document.getElementById('pin_sg2').value = data['PIN_SG2'];
             document.getElementById('sg_relay_trigger').checked = data['SG_RELAY_HIGH_TRIGGER'];
+            show('smartgrid');
         }
         
         document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];   
@@ -373,9 +391,9 @@ function ValidateMQTTTopic(topicName)
     return /^(?:(?:[a-zA-Z0-9_-]+)\/)*([a-zA-Z0-9_-]+\/)$/.test(topicName);  
 }
 
-function show(id)
+function show(id, force = undefined)
 {
-    document.getElementById(id).classList.toggle('hidden');
+    document.getElementById(id).classList.toggle('hidden', force);
 }
 
 async function updatePresets()
