@@ -589,8 +589,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
     config->PARAMETERS_LENGTH = 0;
     config->PARAMETERS = nullptr;
   }
-
-  DynamicJsonDocument webuiSelectionValues(WEBUI_SELECTION_VALUE_SIZE);
+  StaticJsonDocument<WEBUI_SELECTION_VALUE_SIZE> webuiSelectionValues;
   webuiSelectionValues["model"] = (char *)request->getParam("model", true)->value().c_str();
   webuiSelectionValues["language"] = (char *)request->getParam("language", true)->value().c_str();
   webuiSelectionValues["presetParameters"] = (char *)request->getParam("presetParameters", true)->value().c_str();
@@ -598,7 +597,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
   String serializedWebuiSelectionValues;
   serializeJson(webuiSelectionValues, serializedWebuiSelectionValues);
   config->WEBUI_SELECTION_VALUES = (char *)serializedWebuiSelectionValues.c_str();
-  
+
   saveConfig();
 
   request->send(200, "text/text", "OK");

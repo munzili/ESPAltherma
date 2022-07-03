@@ -143,7 +143,7 @@ void readConfig()
 
 void saveConfig()
 {
-    DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
+    StaticJsonDocument<MODELS_CONFIG_SIZE> configDoc;
     configDoc["STANDALONE_WIFI"] = config->STANDALONE_WIFI;
 
     if(!config->STANDALONE_WIFI)
