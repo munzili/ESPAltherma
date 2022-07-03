@@ -50,7 +50,8 @@ void onLoadWifiNetworks(AsyncWebServerRequest *request)
 
   scan_wifi();
 
-  for (int16_t i = 0; i < lastWifiScanResultAmount; i++) {
+  for (int16_t i = 0; i < lastWifiScanResultAmount; i++) 
+  {
     JsonObject networkDetails = networksDoc.createNestedObject();
     networkDetails["SSID"] = lastWifiScanResults[i]->SSID;
     networkDetails["RSSI"] = lastWifiScanResults[i]->RSSI;
@@ -183,7 +184,7 @@ void onFormat(AsyncWebServerRequest *request)
 {
   bool result = formatDefaultFS();
 
-  request->send(200, "text/javascript", String(result));
+  request->send(200, "text/javascript", String(result ? "OK" : "FAILED"));
 
   esp_restart();
 }
@@ -198,8 +199,8 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
   String logmessage;  
   String fsFilename;
   
-  if (!index) {
-      
+  if (!index) 
+  {      
     do
     {
       fsFilename = "/P" + String(millis()) + ".json";
@@ -211,14 +212,16 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
     Serial.println(logmessage);
   }
 
-  if (len) {
+  if (len) 
+  {
     // stream the incoming chunk to the opened file
     request->_tempFile.write(data, len);    
     logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
     Serial.println(logmessage);
   }
 
-  if (final) {       
+  if (final) 
+  {       
     lastUploadFileName = "/" + String(request->_tempFile.name());
 
     logmessage = "Upload Complete: " + String(filename) + ", size: " + String(index + len);    
@@ -266,7 +269,8 @@ void onUpload(AsyncWebServerRequest *request)
   uploadFileFS.close();
   
   bool newModel = true;
-  for (JsonObject model : modelsDocArr) {
+  for (JsonObject model : modelsDocArr) 
+  {
     if(strcmp(model["Model"].as<const char*>(), uploadDoc["Model"].as<const char*>()) == 0)
     {
       Serial.printf("Found existing Model: %s\n", model["Model"].as<const char*>());
@@ -353,7 +357,8 @@ void onLoadValues(AsyncWebServerRequest *request)
   config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
   
   uint8_t counter = 0;
-  for (JsonArray model : modelsDocArr) {
+  for (JsonArray model : modelsDocArr) 
+  {
     config->PARAMETERS[counter] = new LabelDef(model[0], model[1], model[2], model[3], model[4], model[5]);
     counter++;
   }  
@@ -361,7 +366,8 @@ void onLoadValues(AsyncWebServerRequest *request)
   Serial.println("Fetching Values");
 
   uint8_t loopCounter = 0;
-  for (JsonArray model : modelsDocArr) {
+  for (JsonArray model : modelsDocArr) 
+  {
     RegistryBuffer buffer;
     buffer.RegistryID = model[0].as<const uint8_t>();
     int tries = 0;
@@ -566,7 +572,8 @@ void onSaveConfig(AsyncWebServerRequest *request)
     config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
 
     int counter = 0;
-    for (JsonArray value : parametersArray) {
+    for (JsonArray value : parametersArray) 
+    {
       config->PARAMETERS[counter] = new LabelDef(
         value[0].as<const int>(), 
         value[1].as<const int>(), 

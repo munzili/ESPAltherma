@@ -89,6 +89,14 @@ void extraLoop()
   }
   M5.update();
 #endif
+  
+  if(!doRestartInStandaloneWifi)
+   return;
+
+  Serial.println("Restarting in standalone wifi mode");
+  config->STANDALONE_WIFI = true;
+  saveConfig();
+  esp_restart();
 }
 
 void initRegistries()
@@ -237,23 +245,11 @@ void setup()
   mqttSerial.print("ESPAltherma started!");
 }
 
-void handleRestartInStandaloneWifi()
-{
-  if(!doRestartInStandaloneWifi)
-    return;
-
-  Serial.println("Restarting in standalone wifi mode");
-  config->STANDALONE_WIFI = true;
-  saveConfig();
-  esp_restart();
-}
-
 void waitLoop(uint ms){
   unsigned long start = millis();
   while (millis() < start + ms) //wait .5sec between registries
   {
-    extraLoop();
-    handleRestartInStandaloneWifi();
+    extraLoop();   
   }
 }
 
