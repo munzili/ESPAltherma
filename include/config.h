@@ -197,12 +197,12 @@ void saveConfig()
         parameter.add(config->PARAMETERS[i]->label);
     }
 
-    configDoc["WEBUI_SELECTION_VALUES"] = config->WEBUI_SELECTION_VALUES;    
-    
+    configDoc["WEBUI_SELECTION_VALUES"] = config->WEBUI_SELECTION_VALUES;
+
     File configFile = LittleFS.open(CONFIG_FILE, FILE_WRITE);
     serializeJsonPretty(configDoc, Serial);
     serializeJson(configDoc, configFile);
-    configFile.close();    
+    configFile.close();
 }
 
 #endif

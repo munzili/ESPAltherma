@@ -23,6 +23,7 @@ size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
 
 bool arduinoOTAIsBusy = false;
+bool doRestartInStandaloneWifi = false;
 
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
 long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
@@ -148,9 +149,7 @@ void setupScreen(){
 }
 
 void IRAM_ATTR restartInStandaloneWifi() {
-    config->STANDALONE_WIFI = true;
-    saveConfig();
-    esp_restart();
+  doRestartInStandaloneWifi = true;
 }
 
 void setup()
@@ -238,13 +237,26 @@ void setup()
   mqttSerial.print("ESPAltherma started!");
 }
 
+void handleRestartInStandaloneWifi()
+{
+  if(!doRestartInStandaloneWifi)
+    return;
+
+  Serial.println("Restarting in standalone wifi mode");
+  config->STANDALONE_WIFI = true;
+  saveConfig();
+  esp_restart();
+}
+
 void waitLoop(uint ms){
   unsigned long start = millis();
   while (millis() < start + ms) //wait .5sec between registries
   {
     extraLoop();
+    handleRestartInStandaloneWifi();
   }
 }
+
 
 void loop()
 {
