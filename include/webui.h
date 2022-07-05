@@ -580,7 +580,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
         value[2].as<const int>(), 
         value[3].as<const int>(), 
         value[4].as<const int>(),
-        value[5].as<const char*>());
+        value[5]);
       counter++;
     }
   }
@@ -589,6 +589,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
     config->PARAMETERS_LENGTH = 0;
     config->PARAMETERS = nullptr;
   }
+
   StaticJsonDocument<WEBUI_SELECTION_VALUE_SIZE> webuiSelectionValues;
   webuiSelectionValues["model"] = (char *)request->getParam("model", true)->value().c_str();
   webuiSelectionValues["language"] = (char *)request->getParam("language", true)->value().c_str();
@@ -596,7 +597,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   String serializedWebuiSelectionValues;
   serializeJson(webuiSelectionValues, serializedWebuiSelectionValues);
-  config->WEBUI_SELECTION_VALUES = (char *)serializedWebuiSelectionValues.c_str();
+  config->WEBUI_SELECTION_VALUES = (char *)serializedWebuiSelectionValues.c_str();  
 
   saveConfig();
 

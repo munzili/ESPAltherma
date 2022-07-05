@@ -107,6 +107,7 @@ void readConfig()
     config->MQTT_PASSWORD = (char *)configDoc["MQTT_PASSWORD"].as<const char*>();
     config->MQTT_USE_JSONTABLE = configDoc["MQTT_USE_JSONTABLE"].as<const bool>();
     config->MQTT_USE_ONETOPIC = configDoc["MQTT_USE_ONETOPIC"].as<const bool>();
+  
     if(config->MQTT_USE_ONETOPIC)
     {
         config->MQTT_ONETOPIC_NAME = (char *)configDoc["MQTT_ONETOPIC_NAME"].as<const char*>();
@@ -135,15 +136,15 @@ void readConfig()
             parameter[2].as<const int>(), 
             parameter[3].as<const int>(), 
             parameter[4].as<const int>(), 
-            parameter[5].as<const char*>());
+            parameter[5]);
     }
 
-    config->WEBUI_SELECTION_VALUES = (char *)configDoc["WEBUI_SELECTION_VALUES"].as<const char*>();
+    config->WEBUI_SELECTION_VALUES = (char *)configDoc["WEBUI_SELECTION_VALUES"].as<const char*>();    
 }
 
 void saveConfig()
 {
-    StaticJsonDocument<MODELS_CONFIG_SIZE> configDoc;
+    DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
     configDoc["STANDALONE_WIFI"] = config->STANDALONE_WIFI;
 
     if(!config->STANDALONE_WIFI)
@@ -183,9 +184,8 @@ void saveConfig()
     configDoc["PIN_SG2"] = config->PIN_SG2;
     configDoc["SG_RELAY_HIGH_TRIGGER"] = config->SG_RELAY_HIGH_TRIGGER;
     configDoc["PIN_ENABLE_CONFIG"] = config->PIN_ENABLE_CONFIG;
-    
-    JsonArray parameters = configDoc.createNestedArray("PARAMETERS");
 
+    JsonArray parameters = configDoc.createNestedArray("PARAMETERS");
     for(size_t i = 0; i < config->PARAMETERS_LENGTH; i++)
     {
         JsonArray parameter = parameters.createNestedArray();
@@ -196,7 +196,7 @@ void saveConfig()
         parameter.add(config->PARAMETERS[i]->dataType);
         parameter.add(config->PARAMETERS[i]->label);
     }
-
+    
     configDoc["WEBUI_SELECTION_VALUES"] = config->WEBUI_SELECTION_VALUES;
 
     File configFile = LittleFS.open(CONFIG_FILE, FILE_WRITE);

@@ -9,9 +9,9 @@ struct LabelDef
     const uint16_t convid;
     const int8_t dataSize;
     const int8_t dataType;
-    const char *label;
+    const String label;
     char asString[30];
-    LabelDef(int registryIDp, int offsetp, int convidp, int dataSizep, int dataTypep, const char *labelp) : registryID(registryIDp), offset(offsetp), convid(convidp), dataSize(dataSizep), dataType(dataTypep), label(labelp){};
+    LabelDef(int registryIDp, int offsetp, int convidp, int dataSizep, int dataTypep, String labelp) : registryID(registryIDp), offset(offsetp), convid(convidp), dataSize(dataSizep), dataType(dataTypep), label(labelp){};
 };
 
 #endif

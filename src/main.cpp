@@ -56,8 +56,8 @@ void updateValues(LabelDef *labelDef)
   if(config->MQTT_USE_ONETOPIC)
   {
     char *topicBuff = config->MQTT_ONETOPIC_NAME;
-    strcat(topicBuff, labelDef->label);
-    client.publish(config->MQTT_ONETOPIC_NAME, labelDef->asString);
+    strcat(topicBuff, labelDef->label.c_str());
+    client.publish(topicBuff, labelDef->asString);
   }
   
   if (alpha)

@@ -60,7 +60,7 @@ void readEEPROM(){
 void reconnect()
 {
   //in case loopback as server is set, skip connecting (debug purpose)
-  if(strcmp(config->MQTT_SERVER, "127.0.0.1") == 0)
+  if(strcmp(config->MQTT_SERVER, "127.0.0.1") == 0 || strcmp(config->MQTT_SERVER, "localhost") == 0)
   {
     mqttSerial.print("Found loopback MQTT server, skiping connection...");
     return;
