@@ -267,7 +267,7 @@ void loop()
   for (size_t i = 0; i < registryBufferSize; i++)
   {
     int tries = 0;
-    while (!queryRegistry(&registryBuffers[i]) && tries++ < 3)
+    while (tries++ < 3 && !queryRegistry(&registryBuffers[i]))
     {
       mqttSerial.println("Retrying...");
       waitLoop(1000);
