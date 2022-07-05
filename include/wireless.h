@@ -7,19 +7,19 @@
 
 struct WifiDetails
 {
-    const String SSID;    
-    const int32_t RSSI;
-    const wifi_auth_mode_t EncryptionType;
+  const String SSID;    
+  const int32_t RSSI;
+  const wifi_auth_mode_t EncryptionType;
 };
 
 void start_standalone_wifi()
 {  
-    IPAddress local_ip(192, 168, 1, 1); 
-    IPAddress gateway(192, 168, 1, 1); 
-    IPAddress subnet(255, 255, 255, 0);
-    WiFi.softAP("ESPAltherma-Config-WiFi");   
-    WiFi.softAPConfig(local_ip, gateway, subnet);
-    WiFi.setHostname("ESPAltherma");    
+  IPAddress local_ip(192, 168, 1, 1); 
+  IPAddress gateway(192, 168, 1, 1); 
+  IPAddress subnet(255, 255, 255, 0);  
+  WiFi.softAP("ESPAltherma-Config-WiFi");   
+  WiFi.softAPConfig(local_ip, gateway, subnet);
+  WiFi.setHostname("ESPAltherma");    
 }
 
 void setup_wifi()
@@ -55,7 +55,7 @@ void setup_wifi()
     }
   }
 
-  WiFi.begin(config->SSID, config->SSID_PASSWORD);
+  WiFi.begin(config->SSID.c_str(), config->SSID_PASSWORD.c_str());
   int i = 0;
   while (WiFi.status() != WL_CONNECTED)
   {

@@ -60,7 +60,7 @@ void readEEPROM(){
 void reconnect()
 {
   //in case loopback as server is set, skip connecting (debug purpose)
-  if(strcmp(config->MQTT_SERVER, "127.0.0.1") == 0 || strcmp(config->MQTT_SERVER, "localhost") == 0)
+  if(config->MQTT_SERVER.compareTo("127.0.0.1") == 0 || config->MQTT_SERVER.compareTo( "localhost") == 0)
   {
     mqttSerial.print("Found loopback MQTT server, skiping connection...");
     return;
@@ -72,7 +72,7 @@ void reconnect()
   {
     Serial.print("Attempting MQTT connection...");
 
-    if (client.connect("ESPAltherma-dev", config->MQTT_USERNAME, config->MQTT_PASSWORD, MQTT_lwt, 0, true, "Offline"))
+    if (client.connect("ESPAltherma-dev", config->MQTT_USERNAME.c_str(), config->MQTT_PASSWORD.c_str(), MQTT_lwt, 0, true, "Offline"))
     {
       Serial.println("connected!");
       client.publish("homeassistant/sensor/espAltherma/config", "{\"name\":\"AlthermaSensors\",\"stat_t\":\"~/STATESENS\",\"avty_t\":\"~/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"espaltherma\",\"device\":{\"identifiers\":[\"ESPAltherma\"]}, \"~\":\"espaltherma\",\"json_attr_t\":\"~/ATTR\"}", true);

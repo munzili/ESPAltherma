@@ -12,20 +12,20 @@ struct Config
 {
     bool configStored;
     bool STANDALONE_WIFI;
-    char* SSID;
-    char* SSID_PASSWORD;
+    String SSID;
+    String SSID_PASSWORD;
     bool SSID_STATIC_IP;
-    char* SSID_IP;
-    char* SSID_SUBNET;
-    char* SSID_GATEWAY;
-    char* SSID_PRIMARY_DNS;
-    char* SSID_SECONDARY_DNS;
-    char* MQTT_SERVER;
-    char* MQTT_USERNAME;
-    char* MQTT_PASSWORD;
+    String SSID_IP;
+    String SSID_SUBNET;
+    String SSID_GATEWAY;
+    String SSID_PRIMARY_DNS;
+    String SSID_SECONDARY_DNS;
+    String MQTT_SERVER;
+    String MQTT_USERNAME;
+    String MQTT_PASSWORD;
     bool MQTT_USE_JSONTABLE;
     bool MQTT_USE_ONETOPIC;
-    char* MQTT_ONETOPIC_NAME;
+    String MQTT_ONETOPIC_NAME;
     uint16_t MQTT_PORT;
     uint32_t FREQUENCY;
     uint8_t PIN_RX;
@@ -42,17 +42,6 @@ struct Config
 
     ~Config()
     {
-        if(SSID) delete[] SSID;
-        if(SSID_PASSWORD) delete[] SSID_PASSWORD;
-        if(SSID_IP) delete[] SSID_IP;
-        if(SSID_SUBNET) delete[] SSID_SUBNET;
-        if(SSID_GATEWAY) delete[] SSID_GATEWAY;
-        if(SSID_PRIMARY_DNS) delete[] SSID_PRIMARY_DNS;
-        if(SSID_SECONDARY_DNS) delete[] SSID_SECONDARY_DNS;
-        if(MQTT_SERVER) delete[] MQTT_SERVER;
-        if(MQTT_USERNAME) delete[] MQTT_USERNAME;
-        if(MQTT_PASSWORD) delete[] MQTT_PASSWORD;
-        if(MQTT_ONETOPIC_NAME) delete[] MQTT_ONETOPIC_NAME;
         if(WEBUI_SELECTION_VALUES) delete[] WEBUI_SELECTION_VALUES;
 
         if(PARAMETERS_LENGTH)

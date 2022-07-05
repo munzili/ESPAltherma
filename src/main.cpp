@@ -23,7 +23,7 @@ size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
 
 bool arduinoOTAIsBusy = false;
-bool doRestartInStandaloneWifi = false;
+bool doRestartInStandaloneWifi = false; 
 
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
 long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
@@ -55,9 +55,7 @@ void updateValues(LabelDef *labelDef)
 
   if(config->MQTT_USE_ONETOPIC)
   {
-    char *topicBuff = config->MQTT_ONETOPIC_NAME;
-    strcat(topicBuff, labelDef->label.c_str());
-    client.publish(topicBuff, labelDef->asString);
+    client.publish((config->MQTT_ONETOPIC_NAME + labelDef->label).c_str(), labelDef->asString);
   }
   
   if (alpha)
@@ -180,7 +178,7 @@ void setup()
     start_standalone_wifi();    
     WebUI_Init();
   }
-  
+
   initMQTTConfig(config);
   
   setupScreen();
@@ -232,10 +230,9 @@ void setup()
   pinMode(config->PIN_ENABLE_CONFIG, INPUT_PULLUP);
   attachInterrupt(config->PIN_ENABLE_CONFIG, restartInStandaloneWifi, FALLING);
 
-  client.setServer(config->MQTT_SERVER, config->MQTT_PORT);
+  client.setServer(config->MQTT_SERVER.c_str(), config->MQTT_PORT);
   client.setBufferSize(MAX_MSG_SIZE); //to support large json message
   client.setCallback(callback);
-  client.setServer(config->MQTT_SERVER, config->MQTT_PORT);
   mqttSerial.print("Connecting to MQTT server...");
   mqttSerial.begin(&client, "espaltherma/log");
   reconnect();
@@ -252,7 +249,6 @@ void waitLoop(uint ms){
     extraLoop();   
   }
 }
-
 
 void loop()
 {
