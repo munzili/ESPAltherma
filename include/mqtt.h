@@ -1,9 +1,9 @@
 #ifndef MQTT_H
 #define MQTT_H
 #include <PubSubClient.h>
-#include <EEPROM.h>
 #include "config.h"
 #include "mqttConfig.h"
+#include "persistence.h"
 
 #define MQTT_attr "espaltherma/ATTR"
 #define MQTT_lwt "espaltherma/LWT"
@@ -36,25 +36,6 @@ void sendValues()
     strcpy(jsonbuff, "[{\0");
   else
     strcpy(jsonbuff, "{\0");
-}
-
-void saveEEPROM(uint8_t state){
-    EEPROM.write(EEPROM_STATE, state);
-    EEPROM.commit();
-}
-
-void readEEPROM(){
-  if ('R' == EEPROM.read(EEPROM_CHK)){
-    digitalWrite(config->PIN_THERM, EEPROM.read(EEPROM_STATE));
-    mqttSerial.printf("Restoring previous state: %s", (EEPROM.read(EEPROM_STATE) == HIGH) ? "Off":"On" );
-  }
-  else{
-    mqttSerial.printf("EEPROM not initialized (%d). Initializing...", EEPROM.read(EEPROM_CHK));
-    EEPROM.write(EEPROM_CHK, 'R');
-    EEPROM.write(EEPROM_STATE, HIGH);
-    EEPROM.commit();
-    digitalWrite(config->PIN_THERM, HIGH);
-  }
 }
 
 void reconnect()
@@ -115,14 +96,14 @@ void callbackTherm(byte *payload, unsigned int length)
   if (payload[1] == 'F')
   { //turn off
     digitalWrite(config->PIN_THERM, HIGH);
-    saveEEPROM(HIGH);
+    savePersistence(HIGH);
     client.publish("espaltherma/STATE", "OFF");
     mqttSerial.println("Turned OFF");
   }
   else if (payload[1] == 'N')
   { //turn on
     digitalWrite(config->PIN_THERM, LOW);
-    saveEEPROM(LOW);
+    savePersistence(LOW);
     client.publish("espaltherma/STATE", "ON");
     mqttSerial.println("Turned ON");
   }

@@ -18,6 +18,7 @@
 #include "mqtt.h"
 #include "webui.h"
 #include "wireless.h"
+#include "persistence.h"
 
 size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
@@ -173,7 +174,7 @@ void setup()
       return;
   }
   
-  EEPROM.begin(16);
+  initPersistence();
 
   readConfig();
 
@@ -212,7 +213,7 @@ void setup()
   gpio_pullup_dis(GPIO_NUM_25);
 #endif
 
-  readEEPROM();//Restore previous state
+  readPersistence();//Restore previous state
 
   if(!config->STANDALONE_WIFI)
   {
