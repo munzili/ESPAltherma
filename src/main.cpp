@@ -30,7 +30,7 @@ bool doRestartInStandaloneWifi = false;
 long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
 #endif
 
-bool contains(uint8_t array[], size_t size, uint8_t value)
+bool contains(uint8_t *array, size_t size, uint8_t value)
 {
   for (size_t i = 0; i < size; i++)
   {
@@ -114,7 +114,7 @@ void initRegistries()
   {            
     auto &&label = *config->PARAMETERS[i];
 
-    if (!contains(tempRegistryIDs, sizeof(tempRegistryIDs), label.registryID))
+    if (!contains(tempRegistryIDs, config->PARAMETERS_LENGTH, label.registryID))
     {
       mqttSerial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
       tempRegistryIDs[registryBufferSize++] = label.registryID;
@@ -239,13 +239,13 @@ void setup()
   client.setServer(config->MQTT_SERVER.c_str(), config->MQTT_PORT);
   client.setBufferSize(MAX_MSG_SIZE); //to support large json message
   client.setCallback(callback);
-  mqttSerial.print("Connecting to MQTT server...");
+  mqttSerial.print("Connecting to MQTT server...\n");
   mqttSerial.begin(&client, "espaltherma/log");
   reconnect();
   mqttSerial.println("OK!");
 
   initRegistries();
-  mqttSerial.print("ESPAltherma started!");
+  mqttSerial.print("ESPAltherma started!\n");
 }
 
 void waitLoop(uint ms){

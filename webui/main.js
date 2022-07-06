@@ -167,6 +167,7 @@ async function loadConfig()
         {            
             customParametersList = data['PARAMETERS'];
             updateParametersTable('selectedParametersTable', customParametersList);
+            updateParameters();
         }
     })
     .catch(function(err) {
@@ -498,12 +499,12 @@ async function uploadFile() {
     });        
 }
 
-function AddParameter(offset, regid, convid, dataSize, dataType, dataName)
+function AddParameter(regid, offset, convid, dataSize, dataType, dataName)
 {
     
     for (let i in customParametersList) {
-        if(customParametersList[i][0] == offset && 
-           customParametersList[i][1] == regid && 
+        if(customParametersList[i][0] == regid && 
+           customParametersList[i][1] == offset &&            
            customParametersList[i][2] == convid && 
            customParametersList[i][3] == dataSize && 
            customParametersList[i][4] == dataType)
@@ -513,7 +514,7 @@ function AddParameter(offset, regid, convid, dataSize, dataType, dataName)
         }
     }
 
-    const dataArray = [offset, regid, convid, dataSize, dataType, dataName];
+    const dataArray = [regid, offset, convid, dataSize, dataType, dataName];
 
     customParametersList.push(dataArray);
     return true;
@@ -521,15 +522,15 @@ function AddParameter(offset, regid, convid, dataSize, dataType, dataName)
 
 function addCustomParameter()
 {    
-    const offset = document.getElementById('offset');
     const regid = document.getElementById('regid');
+    const offset = document.getElementById('offset');
     const convid = document.getElementById('convid');
     const dataSize = document.getElementById('dataSize');
     const dataType = document.getElementById('dataType');
     const dataName = document.getElementById('dataName');
 
-    if( offset.value == '' || isNaN(offset.value) ||
-        regid.value == '' || isNaN(regid.value) ||
+    if( regid.value == '' || isNaN(regid.value) ||
+        offset.value == '' || isNaN(offset.value) ||        
         convid.value == '' || isNaN(convid.value) || 
         dataSize.value == '' || isNaN(dataSize.value) ||
         dataType.value == '' || isNaN(dataType.value) ||
@@ -539,13 +540,13 @@ function addCustomParameter()
         return false;
     }
 
-    const result = AddParameter(offset.value, regid.value, convid.value, dataSize.value, dataType.value, dataName.value.trim());
+    const result = AddParameter(regid.value, offset.value, convid.value, dataSize.value, dataType.value, dataName.value.trim());
 
     if(!result)
         return;
 
-    offset.value = '';
     regid.value = '';
+    offset.value = '';
     convid.value = '';
     dataSize.value = '';
     dataType.value = '';
@@ -571,15 +572,15 @@ function updateParametersTable(tableId, parameters)
         
         const nameCell = row.insertCell(0);
        
-        const offsetCell = row.insertCell(1);
-        const regidCell = row.insertCell(2);
+        const regidCell = row.insertCell(1);
+        const offsetCell = row.insertCell(2);        
         const convidCell = row.insertCell(3);
         const dataSizeCell = row.insertCell(4);
         const dataTypeCell = row.insertCell(5);        
 
         nameCell.appendChild(document.createTextNode(data[5]));
-        offsetCell.appendChild(document.createTextNode(data[0]));
-        regidCell.appendChild(document.createTextNode(data[1]));
+        regidCell.appendChild(document.createTextNode(data[0]));
+        offsetCell.appendChild(document.createTextNode(data[1]));        
         convidCell.appendChild(document.createTextNode(data[2]));
         dataSizeCell.appendChild(document.createTextNode(data[3]));
         dataTypeCell.appendChild(document.createTextNode(data[4]));

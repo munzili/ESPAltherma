@@ -42,8 +42,6 @@ struct Config
 
     ~Config()
     {
-        if(WEBUI_SELECTION_VALUES) delete[] WEBUI_SELECTION_VALUES;
-
         if(PARAMETERS_LENGTH)
         {
             for (size_t i = 0; i < PARAMETERS_LENGTH; i++)

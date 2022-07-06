@@ -7,6 +7,7 @@
 #include "esp_task_wdt.h"
 #include "config.h"
 #include "wireless.h"
+#include "persistence.h"
 
 #define MODELS_FILE "/models.json"
 #define MODEL_DEFINITION_DOC_SIZE 1024*25
@@ -39,6 +40,8 @@ bool formatDefaultFS()
   File file = LittleFS.open(MODELS_FILE, FILE_WRITE, true);
   file.print("[]");
   file.close();
+
+  resetPersistence();
 
   return true;
 }
