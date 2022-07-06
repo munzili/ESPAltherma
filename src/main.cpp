@@ -39,6 +39,11 @@ bool contains(uint8_t array[], size_t size, uint8_t value)
   return false;
 }
 
+
+uint8_t getFragmentation() {
+  return 100 - heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) * 100.0 / heap_caps_get_free_size(MALLOC_CAP_8BIT);
+}
+
 //Converts to string and add the value to the JSON message
 void updateValues(LabelDef *labelDef)
 {
@@ -295,6 +300,7 @@ void loop()
   }  
   
   sendValues();//Send the full json message
-  mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);
+  mqttSerial.printf("Fragemntation level: %d\n", getFragmentation());
+  mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);  
   waitLoop(config->FREQUENCY);
 }

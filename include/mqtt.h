@@ -62,7 +62,7 @@ void reconnect()
   //in case loopback as server is set, skip connecting (debug purpose)
   if(config->MQTT_SERVER.compareTo("127.0.0.1") == 0 || config->MQTT_SERVER.compareTo( "localhost") == 0)
   {
-    mqttSerial.print("Found loopback MQTT server, skiping connection...");
+    mqttSerial.print("Found loopback MQTT server, skiping connection...\n");
     return;
   }
 
@@ -70,7 +70,7 @@ void reconnect()
   int i = 0;
   while (!client.connected())
   {
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("Attempting MQTT connection...\n");
 
     if (client.connect("ESPAltherma-dev", config->MQTT_USERNAME.c_str(), config->MQTT_PASSWORD.c_str(), MQTT_lwt, 0, true, "Offline"))
     {
