@@ -12,6 +12,7 @@
 
 #define MODELS_FILE "/models.json"
 #define MODEL_DEFINITION_DOC_SIZE 1024*25
+#define MODEL_DEFINITION_UOLOAD_SIZE 1024*50
 #define MODELS_DOC_SIZE 1024*10
 #define WEBUI_SELECTION_VALUE_SIZE 1024
 
@@ -236,7 +237,7 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
 
     // minimize json file
     File modelsFile = LittleFS.open(lastUploadFileName, FILE_READ);
-    DynamicJsonDocument modelsDoc(MODEL_DEFINITION_DOC_SIZE);
+    DynamicJsonDocument modelsDoc(MODEL_DEFINITION_UOLOAD_SIZE);
     deserializeJson(modelsDoc, modelsFile); 
     modelsFile.close();
 
