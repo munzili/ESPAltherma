@@ -2,11 +2,11 @@
 #define COMM_H
 #include <Arduino.h>
 #include <HardwareSerial.h>
+#include "X10A.h"
 
 #define SER_TIMEOUT 300 //leave 300ms for the machine to answer
 #define MAX_BUFFER_SIZE 32 //max bytes returned from X10A Port
 
-HardwareSerial SerialX10A(1);
 
 struct RegistryBuffer {
   char RegistryID;

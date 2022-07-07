@@ -8,6 +8,7 @@
 #include "config.h"
 #include "wireless.h"
 #include "persistence.h"
+#include "arrayFunctions.h"
 
 #define MODELS_FILE "/models.json"
 #define MODEL_DEFINITION_DOC_SIZE 1024*25
@@ -329,11 +330,7 @@ void onLoadValues(AsyncWebServerRequest *request)
   // disable watchdog of AsyncWebServer - WD will cancel this request becouse it tookes too long
   esp_task_wdt_delete(NULL);
   
-  if(SerialX10A)
-  {
-    Serial.println("Canceling current serial connction");
-    SerialX10A.end();
-  }
+  bool serialX10AWasInited = SerialX10A;
 
   int8_t pinRx = request->getParam("PIN_RX", true)->value().toInt();
   int8_t pinTx = request->getParam("PIN_TX", true)->value().toInt();
@@ -341,11 +338,7 @@ void onLoadValues(AsyncWebServerRequest *request)
 
   Serial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", pinRx, pinTx);
 
-  SerialX10A.begin(
-    9600, 
-    SERIAL_8E1, 
-    pinRx, 
-    pinTx);
+  X10AInit(pinRx, pinTx);
 
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
   deserializeJson(modelsDoc, params); 
@@ -353,69 +346,97 @@ void onLoadValues(AsyncWebServerRequest *request)
 
   Serial.printf("Creating labelDefs %i\n", modelsDocArr.size());
 
-  // temp create new label definitions from request and afterwards restore old one
-  LabelDef ***oldLabelDefs = &config->PARAMETERS;
-  uint8_t oldLabelDefsSize = config->PARAMETERS_LENGTH;
-  config->PARAMETERS_LENGTH = modelsDocArr.size();
-  config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
+  size_t labelsSize = modelsDocArr.size();
+  LabelDef **labelsToLoad = new LabelDef*[labelsSize];
   
   uint8_t counter = 0;
   for (JsonArray model : modelsDocArr) 
   {
-    config->PARAMETERS[counter] = new LabelDef(model[0], model[1], model[2], model[3], model[4], model[5]);
+    labelsToLoad[counter] = new LabelDef(model[0], model[1], model[2], model[3], model[4], model[5]);
     counter++;
   }  
 
-  Serial.println("Fetching Values");
+  //getting the list of registries to query from the selected values  
+  uint8_t loadRegistryBufferSize = 0;  
+  uint8_t* tempRegistryIDs = new uint8_t[labelsSize];
 
-  uint8_t loopCounter = 0;
-  for (JsonArray model : modelsDocArr) 
-  {
-    RegistryBuffer buffer;
-    buffer.RegistryID = model[0].as<const uint8_t>();
-    int tries = 0;
-    Serial.printf("Quering register %i\n", buffer.RegistryID);
-    while (!queryRegistry(&buffer) && tries++ < 3)
+  size_t i;
+  for (i = 0; i < labelsSize; i++)
+  {            
+    auto &&label = *labelsToLoad[i];
+
+    if (!contains(tempRegistryIDs, labelsSize, label.registryID))
     {
-      mqttSerial.println("Retrying...");
+      Serial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
+      tempRegistryIDs[loadRegistryBufferSize++] = label.registryID;
+    }
+  }
+  
+  RegistryBuffer loadRegistryBuffers[loadRegistryBufferSize];
+
+  for(i = 0; i < loadRegistryBufferSize; i++)
+  {
+    loadRegistryBuffers[i].RegistryID = tempRegistryIDs[i];
+  }
+
+  delete[] tempRegistryIDs;
+
+  if (loadRegistryBufferSize == 0)
+  {
+    request->send(422, "text/text", "Given params doesn't contain a registry buffer to fetch");
+    return;
+  }
+
+  Serial.println("Fetching Values");
+  
+  //Querying all registries and store results
+  for (size_t i = 0; i < loadRegistryBufferSize; i++)
+  {
+    uint8_t tries = 0;
+    while (tries++ < 3 && !queryRegistry(&loadRegistryBuffers[i]))
+    {
+      Serial.println("Retrying...");
       delay(1000);
     }
-    if (model[0].as<const uint8_t>() == buffer.Buffer[1]) //if replied registerID is coherent with the command
+  }
+  
+  for (size_t i = 0; i < labelsSize; i++)
+  {            
+    auto &&label = *labelsToLoad[i];
+
+    for (size_t j = 0; j < loadRegistryBufferSize; j++)
     {
-      mqttSerial.println("Found value " + buffer.Buffer[1]);
+      if(loadRegistryBuffers[j].Success && label.registryID == loadRegistryBuffers[j].RegistryID)
+      {
+        char *input = loadRegistryBuffers[j].Buffer;
+        input += label.offset + 3;
 
-      char *input = buffer.Buffer;
-      input += config->PARAMETERS[loopCounter]->offset + 3;
-
-      converter.convert(config->PARAMETERS[loopCounter], input); // convert buffer result of label offset to correct/usabel value
+        converter.convert(&label, input); // convert buffer result of label offset to correct/usabel value
+        break;
+      }
     }
-
-    loopCounter++;
   }  
-
+  
   Serial.println("Returning Values");
 
   DynamicJsonDocument resultDoc(modelsDocArr.size()*JSON_OBJECT_SIZE(2));
   JsonArray obj = resultDoc.to<JsonArray>();
   
-  for (uint8_t i = 0; i < counter; i++) {
-    obj.add(config->PARAMETERS[i]->asString);
+  for (uint8_t i = 0; i < labelsSize; i++) {
+    obj.add(labelsToLoad[i]->asString);
   } 
 
-  Serial.println("Delete tmp labelDefs");
-
-  while(counter >= 0)
+  for (size_t i = 0; i < labelsSize; i++)
   {
-    delete[] config->PARAMETERS[counter];
-    counter--;
+      delete labelsToLoad[i];
   }
+  delete[] labelsToLoad;
 
-  delete[] config->PARAMETERS;
-
-  Serial.println("Setting old labelDefs");
-
-  config->PARAMETERS = *oldLabelDefs;
-  config->PARAMETERS_LENGTH = oldLabelDefsSize;
+  if(serialX10AWasInited)
+  {
+    Serial.println("Restoring original X10A connection");
+    X10AInit(config->PIN_RX, config->PIN_TX);
+  }
 
   String response;
   serializeJson(resultDoc, response);

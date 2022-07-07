@@ -6,7 +6,6 @@
 #include <Arduino.h>
 #endif
 
-#include <HardwareSerial.h>
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
 
@@ -19,6 +18,8 @@
 #include "webui.h"
 #include "wireless.h"
 #include "persistence.h"
+#include "X10A.h"
+#include "arrayFunctions.h"
 
 size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
@@ -29,17 +30,6 @@ bool doRestartInStandaloneWifi = false;
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
 long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
 #endif
-
-bool contains(uint8_t *array, size_t size, uint8_t value)
-{
-  for (size_t i = 0; i < size; i++)
-  {
-    if (array[i] == value)
-      return true;
-  }
-  return false;
-}
-
 
 uint8_t getFragmentation() {
   return 100 - heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) * 100.0 / heap_caps_get_free_size(MALLOC_CAP_8BIT);
@@ -195,7 +185,7 @@ void setup()
     return;
   }
 
-  SerialX10A.begin(9600, SERIAL_8E1, config->PIN_RX, config->PIN_TX);
+  X10AInit(config->PIN_RX, config->PIN_TX);
   pinMode(config->PIN_THERM, OUTPUT);
   digitalWrite(config->PIN_THERM, HIGH);
 
@@ -272,7 +262,7 @@ void loop()
   //Querying all registries and store results
   for (size_t i = 0; i < registryBufferSize; i++)
   {
-    int tries = 0;
+    uint8_t tries = 0;
     while (tries++ < 3 && !queryRegistry(&registryBuffers[i]))
     {
       mqttSerial.println("Retrying...");
@@ -301,7 +291,6 @@ void loop()
   }  
   
   sendValues();//Send the full json message
-  mqttSerial.printf("Fragemntation level: %d\n", getFragmentation());
   mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);  
   waitLoop(config->FREQUENCY);
 }
