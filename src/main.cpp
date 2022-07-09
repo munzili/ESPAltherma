@@ -259,6 +259,13 @@ void loop()
     reconnect();
   }
 
+  if(registryScanInProgress)
+  {
+    return;
+  }
+
+  registryScanInProgress = true;
+
   //Querying all registries and store results
   for (size_t i = 0; i < registryBufferSize; i++)
   {
@@ -289,6 +296,8 @@ void loop()
       }
     }
   }  
+
+  registryScanInProgress = false;
   
   sendValues();//Send the full json message
   mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);  

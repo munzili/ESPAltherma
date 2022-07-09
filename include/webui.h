@@ -28,7 +28,16 @@ extern const uint8_t picoCSS_end[] asm("_binary_webui_pico_min_css_gz_end");
 extern const uint8_t mainCSS_start[] asm("_binary_webui_main_css_gz_start");
 extern const uint8_t mainCSS_end[] asm("_binary_webui_main_css_gz_end");
 
+enum ValueLoadState {
+  NotLoading,
+  Loading,
+  LoadingFinished
+};
+
 String lastUploadFileName;
+ValueLoadState valueLoadState;
+String valueLoadResponse;
+bool registryScanInProgress;
 
 bool formatDefaultFS()
 {
@@ -320,6 +329,26 @@ void onUpload(AsyncWebServerRequest *request)
   request->send(200);
 }
 
+void onLoadValuesResult(AsyncWebServerRequest *request)
+{
+  if(valueLoadState == NotLoading)
+  {
+    request->send(503, "text/text", "No values loading in progress");
+    return;
+  }
+
+  if(valueLoadState == Loading)
+  {
+    request->send(503, "text/text", "Values loading not finished");
+    return;
+  }
+
+  request->send(200, "application/json", valueLoadResponse);
+  valueLoadResponse = "";
+
+  valueLoadState = NotLoading;
+}
+
 void onLoadValues(AsyncWebServerRequest *request)
 {
   if(!request->hasParam("PIN_RX", true) || !request->hasParam("PIN_TX", true) || !request->hasParam("PARAMS", true))
@@ -327,6 +356,16 @@ void onLoadValues(AsyncWebServerRequest *request)
     request->send(422, "text/text", "Missing parameters PIN_RX, PIN_TX or PARAMS");
     return;
   }
+
+  if(valueLoadState != NotLoading)
+  {
+    request->send(202, "text/text", "Value loading in progress");
+    return;
+  }
+
+  valueLoadState = Loading;
+
+  request->send(200, "application/json", "OK");
 
   // disable watchdog of AsyncWebServer - WD will cancel this request becouse it tookes too long
   esp_task_wdt_delete(NULL);
@@ -338,6 +377,13 @@ void onLoadValues(AsyncWebServerRequest *request)
   String params = request->getParam("PARAMS", true)->value();
 
   Serial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", pinRx, pinTx);
+
+  while(registryScanInProgress)
+  {
+    delay(1000);
+  }
+
+  registryScanInProgress = true;
 
   X10AInit(pinRx, pinTx);
 
@@ -439,10 +485,11 @@ void onLoadValues(AsyncWebServerRequest *request)
     X10AInit(config->PIN_RX, config->PIN_TX);
   }
 
-  String response;
-  serializeJson(resultDoc, response);
+  registryScanInProgress = false;
+  
+  serializeJson(resultDoc, valueLoadResponse);
 
-  request->send(200, "application/json", response);
+  valueLoadState = LoadingFinished;
 }
 
 void onLoadModel(AsyncWebServerRequest *request)
@@ -647,6 +694,7 @@ void WebUI_Init()
   server.on("/upload", HTTP_POST, onUpload, handleUpload);
   server.on("/loadModels", HTTP_GET, onLoadModels);
   server.on("/loadValues", HTTP_POST, onLoadValues);
+  server.on("/loadValuesResult", HTTP_GET, onLoadValuesResult);
   server.on("/saveConfig", HTTP_POST, onSaveConfig);
   server.on("/loadConfig", HTTP_GET, onLoadConfig);
   server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
