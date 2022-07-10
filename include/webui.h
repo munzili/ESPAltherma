@@ -264,7 +264,7 @@ void onUpload(AsyncWebServerRequest *request)
 {
   if(!request->hasParam("file", true, true))
   {
-    request->send(422, "text/text", "Missing parameter file");
+    request->send(422, "text/plain", "Missing parameter file");
     return;
   }  
   
@@ -333,13 +333,13 @@ void onLoadValuesResult(AsyncWebServerRequest *request)
 {
   if(valueLoadState == NotLoading)
   {
-    request->send(503, "text/text", "No values loading in progress");
+    request->send(503, "text/plain", "No values loading in progress");
     return;
   }
 
   if(valueLoadState == Loading)
   {
-    request->send(503, "text/text", "Values loading not finished");
+    request->send(503, "text/plain", "Values loading not finished");
     return;
   }
 
@@ -353,13 +353,13 @@ void onLoadValues(AsyncWebServerRequest *request)
 {
   if(!request->hasParam("PIN_RX", true) || !request->hasParam("PIN_TX", true) || !request->hasParam("PARAMS", true))
   {
-    request->send(422, "text/text", "Missing parameters PIN_RX, PIN_TX or PARAMS");
+    request->send(422, "text/plain", "Missing parameters PIN_RX, PIN_TX or PARAMS");
     return;
   }
 
   if(valueLoadState != NotLoading)
   {
-    request->send(202, "text/text", "Value loading in progress");
+    request->send(202, "text/plain", "Value loading in progress");
     return;
   }
 
@@ -377,6 +377,7 @@ void onLoadValues(AsyncWebServerRequest *request)
   String params = request->getParam("PARAMS", true)->value();
 
   Serial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", pinRx, pinTx);
+  Serial.println("Waiting for registry scan to finish...");
 
   while(registryScanInProgress)
   {
@@ -384,6 +385,8 @@ void onLoadValues(AsyncWebServerRequest *request)
   }
 
   registryScanInProgress = true;
+
+  Serial.println("Starting registry scan...");
 
   X10AInit(pinRx, pinTx);
 
@@ -430,7 +433,7 @@ void onLoadValues(AsyncWebServerRequest *request)
 
   if (loadRegistryBufferSize == 0)
   {
-    request->send(422, "text/text", "Given params doesn't contain a registry buffer to fetch");
+    request->send(422, "text/plain", "Given params doesn't contain a registry buffer to fetch");
     return;
   }
 
@@ -486,6 +489,8 @@ void onLoadValues(AsyncWebServerRequest *request)
   }
 
   registryScanInProgress = false;
+
+  Serial.println("Finished registry scan");
   
   serializeJson(resultDoc, valueLoadResponse);
 
@@ -496,7 +501,7 @@ void onLoadModel(AsyncWebServerRequest *request)
 {
   if(!request->hasParam("modelFile", true))
   {
-    request->send(422, "text/text", "Missing model file");
+    request->send(422, "text/plain", "Missing model file");
     return;
   }
   
@@ -507,7 +512,7 @@ void onLoadModel(AsyncWebServerRequest *request)
 
   if(!LittleFS.exists(modelFile))
   {
-    request->send(400, "text/text", "Model file not found");
+    request->send(400, "text/plain", "Model file not found");
     return;
   }
 
@@ -532,7 +537,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
   {
     if(!request->hasParam("ssid", true) || !request->hasParam("ssid_password", true))
     {
-      request->send(422, "text/text", "Missing parameter(s) for ssid!");
+      request->send(422, "text/plain", "Missing parameter(s) for ssid!");
       return;
     }
 
@@ -542,44 +547,44 @@ void onSaveConfig(AsyncWebServerRequest *request)
                                                     !request->hasParam("primary_dns", true) || 
                                                     !request->hasParam("secondary_dns", true)))
     {
-      request->send(422, "text/text", "Missing parameter(s) for static ip");
+      request->send(422, "text/plain", "Missing parameter(s) for static ip");
       return;
     }
   }
 
   if(!request->hasParam("mqtt_server", true) || !request->hasParam("mqtt_username", true) || !request->hasParam("mqtt_password", true) || !request->hasParam("mqtt_port", true) || !request->hasParam("frequency", true))
   {
-    request->send(422, "text/text", "Missing parameter(s) for MQTT!");
+    request->send(422, "text/plain", "Missing parameter(s) for MQTT!");
     return;
   }
 
   if(request->hasParam("mqtt_use_onetopic", true) && !request->hasParam("mqtt_onetopic", true))
   {
-    request->send(422, "text/text", "Missing parameter(s) for MQTT onetopic");
+    request->send(422, "text/plain", "Missing parameter(s) for MQTT onetopic");
     return;
   }
 
   if(!request->hasParam("pin_rx", true) || !request->hasParam("pin_tx", true) || !request->hasParam("pin_therm", true))
   {
-    request->send(422, "text/text", "Missing parameter(s) for MQTT onetopic");
+    request->send(422, "text/plain", "Missing parameter(s) for MQTT onetopic");
     return;
   }
 
   if(request->hasParam("sg_enabled", true) && (!request->hasParam("pin_sg1", true) || !request->hasParam("pin_sg2", true)))
   {
-    request->send(422, "text/text", "Missing parameter(s) for SmartGrid");
+    request->send(422, "text/plain", "Missing parameter(s) for SmartGrid");
     return;
   }
 
   if(!request->hasParam("pin_enable_config", true))
   {
-    request->send(422, "text/text", "Missing parameter pin to enable config");
+    request->send(422, "text/plain", "Missing parameter pin to enable config");
     return;
   }
 
   if(!request->hasParam("pin_enable_config", true))
   {
-    request->send(422, "text/text", "Missing parameter pin to enable config");
+    request->send(422, "text/plain", "Missing parameter pin to enable config");
     return;
   }
   #pragma endregion Validate_Input_Params
@@ -673,7 +678,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   saveConfig();
 
-  request->send(200, "text/text", "OK");
+  request->send(200, "text/plain", "OK");
 
   esp_restart();
 }

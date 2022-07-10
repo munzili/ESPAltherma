@@ -5,6 +5,9 @@ let selectedModelParameters = [];
 let models = [];
 let boardDefaults = {};
 
+let fetchDataIntervalHandler;
+let fetchDataIntervalId;
+
 window.addEventListener('load', async function () {
     document.getElementById('submit').addEventListener('click', sendConfigData);
     document.getElementById('btnWifiListRefresh').addEventListener('click', loadWifiNetworks);
@@ -653,7 +656,64 @@ function clearCustomParameters()
     updateParametersTable('selectedParametersTable', customParametersList);
 }
 
-async function loadData(tableId)
+async function finishLoadData()
+{
+    let params;
+    if (fetchDataIntervalId == 'selectedParametersTable')
+        params = customParametersList;
+    else
+        params = selectedModelParameters;
+
+    const buttonId = 'load' + fetchDataIntervalId.charAt(0).toUpperCase() + fetchDataIntervalId.slice(1);
+    const buttonLoadValues = document.getElementById(buttonId);
+
+    await fetch('/loadValuesResult', {
+        method: "GET"
+    })  
+    .then(function(response) { 
+        if(response.status != 200)
+        {
+            throw new Error("A!" + response.text);
+        }
+
+        return response.json(); 
+    })
+    .then(function(data){        
+        params.forEach((model, index) => {
+            model[6] = data[index];
+        });
+
+        if (fetchDataIntervalId == 'selectedParametersTable')
+        {
+            customParametersList = params;
+            updateParametersTable(fetchDataIntervalId, customParametersList);
+        }
+        else
+        {
+            selectedModelParameters = params;     
+            updateParametersTable(fetchDataIntervalId, selectedModelParameters);   
+        }
+        
+        clearInterval(fetchDataIntervalHandler);
+        buttonLoadValues.removeAttribute('aria-busy');
+        buttonLoadValues.toggleAttribute('disabled');
+    })
+    .catch(function(err) {
+        if(err.message.startsWith("A!"))
+        {
+            console.log(err.message.slice(2));
+        }
+        else
+        {
+            clearInterval(fetchDataIntervalHandler);
+            buttonLoadValues.removeAttribute('aria-busy');
+            buttonLoadValues.toggleAttribute('disabled');
+            alert('Fetching param values failed! Message: ' + err);
+        }
+    });    
+}
+
+async function beginLoadData(tableId)
 {
     let params;
     if (tableId == 'selectedParametersTable')
@@ -670,7 +730,12 @@ async function loadData(tableId)
         alert("Need valid PIN RX/TX to fetch values! Canceled");
         return;   
     }
-        
+
+    const buttonId = 'load' + tableId.charAt(0).toUpperCase() + tableId.slice(1);
+    const buttonLoadValues = document.getElementById(buttonId);
+    buttonLoadValues.setAttribute('aria-busy', 'true');
+    buttonLoadValues.toggleAttribute('disabled');
+
     const formData = new FormData();           
     formData.append("PIN_RX", pinRx);
     formData.append("PIN_TX", pinTx);
@@ -679,25 +744,27 @@ async function loadData(tableId)
         method: "POST", 
         body: formData
     })  
-    .then(function(response) { return response.json(); })
-    .then(function(data){
-        params.forEach((model, index) => {
-            model[6] = data[index];
-        });
-
-        if (tableId == 'selectedParametersTable')
+    .then(function(response) {
+        if(response.status == 200)
         {
-            customParametersList = params;
-            updateParametersTable(tableId, customParametersList);
+            fetchDataIntervalId = tableId;
+            fetchDataIntervalHandler = setInterval(finishLoadData, 5000);
         }
         else
         {
-            selectedModelParameters = params;     
-            updateParametersTable(tableId, selectedModelParameters);   
+            response.text().then(function(text) {                
+                alert("Begin fetching param values failed! Message: " + text);
+            })
+            .finally(function() {
+                buttonLoadValues.removeAttribute('aria-busy');
+                buttonLoadValues.toggleAttribute('disabled');
+            });
         }
     })
     .catch(function(err) {
-        alert('Fetching param values failed! Message: ' + err);
+        buttonLoadValues.removeAttribute('aria-busy');
+        buttonLoadValues.toggleAttribute('disabled');
+        alert('Begin fetching param values failed! Message: ' + err);
     });    
 }
 
