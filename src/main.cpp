@@ -242,12 +242,17 @@ void waitLoop(uint ms){
   unsigned long start = millis();
   while (millis() < start + ms) //wait .5sec between registries
   {
+    if(valueLoadState == Pending)
+      return;
+
     extraLoop();   
   }
 }
 
 void loop()
 {
+  webuiScanRegister();
+
   if(!config->configStored)
   {
     extraLoop();
@@ -258,13 +263,6 @@ void loop()
   { //(re)connect to MQTT if needed
     reconnect();
   }
-
-  if(registryScanInProgress)
-  {
-    return;
-  }
-
-  registryScanInProgress = true;
 
   //Querying all registries and store results
   for (size_t i = 0; i < registryBufferSize; i++)
@@ -296,8 +294,6 @@ void loop()
       }
     }
   }  
-
-  registryScanInProgress = false;
   
   sendValues();//Send the full json message
   mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);  

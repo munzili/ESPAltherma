@@ -10,7 +10,7 @@ struct LabelDef
     const int8_t dataSize;
     const int8_t dataType;
     const String label;
-    char asString[30];
+    char asString[32];
     LabelDef(int registryIDp, int offsetp, int convidp, int dataSizep, int dataTypep, String labelp) : registryID(registryIDp), offset(offsetp), convid(convidp), dataSize(dataSizep), dataType(dataTypep), label(labelp){};
 };
 

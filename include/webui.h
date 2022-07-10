@@ -9,6 +9,7 @@
 #include "wireless.h"
 #include "persistence.h"
 #include "arrayFunctions.h"
+#include "webuiScanRegister.h"
 
 #define MODELS_FILE "/models.json"
 #define MODEL_DEFINITION_DOC_SIZE 1024*25
@@ -28,16 +29,7 @@ extern const uint8_t picoCSS_end[] asm("_binary_webui_pico_min_css_gz_end");
 extern const uint8_t mainCSS_start[] asm("_binary_webui_main_css_gz_start");
 extern const uint8_t mainCSS_end[] asm("_binary_webui_main_css_gz_end");
 
-enum ValueLoadState {
-  NotLoading,
-  Loading,
-  LoadingFinished
-};
-
 String lastUploadFileName;
-ValueLoadState valueLoadState;
-String valueLoadResponse;
-bool registryScanInProgress;
 
 bool formatDefaultFS()
 {
@@ -56,7 +48,6 @@ bool formatDefaultFS()
 
   return true;
 }
-
 
 void onLoadWifiNetworks(AsyncWebServerRequest *request)
 {  
@@ -337,7 +328,7 @@ void onLoadValuesResult(AsyncWebServerRequest *request)
     return;
   }
 
-  if(valueLoadState == Loading)
+  if(valueLoadState == Loading || valueLoadState == Pending)
   {
     request->send(503, "text/plain", "Values loading not finished");
     return;
@@ -363,138 +354,13 @@ void onLoadValues(AsyncWebServerRequest *request)
     return;
   }
 
-  valueLoadState = Loading;
+  webuiScanRegisterConfig.PinRx = request->getParam("PIN_RX", true)->value().toInt();
+  webuiScanRegisterConfig.PinTx = request->getParam("PIN_TX", true)->value().toInt();
+  webuiScanRegisterConfig.Params = request->getParam("PARAMS", true)->value();  
+
+  valueLoadState = Pending;
 
   request->send(200, "application/json", "OK");
-
-  // disable watchdog of AsyncWebServer - WD will cancel this request becouse it tookes too long
-  esp_task_wdt_delete(NULL);
-  
-  bool serialX10AWasInited = SerialX10A;
-
-  int8_t pinRx = request->getParam("PIN_RX", true)->value().toInt();
-  int8_t pinTx = request->getParam("PIN_TX", true)->value().toInt();
-  String params = request->getParam("PARAMS", true)->value();
-
-  Serial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", pinRx, pinTx);
-  Serial.println("Waiting for registry scan to finish...");
-
-  while(registryScanInProgress)
-  {
-    delay(1000);
-  }
-
-  registryScanInProgress = true;
-
-  Serial.println("Starting registry scan...");
-
-  X10AInit(pinRx, pinTx);
-
-  DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
-  deserializeJson(modelsDoc, params); 
-  JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
-
-  Serial.printf("Creating labelDefs %i\n", modelsDocArr.size());
-
-  size_t labelsSize = modelsDocArr.size();
-  LabelDef **labelsToLoad = new LabelDef*[labelsSize];
-  
-  uint8_t counter = 0;
-  for (JsonArray model : modelsDocArr) 
-  {
-    labelsToLoad[counter] = new LabelDef(model[0], model[1], model[2], model[3], model[4], model[5]);
-    counter++;
-  }  
-
-  //getting the list of registries to query from the selected values  
-  uint8_t loadRegistryBufferSize = 0;  
-  uint8_t* tempRegistryIDs = new uint8_t[labelsSize];
-
-  size_t i;
-  for (i = 0; i < labelsSize; i++)
-  {            
-    auto &&label = *labelsToLoad[i];
-
-    if (!contains(tempRegistryIDs, labelsSize, label.registryID))
-    {
-      Serial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
-      tempRegistryIDs[loadRegistryBufferSize++] = label.registryID;
-    }
-  }
-  
-  RegistryBuffer loadRegistryBuffers[loadRegistryBufferSize];
-
-  for(i = 0; i < loadRegistryBufferSize; i++)
-  {
-    loadRegistryBuffers[i].RegistryID = tempRegistryIDs[i];
-  }
-
-  delete[] tempRegistryIDs;
-
-  if (loadRegistryBufferSize == 0)
-  {
-    request->send(422, "text/plain", "Given params doesn't contain a registry buffer to fetch");
-    return;
-  }
-
-  Serial.println("Fetching Values");
-  
-  //Querying all registries and store results
-  for (size_t i = 0; i < loadRegistryBufferSize; i++)
-  {
-    uint8_t tries = 0;
-    while (tries++ < 3 && !queryRegistry(&loadRegistryBuffers[i]))
-    {
-      Serial.println("Retrying...");
-      delay(1000);
-    }
-  }
-  
-  for (size_t i = 0; i < labelsSize; i++)
-  {            
-    auto &&label = *labelsToLoad[i];
-
-    for (size_t j = 0; j < loadRegistryBufferSize; j++)
-    {
-      if(loadRegistryBuffers[j].Success && label.registryID == loadRegistryBuffers[j].RegistryID)
-      {
-        char *input = loadRegistryBuffers[j].Buffer;
-        input += label.offset + 3;
-
-        converter.convert(&label, input); // convert buffer result of label offset to correct/usabel value
-        break;
-      }
-    }
-  }  
-  
-  Serial.println("Returning Values");
-
-  DynamicJsonDocument resultDoc(modelsDocArr.size()*JSON_OBJECT_SIZE(2));
-  JsonArray obj = resultDoc.to<JsonArray>();
-  
-  for (uint8_t i = 0; i < labelsSize; i++) {
-    obj.add(labelsToLoad[i]->asString);
-  } 
-
-  for (size_t i = 0; i < labelsSize; i++)
-  {
-      delete labelsToLoad[i];
-  }
-  delete[] labelsToLoad;
-
-  if(serialX10AWasInited)
-  {
-    Serial.println("Restoring original X10A connection");
-    X10AInit(config->PIN_RX, config->PIN_TX);
-  }
-
-  registryScanInProgress = false;
-
-  Serial.println("Finished registry scan");
-  
-  serializeJson(resultDoc, valueLoadResponse);
-
-  valueLoadState = LoadingFinished;
 }
 
 void onLoadModel(AsyncWebServerRequest *request)
