@@ -135,7 +135,7 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
       "\"Default\": {"
         "\"pin_rx\": 16,"
         "\"pin_tx\": 17,"
-        "\"pin_therm\": 2,"
+        "\"pin_therm\": 34,"
         "\"pin_sg1\": 32,"
         "\"pin_sg2\": 33,"
         "\"pin_enable_config\": 39,"
