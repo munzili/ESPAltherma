@@ -10,6 +10,7 @@ let fetchDataIntervalId;
 
 window.addEventListener('load', async function () {
     document.getElementById('submit').addEventListener('click', sendConfigData);
+    document.getElementById('startUpdate').addEventListener('click', sendUpdate);
     document.getElementById('btnWifiListRefresh').addEventListener('click', loadWifiNetworks);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
     
@@ -17,8 +18,31 @@ window.addEventListener('load', async function () {
     await refreshModels();
     await loadConfig();
 
+    document.getElementById('nav-main').querySelectorAll('a').forEach(function(navLink) {
+        navLink.addEventListener('click', handleNavigation);
+    });
+
     document.getElementById('loading-dialog').close();
 });
+
+async function handleNavigation(event)
+{    
+    event.preventDefault();
+
+    document.getElementById('nav-main').querySelectorAll('a').forEach(function(navLink) {
+        navLink.removeAttribute('role');
+    });
+
+    document.querySelectorAll('article[role=tab]').forEach(function(navLink) {
+        navLink.style.display = 'none';
+    });
+
+    let targetElement = event.target || event.srcElement;
+    targetElement.setAttribute('role', 'button');
+
+    let articleId = targetElement.getAttribute('data-link');
+    document.getElementById(articleId).style.display = 'block';
+}
 
 async function loadBoardDefaults()
 {
@@ -366,6 +390,36 @@ async function sendConfigData(event)
     });    
 }
 
+async function sendUpdate(event)
+{
+    const parametersFile = document.getElementById('updateFile');
+    const file = parametersFile.files[0];
+
+    parametersFile.setAttribute('aria-invalid', !file);
+    
+    if(!file)
+        return;
+
+    const formData = new FormData();           
+    formData.append("file", parametersFile.files[0]);
+    formData.append("type", document.querySelector('input[name="updateType"]:checked').value);
+    await fetch('/update', {
+        method: "POST", 
+        body: formData
+    })  
+    .then(function(response) {
+        if (response.status == 200) {
+            parametersFile.removeAttribute('aria-invalid');
+            parametersFile.value = null;
+            models = [];
+            refreshModels();
+        }
+    })
+    .catch(function(err) {
+        alert('File upload failed! Message: ' + err);
+    });        
+}
+
 function clearHiddenValidationResult(elementName)
 {
     document.getElementById(elementName).querySelectorAll("[aria-invalid]").forEach((el) => el.removeAttribute('aria-invalid'));
@@ -499,6 +553,34 @@ async function uploadFile() {
     })
     .catch(function(err) {
         alert('File upload failed! Message: ' + err);
+    });        
+}
+
+async function importConfig() {
+
+    const parametersFile = document.getElementById('configFile');
+    const file = parametersFile.files[0];
+
+    parametersFile.setAttribute('aria-invalid', !file);
+    
+    if(!file)
+        return;
+
+    const formData = new FormData();           
+    formData.append("file", parametersFile.files[0]);
+    await fetch('/uploadConfig', {
+        method: "POST", 
+        body: formData
+    })  
+    .then(function(response) {
+        if (response.status == 200) {
+            parametersFile.removeAttribute('aria-invalid');
+            parametersFile.value = null;
+            location.reload();
+        }
+    })
+    .catch(function(err) {
+        alert('Config upload failed! Message: ' + err);
     });        
 }
 

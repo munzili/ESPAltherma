@@ -74,6 +74,7 @@ void extraLoop()
   { //Stop processing during OTA
     ArduinoOTA.handle();
   }
+
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   if (M5.BtnA.wasPressed()){//Turn back ON screen
     M5.Axp.ScreenBreath(12);
@@ -154,6 +155,38 @@ void IRAM_ATTR restartInStandaloneWifi() {
   doRestartInStandaloneWifi = true;
 }
 
+void setupOTA()
+{
+  ArduinoOTA.setHostname("ESPAltherma");
+
+  ArduinoOTA.onStart([]() {
+    arduinoOTAIsBusy = true;
+    Serial.println("OTA Update start");    
+  });
+
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
+  });
+
+  ArduinoOTA.onEnd([]() {
+    Serial.println("OTA Update End");
+  });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error on OTA [%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    Serial.println("Error on OTA - restarting");
+    esp_restart();
+  });
+
+  ArduinoOTA.begin();
+  mqttSerial.println("OTA ready");
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -181,7 +214,8 @@ void setup()
 
   if(!config->configStored)
   {
-    mqttSerial.print("No config found, skip setup...");
+    mqttSerial.println("No config found, skip setup...");
+    setupOTA();
     return;
   }
 
@@ -212,16 +246,7 @@ void setup()
     WebUI_Init();
   }
 
-  ArduinoOTA.setHostname("ESPAltherma");
-  ArduinoOTA.onStart([]() {
-    arduinoOTAIsBusy = true;
-  });
-
-  ArduinoOTA.onError([](ota_error_t error) {
-    mqttSerial.print("Error on OTA - restarting");
-    esp_restart();
-  });
-  ArduinoOTA.begin();
+  setupOTA();
 
   pinMode(config->PIN_ENABLE_CONFIG, INPUT_PULLUP);
   attachInterrupt(config->PIN_ENABLE_CONFIG, restartInStandaloneWifi, FALLING);

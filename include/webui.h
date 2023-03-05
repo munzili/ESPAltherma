@@ -254,7 +254,7 @@ void onUpload(AsyncWebServerRequest *request)
   }  
   
   String fsFilename = lastUploadFileName;
-  Serial.printf("Found LitteFS Filename: %s\n", fsFilename);
+  Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
   
   File modelsFile = LittleFS.open(MODELS_FILE, FILE_READ);
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
@@ -312,6 +312,30 @@ void onUpload(AsyncWebServerRequest *request)
   modelsFile.close();
 
   request->send(200);
+}
+
+
+void onUploadConfig(AsyncWebServerRequest *request)
+{
+  if(!request->hasParam("file", true, true))
+  {
+    request->send(422, "text/plain", "Missing config file");
+    return;
+  }  
+  
+  String fsFilename = lastUploadFileName;
+  Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
+
+  if(LittleFS.exists(CONFIG_FILE))    
+  {
+    LittleFS.remove(CONFIG_FILE);
+  }
+
+  LittleFS.rename(lastUploadFileName, CONFIG_FILE);
+          
+  request->send(200);
+
+  esp_restart();
 }
 
 void onLoadValuesResult(AsyncWebServerRequest *request)
@@ -561,9 +585,64 @@ void WebUI_Init()
   server.on("/loadValues", HTTP_POST, onLoadValues);
   server.on("/loadValuesResult", HTTP_GET, onLoadValuesResult);
   server.on("/saveConfig", HTTP_POST, onSaveConfig);
+  server.on("/uploadConfig", HTTP_POST, onUploadConfig, handleUpload);
   server.on("/loadConfig", HTTP_GET, onLoadConfig);
   server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
   server.on("/format", HTTP_GET, onFormat);
+
+  server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request) {        
+        // the request handler is triggered after the upload has finished... 
+        // create the response, add header, and send response
+        AsyncWebServerResponse *response = request->beginResponse((Update.hasError())?500:200, "text/plain", (Update.hasError())?"FAIL":"OK");
+        response->addHeader("Connection", "close");
+        response->addHeader("Access-Control-Allow-Origin", "*");
+        request->send(response);
+        esp_restart();
+    }, [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+        //Upload handler chunks in data       
+
+        if (!index) {
+            /*if(!request->hasParam("MD5", true)) {
+                return request->send(400, "text/plain", "MD5 parameter missing");
+            }
+
+            if(!Update.setMD5(request->getParam("MD5", true)->value().c_str())) {
+                return request->send(400, "text/plain", "MD5 parameter invalid");
+            }*/
+
+            #if defined(ESP8266)
+                int cmd = (filename == "filesystem") ? U_FS : U_FLASH;
+                Update.runAsync(true);
+                size_t fsSize = ((size_t) &_FS_end - (size_t) &_FS_start);
+                uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+                if (!Update.begin((cmd == U_FS)?fsSize:maxSketchSpace, cmd)){ // Start with max available size
+            #elif defined(ESP32)
+                //int cmd = (filename == "filesystem") ? U_SPIFFS : U_FLASH;
+                int cmd = (request->getParam("type", true)->value() == "filesystem") ? U_SPIFFS : U_FLASH;
+                if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) { // Start with max available size
+            #endif
+                Update.printError(Serial);
+                return request->send(400, "text/plain", "OTA could not begin");
+            }
+        }
+
+        // Write chunked data to the free sketch space
+        if(len){
+            if (Update.write(data, len) != len) {
+                return request->send(400, "text/plain", "OTA could not begin");
+            }
+        }
+            
+        if (final) { // if the final flag is set then this is the last frame of data
+            if (!Update.end(true)) { //true to set the size to the current progress
+                Update.printError(Serial);
+                return request->send(400, "text/plain", "Could not end OTA");
+            }
+        }else{
+            return;
+        }
+    });
+  
   server.begin();
 }
 #endif
