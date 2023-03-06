@@ -1,6 +1,7 @@
 #ifndef WEBUI_H
 #define WEBUI_H
 #include <LittleFS.h>
+#include <Update.h>
 #include "ESPAsyncWebServer.h" 
 #include "ArduinoJson.h"
 #include "comm.h"
@@ -22,6 +23,8 @@ AsyncWebServer server(80);
 
 extern const uint8_t mainJS_start[] asm("_binary_webui_main_js_gz_start");
 extern const uint8_t mainJS_end[] asm("_binary_webui_main_js_gz_end");
+extern const uint8_t md5JS_start[] asm("_binary_webui_md5_min_js_gz_start");
+extern const uint8_t md5JS_end[] asm("_binary_webui_md5_min_js_gz_end");
 extern const uint8_t indexHTML_start[] asm("_binary_webui_index_html_gz_start");
 extern const uint8_t indexHTML_end[] asm("_binary_webui_index_html_gz_end");
 extern const uint8_t picoCSS_start[] asm("_binary_webui_pico_min_css_gz_start");
@@ -30,6 +33,7 @@ extern const uint8_t mainCSS_start[] asm("_binary_webui_main_css_gz_start");
 extern const uint8_t mainCSS_end[] asm("_binary_webui_main_css_gz_end");
 
 String lastUploadFileName;
+bool webOTAIsBusy = false;
 
 bool formatDefaultFS()
 {
@@ -175,6 +179,13 @@ void onRequestMainCSS(AsyncWebServerRequest *request)
 void onRequestMainJS(AsyncWebServerRequest *request)
 {
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", mainJS_start, mainJS_end - mainJS_start);
+    response->addHeader("Content-Encoding", "gzip");
+    request->send(response);
+}
+
+void onRequestMD5JS(AsyncWebServerRequest *request)
+{
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", md5JS_start, md5JS_end - md5JS_start);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
 }
@@ -590,6 +601,80 @@ void onSaveConfig(AsyncWebServerRequest *request)
   esp_restart();
 }
 
+void onUpdate(AsyncWebServerRequest *request)
+{  
+  bool hasError = Update.hasError();
+
+  AsyncWebServerResponse *response = request->beginResponse((hasError)?500:200, "text/plain", (hasError)?"FAIL":"OK");
+  response->addHeader("Connection", "close");
+  response->addHeader("Access-Control-Allow-Origin", "*");
+  request->send(response);
+
+  if(!hasError)
+    esp_restart();
+}
+
+void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+  //Upload handler chunks in data       
+  if (!index) 
+  {
+    Serial.print("Start Web OTA Update - MD5: ");    
+
+    if(!request->hasParam("MD5", true)) 
+    {
+      return request->send(400, "text/plain", "MD5 parameter missing");
+    }
+
+    const char* md5 = request->getParam("MD5", true)->value().c_str();
+
+    if(strlen(md5) != 32)
+    {
+      return request->send(400, "text/plain", "MD5 parameter invalid");
+    }
+
+    Serial.println(md5);
+   
+    #if defined(ESP8266)
+        int cmd = (filename == "filesystem") ? U_FS : U_FLASH;
+        Update.runAsync(true);
+        size_t fsSize = ((size_t) &_FS_end - (size_t) &_FS_start);
+        uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+        if (!Update.begin((cmd == U_FS)?fsSize:maxSketchSpace, cmd)){ // Start with max available size
+    #elif defined(ESP32)
+        int cmd = (request->getParam("type", true)->value() == "filesystem") ? U_SPIFFS : U_FLASH;
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) { // Start with max available size
+    #endif
+        Update.printError(Serial);
+        return request->send(400, "text/plain", "OTA could not begin");
+    }
+    // TODO Fix md5 check - JS Md5 is not correctly generated
+    //Update.setMD5(md5);
+    webOTAIsBusy = true;
+  }
+
+  // Write chunked data to the free sketch space
+  if(len)
+  {
+    if (Update.write(data, len) != len) 
+    {
+        return request->send(400, "text/plain", "OTA could not begin");
+    }
+    Serial.print("."); 
+  }
+      
+  if (final) 
+  { // if the final flag is set then this is the last frame of data
+    Serial.print("\n--> Update finished!\n");  
+    webOTAIsBusy = false;
+    if (!Update.end(true)) 
+    { //true to set the size to the current progress
+      Update.printError(Serial);
+      return request->send(400, "text/plain", "Could not end OTA");
+    }
+  }
+}
+
 void WebUI_Init()
 {
   if(!LittleFS.exists(MODELS_FILE))
@@ -601,6 +686,7 @@ void WebUI_Init()
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
   server.on("/main.css", HTTP_GET, onRequestMainCSS);
   server.on("/main.js", HTTP_GET, onRequestMainJS);
+  server.on("/md5.min.js", HTTP_GET, onRequestMD5JS);
   server.on("/loadModel", HTTP_POST, onLoadModel);
   server.on("/loadBoardInfo", HTTP_GET, onLoadBoardInfo);
   server.on("/upload", HTTP_POST, onUpload, handleUpload);
@@ -613,60 +699,7 @@ void WebUI_Init()
   server.on("/loadConfig", HTTP_GET, onLoadConfig);
   server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
   server.on("/format", HTTP_GET, onFormat);
-
-  server.on("/update", HTTP_POST, [&](AsyncWebServerRequest *request) {        
-        // the request handler is triggered after the upload has finished... 
-        // create the response, add header, and send response
-        AsyncWebServerResponse *response = request->beginResponse((Update.hasError())?500:200, "text/plain", (Update.hasError())?"FAIL":"OK");
-        response->addHeader("Connection", "close");
-        response->addHeader("Access-Control-Allow-Origin", "*");
-        request->send(response);
-        esp_restart();
-    }, [&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-        //Upload handler chunks in data       
-
-        if (!index) {
-            /*if(!request->hasParam("MD5", true)) {
-                return request->send(400, "text/plain", "MD5 parameter missing");
-            }
-
-            if(!Update.setMD5(request->getParam("MD5", true)->value().c_str())) {
-                return request->send(400, "text/plain", "MD5 parameter invalid");
-            }*/
-
-            #if defined(ESP8266)
-                int cmd = (filename == "filesystem") ? U_FS : U_FLASH;
-                Update.runAsync(true);
-                size_t fsSize = ((size_t) &_FS_end - (size_t) &_FS_start);
-                uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-                if (!Update.begin((cmd == U_FS)?fsSize:maxSketchSpace, cmd)){ // Start with max available size
-            #elif defined(ESP32)
-                //int cmd = (filename == "filesystem") ? U_SPIFFS : U_FLASH;
-                int cmd = (request->getParam("type", true)->value() == "filesystem") ? U_SPIFFS : U_FLASH;
-                if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) { // Start with max available size
-            #endif
-                Update.printError(Serial);
-                return request->send(400, "text/plain", "OTA could not begin");
-            }
-        }
-
-        // Write chunked data to the free sketch space
-        if(len){
-            if (Update.write(data, len) != len) {
-                return request->send(400, "text/plain", "OTA could not begin");
-            }
-        }
-            
-        if (final) { // if the final flag is set then this is the last frame of data
-            if (!Update.end(true)) { //true to set the size to the current progress
-                Update.printError(Serial);
-                return request->send(400, "text/plain", "Could not end OTA");
-            }
-        }else{
-            return;
-        }
-    });
-  
+  server.on("/update", HTTP_POST, onUpdate, handleUpdate);  
   server.begin();
 }
 #endif

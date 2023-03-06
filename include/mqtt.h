@@ -73,10 +73,7 @@ void reconnect()
     {
       Serial.printf("failed, rc=%d, try again in 5 seconds", client.state());
       unsigned long start = millis();
-      while (millis() < start + 5000)
-      {
-        ArduinoOTA.handle();
-      }
+      while (millis() < start + 5000) { }
 
       if (i++ == 100)
       {

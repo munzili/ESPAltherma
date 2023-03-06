@@ -392,32 +392,72 @@ async function sendConfigData(event)
 
 async function sendUpdate(event)
 {
-    const parametersFile = document.getElementById('updateFile');
-    const file = parametersFile.files[0];
+    const updateFile = document.getElementById('updateFile');
+    const file = updateFile.files[0];
 
-    parametersFile.setAttribute('aria-invalid', !file);
+    updateFile.setAttribute('aria-invalid', !file);
     
     if(!file)
         return;
 
-    const formData = new FormData();           
-    formData.append("file", parametersFile.files[0]);
-    formData.append("type", document.querySelector('input[name="updateType"]:checked').value);
-    await fetch('/update', {
-        method: "POST", 
-        body: formData
-    })  
-    .then(function(response) {
-        if (response.status == 200) {
-            parametersFile.removeAttribute('aria-invalid');
-            parametersFile.value = null;
-            models = [];
-            refreshModels();
-        }
-    })
-    .catch(function(err) {
-        alert('File upload failed! Message: ' + err);
-    });        
+    const reader = new FileReader();
+    reader.onload = async function (event) {
+        const data = event.target.result;
+        if (data) {
+            const uintArBuff = new Uint8Array(data); 
+            const md5Hash = md5(uintArBuff);   
+                        
+            const formData = new FormData();                       
+            formData.append("type", document.querySelector('input[name="updateType"]:checked').value);
+            formData.append("MD5", md5Hash);          
+            formData.append("file", updateFile.files[0], "update.bin");
+            
+            const request = new XMLHttpRequest();
+            request.addEventListener('load', () => {          
+                let oatError = "";
+                document.getElementById("startUpdate").disabled = false;
+                if (request.status === 200) {
+                    updateFile.removeAttribute('aria-invalid');
+                    updateFile.value = null;
+                    document.getElementById("otaProgress").innerText = "Finished! Reload Config page in 3 seconds";
+                    setTimeout(() => {
+                        document.location.reload();
+                    }, 3000);
+                } else if (request.status !== 500) {
+                    oatError = `[HTTP ERROR] ${request.statusText}`;
+                } else {
+                    oatError = request.responseText;
+                }
+
+                if(oatError != "")
+                {
+                    document.getElementById("otaProgress").innerText = "Error!";
+                    document.getElementById("oatErrorDisplay").classList.remove("hidden");
+                    document.getElementById("oatErrorDisplay").innerText = oatError;
+                }
+              });
+
+            request.upload.addEventListener('progress', (e) => {
+                document.getElementById("otaProgress").innerText = Math.trunc((e.loaded / e.total) * 100) + "%";
+            });
+              
+            try {
+                document.getElementById("startUpdate").disabled = true;
+                document.getElementById("oatErrorDisplay").classList.add("hidden");
+                document.getElementById("progressDisplay").classList.remove('hidden');
+                document.getElementById("otaProgress").innerText = "0%";
+
+                request.open('post', '/update');
+                request.send(formData);
+            }            
+            catch(error) 
+            {
+                document.getElementById("oatErrorDisplay").classList.remove("hidden");
+                document.getElementById("oatErrorDisplay").innerText = "Unknown error while upload, check the console for details.";
+            }            
+        }  
+    }
+    reader.readAsArrayBuffer(file);
 }
 
 function clearHiddenValidationResult(elementName)
@@ -568,7 +608,7 @@ async function importConfig() {
 
     const formData = new FormData();           
     formData.append("file", parametersFile.files[0]);
-    await fetch('/uploadConfig', {
+    await fetch('/importConfig', {
         method: "POST", 
         body: formData
     })  

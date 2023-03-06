@@ -7,6 +7,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" type="text/css" href="pico.min.css">
   <link rel="stylesheet" type="text/css" href="main.css">
+  <script src="md5.min.js"></script>
   <script src="main.js"></script>
 </head>
 <body>  
@@ -16,15 +17,19 @@
         Loading, please wait...
       </article>
     </dialog>
-    <header><h1>ESPAltherma</h1></header>    
+    <header><h1>ESPAltherma Config</h1></header>    
     <nav id="nav-main">
       <ul>
-        <li><a href="#" data-link="form-config" role="button" >Config</a></li>
+        <li><a href="#" data-link="form-network" role="button" >Network</a></li>
+        <li><a href="#" data-link="form-pins">Pins</a></li>
+        <li><a href="#" data-link="form-x10a">X10A-Bus</a></li>
+        <li><a href="#" data-link="form-can">CAN-Bus</a></li>
+        <li><a href="#" data-link="form-export-import">Export/Import</a></li>
         <li><a href="#" data-link="form-update">Update</a></li>
       </ul>
     </nav>
-    <article id="form-config" role="tab">
-      <form id="configForm" action="/saveConfig" method="post">
+    <form id="configForm" action="/saveConfig" method="post">
+      <article id="form-network" role="tab">      
         <label for="standalone_wifi" >          
           <input type="checkbox" id="standalone_wifi" name="standalone_wifi" role="switch" onclick="updateWifiFields()"/>
           Use standalone WiFi
@@ -118,7 +123,8 @@
             <option value="600000">10 min</option>
           </select>
         </label>
-
+      </article>  
+      <article id="form-pins" role="tab" style="display: none;">      
         <div class="grid">
           <label for="pin_rx">
             PIN RX
@@ -167,7 +173,8 @@
           <select id="pin_enable_config" name="pin_enable_config" data-pins></select>
           <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the standalone wifi mode.</small>
         </label>
-
+      </article>
+      <article id="form-x10a" role="tab" style="display: none;">      
         <div class="grid">
           <div>
             <label for="model">Model:</label>
@@ -326,23 +333,23 @@
             </details>
           </div>
         </article>
-        
-        <p><input type="submit" id="submit" value="SAVE CONFIG" role="button" /></p>
-      </form>
-      <form id="configForm" action="/uploadConfig" method="post">
+      </article>
+      <article id="form-can" role="tab" style="display: none;">      
+        Cooming soon...
+      </article>
+      <article id="form-export-import" role="tab" style="display: none;">      
         <div class="grid">
           <div>
-            <a href="/exportConfig" target="_blank" role="button" class="contrast" id="config-export">Export Config</a>
+            <a href="/exportConfig" target="_blank" role="button" id="config-export">Export Config</a>
           </div> 
           <div>
-            <input type="file" id="configFile" accept=".json" name="configFile"/>
-            <input type="button" onclick="importConfig()" value="Import Config" class="contrast">
+            <input type="file" id="configFile" accept=".json" name="configFile" />
+            <input type="button" onclick="importConfig()" value="Import Config">
           </div>
-        </div>                
-      </form>
-    </article>
-    <article id="form-update" role="tab" style="display: none;">
-      <h3>Update</h3>
+        </div> 
+      </article>
+      <article id="form-update" role="tab" style="display: none;">
+        <h3>Update</h3>
         <p>
             Select Filetype of the Over-the-Air Update:
             <fieldset>
@@ -361,8 +368,12 @@
             </label>
 
             <p><input type="button" id="startUpdate" value="Start update"/></p>
+            <div id="progressDisplay" class="hidden"><div>Progress: </div><div id="otaProgress">0%</div></div>
+            <div id="oatErrorDisplay" class="hidden" style="color: red;"></div>
         </p>
-    </article>
+      </article>
+      <p><input type="submit" id="submit" value="SAVE CONFIG" role="button" /></p>               
+    </form>    
   </main>
 </body>
 </html>

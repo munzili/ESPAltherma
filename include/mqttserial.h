@@ -2,6 +2,7 @@
 #define MQTT_SERIAL_H
 #include "Stream.h"
 #include <PubSubClient.h>
+#include <WiFi.h>
 #ifdef ARDUINO_M5Stick_C_Plus
 #include <M5StickCPlus.h>
 #elif ARDUINO_M5Stick_C
