@@ -404,8 +404,7 @@ async function sendUpdate(event)
     reader.onload = async function (event) {
         const data = event.target.result;
         if (data) {
-            const uintArBuff = new Uint8Array(data); 
-            const md5Hash = md5(uintArBuff);   
+            const md5Hash = SparkMD5.ArrayBuffer.hash(data);
                         
             const formData = new FormData();                       
             formData.append("type", document.querySelector('input[name="updateType"]:checked').value);

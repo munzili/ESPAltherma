@@ -648,8 +648,7 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
         Update.printError(Serial);
         return request->send(400, "text/plain", "OTA could not begin");
     }
-    // TODO Fix md5 check - JS Md5 is not correctly generated
-    //Update.setMD5(md5);
+    Update.setMD5(md5);
     webOTAIsBusy = true;
   }
 
