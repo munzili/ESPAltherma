@@ -315,7 +315,7 @@ void onUpload(AsyncWebServerRequest *request)
 }
 
 
-void onUploadConfig(AsyncWebServerRequest *request)
+void onImportConfig(AsyncWebServerRequest *request)
 {
   if(!request->hasParam("file", true, true))
   {
@@ -407,11 +407,34 @@ void onLoadConfig(AsyncWebServerRequest *request)
 {  
   if(!LittleFS.exists(CONFIG_FILE))
   {    
-    request->send(200, "application/json", "{}");
+    request->send(200, "text/json", "{}");
     return;
   }
 
   request->send(LittleFS, CONFIG_FILE, "text/json");
+}
+
+void onExportConfig(AsyncWebServerRequest *request)
+{  
+  AsyncWebServerResponse *response;
+
+  if(!LittleFS.exists(CONFIG_FILE))
+  {    
+    response = request->beginResponse(200, "text/json", "{}");
+    response->addHeader("Content-Disposition", "attachment; filename=\"config.json\"");
+    response->addHeader("Content-Length", "2");
+    request->send(response);
+    return;
+  }
+
+  File file = LittleFS.open(CONFIG_FILE, "r");
+  size_t filesize = file.size();
+  file.close();
+
+  response = request->beginResponse(LittleFS, CONFIG_FILE, "text/json", true);
+  response->addHeader("Content-Disposition", "attachment; filename=\"config.json\"");
+  response->addHeader("Content-Length", String(filesize));
+  request->send(response);
 }
 
 void onSaveConfig(AsyncWebServerRequest *request)
@@ -585,7 +608,8 @@ void WebUI_Init()
   server.on("/loadValues", HTTP_POST, onLoadValues);
   server.on("/loadValuesResult", HTTP_GET, onLoadValuesResult);
   server.on("/saveConfig", HTTP_POST, onSaveConfig);
-  server.on("/uploadConfig", HTTP_POST, onUploadConfig, handleUpload);
+  server.on("/exportConfig", HTTP_GET, onExportConfig);
+  server.on("/importConfig", HTTP_POST, onImportConfig, handleUpload);
   server.on("/loadConfig", HTTP_GET, onLoadConfig);
   server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
   server.on("/format", HTTP_GET, onFormat);
