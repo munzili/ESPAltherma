@@ -18,6 +18,7 @@
 #include "wireless.h"
 #include "persistence.h"
 #include "X10A.h"
+#include "canBus.h"
 #include "arrayFunctions.h"
 
 size_t registryBufferSize;
@@ -69,6 +70,9 @@ void extraLoop()
   while(webOTAIsBusy) {}
 
   client.loop();
+
+  if(config->CAN_ENABLED)
+    canBus_loop();
 
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   if (M5.BtnA.wasPressed()){//Turn back ON screen
@@ -192,6 +196,11 @@ void setup()
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
     pinMode(config->PIN_SG1, OUTPUT);
     pinMode(config->PIN_SG2, OUTPUT);
+  }
+
+  if(config->CAN_ENABLED)
+  {
+    canBus_setup(config->PIN_CAN_RX, config->PIN_CAN_TX, config->CAN_SPEED_KBPS);
   }
 
 #ifdef ARDUINO_M5Stick_C_Plus

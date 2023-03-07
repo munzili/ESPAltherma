@@ -35,6 +35,10 @@ struct Config
     uint8_t PIN_SG1;
     uint8_t PIN_SG2;
     bool SG_RELAY_HIGH_TRIGGER;
+    bool CAN_ENABLED;
+    uint8_t PIN_CAN_RX;
+    uint8_t PIN_CAN_TX;
+    uint16_t CAN_SPEED_KBPS;
     uint8_t PIN_ENABLE_CONFIG;
     size_t PARAMETERS_LENGTH;
     LabelDef** PARAMETERS;
@@ -108,6 +112,10 @@ void readConfig()
     config->PIN_SG1 = configDoc["PIN_SG1"].as<uint8_t>();
     config->PIN_SG2 = configDoc["PIN_SG2"].as<uint8_t>();
     config->SG_RELAY_HIGH_TRIGGER = configDoc["SG_RELAY_HIGH_TRIGGER"].as<const bool>();
+    config->CAN_ENABLED = configDoc["CAN_ENABLED"].as<const bool>();
+    config->PIN_CAN_RX = configDoc["PIN_CAN_RX"].as<uint8_t>();
+    config->PIN_CAN_TX = configDoc["PIN_CAN_TX"].as<uint8_t>();
+    config->CAN_SPEED_KBPS = configDoc["CAN_SPEED_KBPS"].as<uint8_t>();
     config->PIN_ENABLE_CONFIG = configDoc["PIN_ENABLE_CONFIG"].as<uint8_t>();
 
     JsonArray parameters = configDoc["PARAMETERS"].as<JsonArray>();
@@ -169,6 +177,10 @@ void saveConfig()
     configDoc["SG_ENABLED"] = config->SG_ENABLED;
     configDoc["PIN_SG1"] = config->PIN_SG1;
     configDoc["PIN_SG2"] = config->PIN_SG2;
+    configDoc["CAN_ENABLED"] = config->CAN_ENABLED;
+    configDoc["PIN_CAN_RX"] = config->PIN_CAN_RX;
+    configDoc["PIN_CAN_TX"] = config->PIN_CAN_TX;
+    configDoc["CAN_SPEED_KBPS"] = config->CAN_SPEED_KBPS;
     configDoc["SG_RELAY_HIGH_TRIGGER"] = config->SG_RELAY_HIGH_TRIGGER;
     configDoc["PIN_ENABLE_CONFIG"] = config->PIN_ENABLE_CONFIG;
 

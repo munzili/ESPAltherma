@@ -118,6 +118,9 @@ async function resetToDefaults()
     document.getElementById('pin_therm').value = boardDefaults['pin_therm']; 
     document.getElementById('pin_sg1').value = boardDefaults['pin_sg1']; 
     document.getElementById('pin_sg2').value = boardDefaults['pin_sg2']; 
+    document.getElementById('pin_can_rx').value = boardDefaults['pin_can_rx']; 
+    document.getElementById('pin_can_tx').value = boardDefaults['pin_can_tx']; 
+    document.getElementById('can_speed_kbps').value = boardDefaults['can_speed_kbps']; 
     document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config']; 
     document.getElementById('frequency').value = boardDefaults['frequency']; 
     document.getElementById('mqtt_onetopic').value = boardDefaults['mqtt_onetopic']; 
@@ -173,6 +176,7 @@ async function loadConfig()
         document.getElementById('pin_tx').value = data['PIN_TX'];
         document.getElementById('pin_therm').value = data['PIN_THERM'];
         document.getElementById('sg_enabled').checked = data['SG_ENABLED'];
+        document.getElementById('can_enabled').checked = data['CAN_ENABLED'];
         
         if(data['SG_ENABLED'])
         { 
@@ -181,7 +185,15 @@ async function loadConfig()
             document.getElementById('sg_relay_trigger').checked = data['SG_RELAY_HIGH_TRIGGER'];
             show('smartgrid');
         }
+
+        if(data['CAN_ENABLED'])
+        { 
+            document.getElementById('pin_can_rx').value = data['PIN_CAN_RX'];
+            document.getElementById('pin_can_tx').value = data['PIN_CAN_TX'];
+            show('can_pins');
+        }
         
+        document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];   
         document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];   
 
         let webuiSelectionValues = JSON.parse(data['WEBUI_SELECTION_VALUES']);
@@ -348,6 +360,23 @@ async function sendConfigData(event)
     {
         clearHiddenValidationResult("smartgrid");
     }
+
+    const can_enabled = document.getElementById('can_enabled');
+    if(can_enabled.checked)
+    { 
+        const pin_can_rx = document.getElementById('pin_can_rx');
+        pin_can_rx.setAttribute('aria-invalid', pin_can_rx.value == '');
+
+        const pin_can_tx = document.getElementById('pin_can_tx');
+        pin_can_tx.setAttribute('aria-invalid', pin_can_tx.value == '');
+    }
+    else
+    {
+        clearHiddenValidationResult("can_pins");
+    }
+
+    const can_speed_kbps = document.getElementById('can_speed_kbps');
+    can_speed_kbps.setAttribute('aria-invalid', can_speed_kbps.value == '');
     
     const pin_enable_config = document.getElementById('pin_enable_config');
     pin_enable_config.setAttribute('aria-invalid', pin_enable_config.value == '');

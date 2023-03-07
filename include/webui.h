@@ -99,6 +99,9 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"pin_therm\": 0,"
         "\"pin_sg1\": 32,"
         "\"pin_sg2\": 33,"
+        "\"pin_can_rx\": 32,"
+        "\"pin_can_tx\": 33,"
+        "\"can_speed_kbps\": 20,"
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
         "\"mqtt_onetopic\": \"espaltherma/OneATTR/\","
@@ -142,6 +145,9 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"pin_therm\": 34,"
         "\"pin_sg1\": 32,"
         "\"pin_sg2\": 33,"
+        "\"pin_can_rx\": 4,"
+        "\"pin_can_tx\": 5,"
+        "\"can_speed_kbps\": 20,"
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
         "\"mqtt_onetopic\": \"espaltherma/OneATTR/\","
@@ -506,11 +512,12 @@ void onSaveConfig(AsyncWebServerRequest *request)
     return;
   }
 
-  if(!request->hasParam("pin_enable_config", true))
+  if(request->hasParam("can_enabled", true) && (!request->hasParam("pin_can_rx", true) || !request->hasParam("pin_can_tx", true) || !request->hasParam("can_speed_kbps", true)))
   {
-    request->send(422, "text/plain", "Missing parameter pin to enable config");
+    request->send(422, "text/plain", "Missing parameter(s) for CAN-Bus");
     return;
   }
+
   #pragma endregion Validate_Input_Params
 
   if(config)
@@ -560,6 +567,13 @@ void onSaveConfig(AsyncWebServerRequest *request)
     config->PIN_SG2 = request->getParam("pin_sg2", true)->value().toInt();
   }
 
+  if(config->CAN_ENABLED)
+  {
+    config->PIN_CAN_RX = request->getParam("pin_can_rx", true)->value().toInt();
+    config->PIN_CAN_TX = request->getParam("pin_can_tx", true)->value().toInt();    
+  }
+
+  config->CAN_SPEED_KBPS = request->getParam("can_speed_kbps", true)->value().toInt();
   config->SG_RELAY_HIGH_TRIGGER = request->hasParam("sg_relay_trigger", true);
   config->PIN_ENABLE_CONFIG = request->getParam("pin_enable_config", true)->value().toInt();
   
@@ -612,9 +626,11 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
 void onUpdate(AsyncWebServerRequest *request)
 {  
-  request->onDisconnect([]()
+  bool hasError = Update.hasError();
+
+  request->onDisconnect([hasError]()
   {
-    if(Update.hasError())
+    if(hasError)
       return;
 
     esp_restart();

@@ -173,6 +173,25 @@
           <select id="pin_enable_config" name="pin_enable_config" data-pins></select>
           <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the standalone wifi mode.</small>
         </label>
+
+        <label for="can_enabled" >          
+          <input type="checkbox" id="can_enabled" name="can_enabled" role="switch" onclick="show('can_pins');"/>
+          CAN-Bus enabled
+        </label>
+
+        <article id="can_pins" class="hidden">
+          <div class="grid">
+            <label for="pin_can_rx">
+              PIN CAN RX
+              <select id="pin_can_rx" name="pin_can_rx" data-pins></select>
+            </label>
+            
+            <label for="pin_can_tx">
+              PIN CAN TX
+              <select id="pin_can_tx" name="pin_can_tx" data-pins></select>
+            </label>
+          </div>
+        </article>
       </article>
       <article id="form-x10a" role="tab" style="display: none;">      
         <div class="grid">
@@ -336,7 +355,8 @@
         </article>
       </article>
       <article id="form-can" role="tab" style="display: none;">      
-        Cooming soon...
+        <label for="can_speed_kbps">CAN-Bus Speed in kbps:</label>
+        <input type="number" id="can_speed_kbps" name="can_speed_kbps" min="1" max="1000"/>
       </article>
       <article id="form-export-import" role="tab" style="display: none;">      
         <div class="grid">
