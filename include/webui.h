@@ -194,9 +194,16 @@ void onFormat(AsyncWebServerRequest *request)
 {
   bool result = formatDefaultFS();
 
-  request->send(200, "text/javascript", String(result ? "OK" : "FAILED"));
+  request->onDisconnect([]()
+  {
+#ifdef ESP32
+    ESP.restart();
+#elif defined(ESP8266)
+    ESP.reset();
+#endif
+  });
 
-  esp_restart();
+  request->send(200, "text/javascript", String(result ? "OK" : "FAILED"));  
 }
 
 void onLoadModels(AsyncWebServerRequest *request)
@@ -343,10 +350,17 @@ void onImportConfig(AsyncWebServerRequest *request)
   }
 
   LittleFS.rename(lastUploadFileName, CONFIG_FILE);
+
+  request->onDisconnect([]()
+  {
+#ifdef ESP32
+    ESP.restart();
+#elif defined(ESP8266)
+    ESP.reset();
+#endif
+  });
           
   request->send(200);
-
-  esp_restart();
 }
 
 void onLoadValuesResult(AsyncWebServerRequest *request)
@@ -596,22 +610,36 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   saveConfig();
 
-  request->send(200, "text/plain", "OK");
+  request->onDisconnect([]()
+  {
+#ifdef ESP32
+    ESP.restart();
+#elif defined(ESP8266)
+    ESP.reset();
+#endif
+  });
 
-  esp_restart();
+  request->send(200, "text/plain", "OK");
 }
 
 void onUpdate(AsyncWebServerRequest *request)
 {  
-  bool hasError = Update.hasError();
+  request->onDisconnect([]()
+  {
+    if(Update.hasError())
+      return;
+
+#ifdef ESP32
+    ESP.restart();
+#elif defined(ESP8266)
+    ESP.reset();
+#endif
+  });
 
   AsyncWebServerResponse *response = request->beginResponse((hasError)?500:200, "text/plain", (hasError)?"FAIL":"OK");
   response->addHeader("Connection", "close");
   response->addHeader("Access-Control-Allow-Origin", "*");
   request->send(response);
-
-  if(!hasError)
-    esp_restart();
 }
 
 void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)

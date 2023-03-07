@@ -201,9 +201,9 @@
           </div>
         </div>
 
-        <article id="containerCustomParameters" class="hidden">
+        <article id="containerCustomParameters">
           <div class="grid">
-            <div class="parametersSection">
+            <div id="selectModelParametersSection" class="parametersSection hidden">
               <label for="parametersTable">Parameters:</label>
               <figure >
                 <table id="parametersTable">
@@ -220,6 +220,7 @@
               </figure>
 
               <input type="button" onclick="addSelectedPredefinedParameters()" value="Add to selected parameters">
+              <input type="button" onclick="addPredefinedParameters()" value="Add all parameters">
               <button id="loadParametersTable" onclick="beginLoadData('parametersTable')">Load model values</button>           
             </div>          
             <div class="parametersSection">
