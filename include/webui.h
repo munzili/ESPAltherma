@@ -196,11 +196,7 @@ void onFormat(AsyncWebServerRequest *request)
 
   request->onDisconnect([]()
   {
-#ifdef ESP32
-    ESP.restart();
-#elif defined(ESP8266)
-    ESP.reset();
-#endif
+    esp_restart();
   });
 
   request->send(200, "text/javascript", String(result ? "OK" : "FAILED"));  
@@ -353,11 +349,7 @@ void onImportConfig(AsyncWebServerRequest *request)
 
   request->onDisconnect([]()
   {
-#ifdef ESP32
-    ESP.restart();
-#elif defined(ESP8266)
-    ESP.reset();
-#endif
+    esp_restart();
   });
           
   request->send(200);
@@ -612,11 +604,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   request->onDisconnect([]()
   {
-#ifdef ESP32
-    ESP.restart();
-#elif defined(ESP8266)
-    ESP.reset();
-#endif
+    esp_restart();
   });
 
   request->send(200, "text/plain", "OK");
@@ -629,11 +617,7 @@ void onUpdate(AsyncWebServerRequest *request)
     if(Update.hasError())
       return;
 
-#ifdef ESP32
-    ESP.restart();
-#elif defined(ESP8266)
-    ESP.reset();
-#endif
+    esp_restart();
   });
 
   AsyncWebServerResponse *response = request->beginResponse((hasError)?500:200, "text/plain", (hasError)?"FAIL":"OK");
