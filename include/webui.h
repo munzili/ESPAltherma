@@ -142,7 +142,7 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
       "\"Default\": {"
         "\"pin_rx\": 16,"
         "\"pin_tx\": 17,"
-        "\"pin_therm\": 34,"
+        "\"pin_therm\": 13,"
         "\"pin_sg1\": 32,"
         "\"pin_sg2\": 33,"
         "\"pin_can_rx\": 4,"
@@ -560,6 +560,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
   config->PIN_TX = request->getParam("pin_tx", true)->value().toInt();
   config->PIN_THERM = request->getParam("pin_therm", true)->value().toInt();  
   config->SG_ENABLED = request->hasParam("sg_enabled", true);
+  config->CAN_ENABLED = request->hasParam("can_enabled", true);
 
   if(config->SG_ENABLED)
   {
