@@ -13,6 +13,8 @@ window.addEventListener('load', async function () {
     document.getElementById('submit').addEventListener('click', sendConfigData);
     document.getElementById('startUpdate').addEventListener('click', sendUpdate);
     document.getElementById('btnWifiListRefresh').addEventListener('click', loadWifiNetworks);
+    document.getElementById('linkAddValueCode').addEventListener('click', addValueCode);
+    document.getElementById('removeAddValueCode').addEventListener('click', removeValueCode);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
     
     await loadBoardDefaults();
@@ -989,4 +991,58 @@ async function refreshLanguages()
     }
     
     await updatePresets();
+}
+
+async function addValueCode(event)
+{
+    event.preventDefault();
+
+    let container = document.getElementById("canDataValueCode");
+
+    if(container.innerHTML == "&nbsp;")
+        container.innerHTML = "";
+    
+    const row = (container.querySelectorAll("input").length / 2);
+
+    const leftNode = document.createElement("div");
+    const rightNode = document.createElement("div");
+
+    const leftTextbox = document.createElement("input");
+    const rightTextbox = document.createElement("input");
+
+    leftTextbox.type = "text";
+    leftTextbox.name = "[valueCodeLeft][" + row + "]";
+    rightTextbox.type = "text";
+    rightTextbox.name = "[valueCodeRight][" + row + "]";
+
+    leftNode.appendChild(leftTextbox);
+    rightNode.appendChild(rightTextbox);
+
+    const rowNode = document.createElement("div");
+    rowNode.classList.add("grid");
+
+    rowNode.appendChild(leftNode);
+    rowNode.appendChild(rightNode);
+
+    container.appendChild(rowNode);
+}
+
+async function removeValueCode(event)
+{
+    event.preventDefault();
+
+    let container = document.getElementById("canDataValueCode");
+
+    const rows = (container.querySelectorAll("input").length / 2);
+
+    if(rows == 0)
+        return;
+    
+    if(rows == 1)
+    {
+        container.innerHTML = "&nbsp;";
+        return;
+    }
+
+    container.removeChild(container.lastElementChild);
 }

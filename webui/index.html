@@ -357,6 +357,144 @@
       <article id="form-can" role="tab" style="display: none;">      
         <label for="can_speed_kbps">CAN-Bus Speed in kbps:</label>
         <input type="number" id="can_speed_kbps" name="can_speed_kbps" min="1" max="1000"/>
+
+        <div class="grid">
+          <div>
+            <label for="canBusFile">CAN-Bus definition file:</label>
+            <select id="canBusFile" name="canBusFile" onchange="updateCanBusFile()">
+              <option value="" selected>Select a file...</option>
+            </select>
+          </div>          
+          <div>            
+            <label for="canBusFileUpload">Upload CAN-Bus definition file:</label>
+            <input type="file" id="canBusFileUpload" accept=".json" name="canBusFileUpload"/>
+            <small>Add a commands file for the CAN-Bus</small>
+
+            <input type="button" onclick="uploadCanBusFile()" value="Upload">
+          </div>
+        </div>
+
+        <article id="containerCanBusCommands">
+          <div class="grid">
+            <div id="selectCanBusCommandSection" class="parametersSection hidden">
+              <label for="fileCommandsTable">Commands:</label>
+              <figure >
+                <table id="fileCommandsTable">
+                  <tr>
+                    <td>Name</td>  
+                    <td>Label</td>  
+                    <td>Description</td>  
+                    <td>Command</td>                
+                    <td>ID</td>                    
+                    <td>Divisor</td>
+                    <td>Writable</td>
+                    <td>Unit</td>
+                    <td>Type</td>
+                    <td>Value Code</td>
+                  </tr>                
+                </table>
+              </figure>
+
+              <input type="button" onclick="addSelectedCanBusCommands()" value="Add to selected commands">
+              <input type="button" onclick="addCanBusCommands()" value="Add all commands">
+              <button id="loadCommandsTable" onclick="beginLoadData('fileCommandsTable')">Load command values</button>
+            </div>          
+            <div class="parametersSection">
+              <label for="selectedCommandsTable">Selected Commands:</label>            
+              <figure>
+                <table id="selectedCommandsTable">
+                  <tr>
+                    <td>Name</td>
+                    <td>Label</td>
+                    <td>Description</td>
+                    <td>Command</td>
+                    <td>ID</td>
+                    <td>Divisor</td>
+                    <td>Writable</td>
+                    <td>Unit</td>
+                    <td>Type</td>
+                    <td>Value Code</td>
+                  </tr>
+                </table>
+              </figure>
+
+              <input type="button" onclick="removeSelectedCommands()" value="Remove from selected commands" />
+              <input type="button" onclick="clearCommands()" value="Remove all commands" />
+              <button id="loadSelectedCommandsTable" onclick="beginLoadData('selectedCommandsTable')">Load command values</button>
+            </div>
+          </div>
+          <div class="customParameterSection">                        
+            <details>
+              <summary role="button">Add custom command</summary>
+              <p>                              
+                <label for="canDataName">Name:</label>
+                <input type="text" id="canDataName" name="canDataName"/>
+
+                <label for="canDataLabel">Label:</label>
+                <input type="text" id="canDataLabel" name="canDataLabel"/>
+
+                <label for="canDataDescription">Description:</label>
+                <input type="text" id="canDataDescription" name="canDataDescription"/>
+
+                <label for="canDataCommand">Command:</label>
+                <input type="text" id="canDataCommand" name="canDataCommand"/>
+
+                <div class="grid">
+                  <div>
+                    <label for="canDataID">ID:</label>
+                    <select id="canDataID" name="canDataID">
+                      <option value="190">190</option>
+                      <option value="310">310</option>
+                      <option value="610">610</option>
+                    </select>
+                  </div>    
+                  <div>
+                    <label for="canDataDivisor">Divisor:</label>
+                    <select id="canDataDivisor" name="canDataDivisor">
+                      <option value="0.1">0.1</option>
+                      <option value="1">1</option>
+                      <option value="10">10</option>
+                      <option value="100">100</option>
+                      <option value="1000">1000</option>
+                    </select>
+                  </div>                 
+                  <div>
+                    <label for="canDataWriteable">Writeable:</label>
+                    <input type="checkbox" id="canDataWriteable" name="canDataWriteable" />
+                  </div>
+                  <div >                    
+                    <label for="canDataUnit">Unit:</label>
+                    <select id="canDataUnit" name="canDataUnit">
+                      <option value="deg">deg</option>
+                      <option value="bool">bool</option>
+                      <option value="percent">percent</option>
+                      <option value="int">int</option>
+                      <option value="bar">bar</option>
+                      <option value="hour">hour</option>
+                      <option value="kwh">kwh</option>
+                      <option value="KW">KW</option>
+                      <option value="w">w</option>
+                    </select>
+                  </div>
+                  <div >                    
+                    <label for="canDataType">Type:</label>
+                    <select id="canDataType" name="canDataType">
+                      <option value="int">int</option>
+                      <option value="longint">longint</option>
+                      <option value="float">float</option>
+                      <option value="value">value</option>
+                    </select>
+                  </div>
+                </div>
+
+                <label for="canDataValueCode">Value Code: <a href="#" role="button" id="linkAddValueCode" style="padding: 2pt; padding-bottom: 0pt; padding-top: 0pt;">+</a><a href="#" role="button" id="removeAddValueCode" style="margin-left: 3pt; padding: 4pt; padding-bottom: 0pt; padding-top: 0pt;">-</a></label>
+                <div id="canDataValueCode">&nbsp;</div>                            
+
+                <input type="button" onclick="addCustomCommand()" value="Add">
+              </p>
+            </details>
+          </div>
+        </article>
       </article>
       <article id="form-export-import" role="tab" style="display: none;">      
         <div class="grid">
