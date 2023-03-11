@@ -29,14 +29,13 @@ for file in files_to_convert:
     languageDefinition = json.load(languageFile)
     languageFile.close() 
 
-
     counter = 0
-    for definition in languageDefinition:
+    for definition in languageDefinition["Commands"]:
         defName = definition["name"]
         command = commands[defName]
 
         for c in command:            
-            languageDefinition[counter][c] = command[c]
+            languageDefinition["Commands"][counter][c] = command[c]
         
         counter += 1
 

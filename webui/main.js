@@ -3,7 +3,10 @@ let customParametersList = [];
 let selectedModelPresets = [];
 let selectedModelParameters = [];
 let filteredModelParameters = [];
+let customCommandsList = [];
+let modelCommands = [];
 let models = [];
+let canCommands = [];
 let boardDefaults = {};
 
 let fetchDataIntervalHandler;
@@ -19,6 +22,7 @@ window.addEventListener('load', async function () {
     
     await loadBoardDefaults();
     await refreshModels();
+    await refreshCANCommands();
     await loadConfig();
 
     document.getElementById('nav-main').querySelectorAll('a').forEach(function(navLink) {
@@ -604,7 +608,7 @@ async function updateParameters()
     updateParametersTable('parametersTable', filteredModelParameters);
 }
 
-async function uploadFile() {
+async function uploadX10AFile() {
 
     const parametersFile = document.getElementById('parametersFile');
     const file = parametersFile.files[0];
@@ -616,7 +620,7 @@ async function uploadFile() {
 
     const formData = new FormData();           
     formData.append("file", parametersFile.files[0]);
-    await fetch('/upload', {
+    await fetch('/upload/X10A', {
         method: "POST", 
         body: formData
     })  
@@ -633,7 +637,7 @@ async function uploadFile() {
     });        
 }
 
-async function importConfig() {
+async function uploadConfig() {
 
     const parametersFile = document.getElementById('configFile');
     const file = parametersFile.files[0];
@@ -645,7 +649,7 @@ async function importConfig() {
 
     const formData = new FormData();           
     formData.append("file", parametersFile.files[0]);
-    await fetch('/importConfig', {
+    await fetch('/upload/config', {
         method: "POST", 
         body: formData
     })  
@@ -755,6 +759,57 @@ function updateParametersTable(tableId, parameters)
     }
 }
 
+function updateCommandsTable(tableId, commands)
+{
+    const selectedCommandsTable = document.getElementById(tableId);
+
+    while (selectedCommandsTable.rows.length > 1) {                
+        selectedCommandsTable.deleteRow(1);
+    }
+
+    for (let i in commands) {
+        const data = commands[i];
+
+        const row = selectedCommandsTable.insertRow(-1);
+        row.setAttribute('data-row-index', i);
+        row.addEventListener("click", function(event) {selectRow(tableId, i);});
+        
+        const labelCell = row.insertCell(0);
+        const helpCell = row.insertCell(1);
+        const commandCell = row.insertCell(2);
+        const idCell = row.insertCell(3);
+        const divisorCell = row.insertCell(4);
+        const writableCell = row.insertCell(5);
+        const unitCell = row.insertCell(6);
+        const typeCell = row.insertCell(7);
+        const valueCodeCell = row.insertCell(8);
+
+        labelCell.appendChild(document.createTextNode(data["label"]));
+
+        const helpLink = document.createElement("a");
+        helpLink.href = "javascript:alert('" + data["description"] + "')";
+        helpLink.text = "?";
+        helpCell.appendChild(helpLink);   
+                
+        commandCell.appendChild(document.createTextNode(data["command"]));
+        idCell.appendChild(document.createTextNode(data["id"]));
+        divisorCell.appendChild(document.createTextNode(data["divisor"]));
+        writableCell.appendChild(document.createTextNode(data["writable"]));
+        unitCell.appendChild(document.createTextNode(data["unit"]));
+        typeCell.appendChild(document.createTextNode(data["type"]));
+
+        if(data["value_code"] == undefined)
+            valueCodeCell.appendChild(document.createTextNode(""));
+        else
+            valueCodeCell.appendChild(document.createTextNode(data["value_code"]));
+        
+        if(data["value"] != undefined)
+        {
+            const valueCell = row.insertCell(10);
+            valueCell.appendChild(document.createTextNode(data["value"]));
+        }
+    }
+}
 
 function selectRow(tableid, value)
 {
@@ -1045,4 +1100,242 @@ async function removeValueCode(event)
     }
 
     container.removeChild(container.lastElementChild);
+}
+
+async function uploadCANFile() {
+
+    const canBusFile = document.getElementById('canFileUpload');
+    const file = canBusFile.files[0];
+
+    canBusFile.setAttribute('aria-invalid', !file);
+    
+    if(!file)
+        return;
+
+    const formData = new FormData();           
+    formData.append("file", canBusFile.files[0]);
+    await fetch('/upload/CAN', {
+        method: "POST", 
+        body: formData
+    })  
+    .then(function(response) {
+        if (response.status == 200) {
+            canBusFile.removeAttribute('aria-invalid');
+            canBusFile.value = null;
+            canCommands = [];
+            refreshCANCommands();
+        }
+    })
+    .catch(function(err) {
+        alert('File upload failed! Message: ' + err);
+    });        
+}
+
+async function refreshCANCommands()
+{
+    await fetch('/loadCommands', {
+        method: "GET"
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data){
+        canCommands = data;
+
+        const canModelSelect = document.getElementById('canModel');
+        
+        while (canModelSelect.options.length > 1)
+            canModelSelect.remove(1);
+
+        data.forEach(function(canFile, i) {
+            let option = document.createElement("option");
+            option.text = canFile.Model;
+            option.value = i;
+            canModelSelect.add(option);
+        });
+    })
+    .catch(function(err) {
+        alert('Fetching CAN Files data failed! Message: ' + err);
+    });    
+}
+
+async function updateCanLanguages()
+{
+    const languageSelect = document.getElementById('canLanguage');
+    const selectedModel = document.getElementById('canModel').value;
+
+    while (languageSelect.options.length > 1)
+        languageSelect.remove(1);
+
+    if(selectedModel != '')
+    {
+        const languageFiles = canCommands[selectedModel]["Files"];
+        const languageNames = Object.keys(languageFiles);
+
+        languageNames.forEach((language, index) => {
+            const option = document.createElement("option");
+            option.text = language;
+            option.value = languageFiles[language];
+            languageSelect.add(option);
+        });
+    }
+}
+
+async function updateCanCommands()
+{
+    const commandsFile = document.getElementById('canLanguage').value;
+
+    if(commandsFile == '')
+    {                
+        modelCommands = [];
+        
+        updateCommandsTable('fileCommandsTable', modelCommands);
+        updateCommands();
+        return;
+    }
+
+    const formData = new FormData();           
+    formData.append("commandFile", commandsFile);
+    await fetch('/loadCommand', {
+        method: "POST",
+        body: formData
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data){
+        modelCommands = data['Commands'];     
+        updateCommands();   
+    })
+    .catch(function(err) {
+        alert('Fetching parameter data failed! Message: ' + err);
+    });    
+}
+
+async function updateCommands()
+{
+    let canLanguageSelect = document.getElementById('canLanguage').value;
+
+    if(canLanguageSelect == '')
+    {
+        document.getElementById('selectCanBusCommandSection').classList.add('hidden');
+        modelCommands = [];
+    }
+    else
+    {
+        document.getElementById('selectCanBusCommandSection').classList.remove('hidden');
+    }
+
+    updateCommandsTable('fileCommandsTable', modelCommands);
+}
+
+function addSelectedCanCommands()
+{
+    document
+    .getElementById('fileCommandsTable')
+    .querySelectorAll(".row-selected")
+    .forEach(function(e) {
+        const id = parseInt(e.getAttribute('data-row-index'));
+        const paramToAdd = modelCommands[id];
+
+        AddCanCommand(paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? "");
+        e.classList.remove('row-selected');
+    });
+
+    updateCommandsTable('selectedCommandsTable', customCommandsList);
+}
+
+function addCanCommands()
+{
+    document
+    .getElementById('fileCommandsTable')
+    .querySelectorAll("[data-row-index]")
+    .forEach(function(e) {
+        const id = parseInt(e.getAttribute('data-row-index'));
+        const paramToAdd = modelCommands[id];
+
+        AddCanCommand(paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? "");
+        e.classList.remove('row-selected');
+    });
+
+    updateCommandsTable('selectedCommandsTable', customCommandsList);
+}
+
+function AddCanCommand(label, command, id, divisor, writable, unit, type, valueCode)
+{
+    
+    for (let i in customCommandsList) {
+        if(customCommandsList[i][1] == command)
+        {
+            alert("Command settings of '" + label + "' already exists. Skip adding");
+            return false;
+        }
+    }
+
+    const dataArray = {
+        "label": label,
+        "command": command,
+        "id": id, 
+        "divisor": divisor,
+        "writable": writable,
+        "unit": unit, 
+        "type": type, 
+        "value_code": valueCode
+    };
+
+    customCommandsList.push(dataArray);
+    return true;
+}
+
+function addCustomCanCommand()
+{    
+    const label = document.getElementById('canDataLabel');
+    const command = document.getElementById('canDataCommand');
+    const id = document.getElementById('canDataID');
+    const divisor = document.getElementById('canDataDivisor');
+    const writable = document.getElementById('canDataWriteable');
+    const unit = document.getElementById('canDataUnit');
+    const type = document.getElementById('canDataType');
+
+    if( label.value == '' || isNaN(regid.value) ||
+        command.value == '' || isNaN(offset.value))
+    {
+        alert("Please fill in all fields correctly!");
+        return false;
+    }
+
+    const result = AddCanCommand(command.value, command.value, id.value, divisor.value, writable.checked, unit.value, type.value);
+
+    if(!result)
+        return;
+
+    label.value = '';
+    command.value = '';
+
+    updateCommandsTable('selectedCommandsTable', customCommandsList);
+}
+
+function removeSelectedCustomCommands()
+{    
+    let counterRun = 0;
+
+    document
+    .getElementById('selectedCommandsTable')
+    .querySelectorAll(".row-selected")
+    .forEach(function(e) {
+        let id = parseInt(e.getAttribute('data-row-index'));
+        id -= counterRun;
+        customCommandsList = customCommandsList.filter(function(value, index){ 
+            let keep = index != id;
+
+            if(!keep)
+                counterRun++;
+                
+            return keep;
+        });
+    });
+
+    updateCommandsTable('selectedCommandsTable', customCommandsList);
+}
+
+function clearCustomParameters()
+{    
+    customCommandsList = [];
+    updateCommandsTable('selectedCommandsTable', customCommandsList);
 }

@@ -13,8 +13,10 @@
 #include "webuiScanRegister.h"
 
 #define MODELS_FILE "/models.json"
+#define CAN_COMMANDS_FILE "/CANCommands.json"
 #define MODEL_DEFINITION_DOC_SIZE 1024*25
-#define MODEL_DEFINITION_UOLOAD_SIZE 1024*50
+#define MODEL_DEFINITION_UPLOAD_SIZE 1024*50
+#define COMMANDS_DEFINITION_UPLOAD_SIZE 1024*100
 #define MODELS_DOC_SIZE 1024*10
 #define WEBUI_SELECTION_VALUE_SIZE 1024
 
@@ -45,6 +47,10 @@ bool formatDefaultFS()
 
   LittleFS.begin();
   File file = LittleFS.open(MODELS_FILE, FILE_WRITE, true);
+  file.print("[]");
+  file.close();
+
+  file = LittleFS.open(CAN_COMMANDS_FILE, FILE_WRITE, true);
   file.print("[]");
   file.close();
 
@@ -213,7 +219,12 @@ void onLoadModels(AsyncWebServerRequest *request)
   request->send(LittleFS, MODELS_FILE, "text/json");
 }
 
-void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t* data, size_t len, bool final)
+void onLoadCommands(AsyncWebServerRequest *request)
+{
+  request->send(LittleFS, CAN_COMMANDS_FILE, "text/json");
+}
+
+void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t* data, size_t len, bool final)
 {
   String logmessage;  
   String fsFilename;
@@ -251,7 +262,7 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
 
     // minimize json file
     File modelsFile = LittleFS.open(lastUploadFileName, FILE_READ);
-    DynamicJsonDocument modelsDoc(MODEL_DEFINITION_UOLOAD_SIZE);
+    DynamicJsonDocument modelsDoc(MODEL_DEFINITION_UPLOAD_SIZE);
     deserializeJson(modelsDoc, modelsFile); 
     modelsFile.close();
 
@@ -265,7 +276,7 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
   }
 }
 
-void onUpload(AsyncWebServerRequest *request)
+void onUploadX10AFile(AsyncWebServerRequest *request)
 {
   if(!request->hasParam("file", true, true))
   {
@@ -335,7 +346,7 @@ void onUpload(AsyncWebServerRequest *request)
 }
 
 
-void onImportConfig(AsyncWebServerRequest *request)
+void onUploadConfigFile(AsyncWebServerRequest *request)
 {
   if(!request->hasParam("file", true, true))
   {
@@ -424,6 +435,28 @@ void onLoadModel(AsyncWebServerRequest *request)
   }
 
   request->send(LittleFS, modelFile, "text/json");
+}
+
+void onLoadCommand(AsyncWebServerRequest *request)
+{
+  if(!request->hasParam("commandFile", true))
+  {
+    request->send(422, "text/plain", "Missing command file");
+    return;
+  }
+  
+  String commandFile = request->getParam("commandFile", true)->value();
+
+  Serial.print("Found command file: ");
+  Serial.println(commandFile);
+
+  if(!LittleFS.exists(commandFile))
+  {
+    request->send(400, "text/plain", "Command file not found");
+    return;
+  }
+
+  request->send(LittleFS, commandFile, "text/json");
 }
 
 void onLoadConfig(AsyncWebServerRequest *request)
@@ -703,6 +736,75 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
   }
 }
 
+void onUploadCANFile(AsyncWebServerRequest *request)
+{
+  if(!request->hasParam("file", true, true))
+  {
+    request->send(422, "text/plain", "Missing CAN file");
+    return;
+  }  
+  
+  String fsFilename = lastUploadFileName;
+  Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
+  
+  File canCommandsFile = LittleFS.open(CAN_COMMANDS_FILE, FILE_READ);
+  DynamicJsonDocument canCommandsDoc(MODELS_DOC_SIZE);
+  deserializeJson(canCommandsDoc, canCommandsFile); 
+  JsonArray canCommandsDocArr = canCommandsDoc.as<JsonArray>();
+  canCommandsFile.close();
+  
+  File uploadFileFS = LittleFS.open(fsFilename, FILE_READ);
+  DynamicJsonDocument uploadDoc(COMMANDS_DEFINITION_UPLOAD_SIZE);
+  deserializeJson(uploadDoc, uploadFileFS); 
+  uploadFileFS.close();
+  
+  bool newModel = true;
+  for (JsonObject canCommands : canCommandsDocArr) 
+  {
+    if(strcmp(canCommands["Model"].as<const char*>(), uploadDoc["Model"].as<const char*>()) == 0)
+    {
+      Serial.printf("Found existing Model: %s\n", canCommands["Model"].as<const char*>());
+
+      newModel = false;
+
+      bool existingLanguage = false;
+      for (JsonPair kv : canCommands["Files"].as<JsonObject>()) 
+      {
+        if(strcmp(kv.key().c_str(), uploadDoc["Language"].as<const char*>()) == 0)
+        {
+          Serial.printf("Found existing Model file: %s\n", kv.key().c_str());
+          fsFilename = kv.value().as<const char*>();
+          existingLanguage = true;
+          break;
+        }
+      }
+
+      if(!existingLanguage)
+      {
+        Serial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"].as<const char*>());
+        canCommands["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
+      }
+    }    
+  }
+
+  if(newModel)
+  {
+    Serial.printf("Found new Model: %s\n", uploadDoc["Model"].as<const char*>());
+
+    JsonObject newModelObect = canCommandsDocArr.createNestedObject();
+    newModelObect["Model"] = uploadDoc["Model"].as<const char*>();
+    newModelObect["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
+  }
+  
+  serializeJson(canCommandsDoc, Serial);
+
+  canCommandsFile = LittleFS.open(CAN_COMMANDS_FILE, FILE_WRITE);
+  serializeJson(canCommandsDoc, canCommandsFile);
+  canCommandsFile.close();
+
+  request->send(200);
+}
+
 void WebUI_Init()
 {
   if(!LittleFS.exists(MODELS_FILE))
@@ -716,18 +818,21 @@ void WebUI_Init()
   server.on("/main.js", HTTP_GET, onRequestMainJS);
   server.on("/md5.min.js", HTTP_GET, onRequestMD5JS);
   server.on("/loadModel", HTTP_POST, onLoadModel);
-  server.on("/loadBoardInfo", HTTP_GET, onLoadBoardInfo);
-  server.on("/upload", HTTP_POST, onUpload, handleUpload);
+  server.on("/loadCommand", HTTP_POST, onLoadCommand);
+  server.on("/loadBoardInfo", HTTP_GET, onLoadBoardInfo);  
   server.on("/loadModels", HTTP_GET, onLoadModels);
+  server.on("/loadCommands", HTTP_GET, onLoadCommands);
   server.on("/loadValues", HTTP_POST, onLoadValues);
   server.on("/loadValuesResult", HTTP_GET, onLoadValuesResult);
   server.on("/saveConfig", HTTP_POST, onSaveConfig);
-  server.on("/exportConfig", HTTP_GET, onExportConfig);
-  server.on("/importConfig", HTTP_POST, onImportConfig, handleUpload);
+  server.on("/exportConfig", HTTP_GET, onExportConfig);  
   server.on("/loadConfig", HTTP_GET, onLoadConfig);
   server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
   server.on("/format", HTTP_GET, onFormat);
-  server.on("/update", HTTP_POST, onUpdate, handleUpdate);  
+  server.on("/update", HTTP_POST, onUpdate, handleUpdate);
+  server.on("/upload/config", HTTP_POST, onUploadConfigFile, handleFileUpload);
+  server.on("/upload/X10A", HTTP_POST, onUploadX10AFile, handleFileUpload);
+  server.on("/upload/CAN", HTTP_POST, onUploadCANFile, handleFileUpload);  
   server.begin();
 }
 #endif

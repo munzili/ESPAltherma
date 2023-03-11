@@ -216,7 +216,7 @@
             <input type="file" id="parametersFile" accept=".json" name="parametersFile"/>
             <small>Add a model config file to the predefined model list</small>
 
-            <input type="button" onclick="uploadFile()" value="Upload">
+            <input type="button" onclick="uploadX10AFile()" value="Upload">
           </div>
         </div>
 
@@ -360,30 +360,34 @@
 
         <div class="grid">
           <div>
-            <label for="canBusFile">CAN-Bus definition file:</label>
-            <select id="canBusFile" name="canBusFile" onchange="updateCanBusFile()">
-              <option value="" selected>Select a file...</option>
+            <label for="canModel">Model:</label>
+            <select id="canModel" name="canModel" onchange="updateCanLanguages()">
+              <option value="" selected>Select a model...</option>
+            </select>
+
+            <label for="canLanguage">Language:</label>
+            <select id="canLanguage" name="canLanguage" onchange="updateCanCommands()">
+              <option value="" selected>Select a language...</option>
             </select>
           </div>          
           <div>            
-            <label for="canBusFileUpload">Upload CAN-Bus definition file:</label>
-            <input type="file" id="canBusFileUpload" accept=".json" name="canBusFileUpload"/>
+            <label for="canFileUpload">Upload CAN-Bus definition file:</label>
+            <input type="file" id="canFileUpload" accept=".json" name="canFileUpload"/>
             <small>Add a commands file for the CAN-Bus</small>
 
-            <input type="button" onclick="uploadCanBusFile()" value="Upload">
+            <input type="button" onclick="uploadCANFile()" value="Upload">
           </div>
         </div>
 
         <article id="containerCanBusCommands">
           <div class="grid">
             <div id="selectCanBusCommandSection" class="parametersSection hidden">
-              <label for="fileCommandsTable">Commands:</label>
+              <label for="fileCommandsTable">Available Commands:</label>
               <figure >
                 <table id="fileCommandsTable">
                   <tr>
-                    <td>Name</td>  
                     <td>Label</td>  
-                    <td>Description</td>  
+                    <td>?</td>  
                     <td>Command</td>                
                     <td>ID</td>                    
                     <td>Divisor</td>
@@ -391,12 +395,13 @@
                     <td>Unit</td>
                     <td>Type</td>
                     <td>Value Code</td>
+                    <td>Value</td>
                   </tr>                
                 </table>
               </figure>
 
-              <input type="button" onclick="addSelectedCanBusCommands()" value="Add to selected commands">
-              <input type="button" onclick="addCanBusCommands()" value="Add all commands">
+              <input type="button" onclick="addSelectedCanCommands()" value="Add to selected commands">
+              <input type="button" onclick="addCanCommands()" value="Add all commands">
               <button id="loadCommandsTable" onclick="beginLoadData('fileCommandsTable')">Load command values</button>
             </div>          
             <div class="parametersSection">
@@ -404,9 +409,8 @@
               <figure>
                 <table id="selectedCommandsTable">
                   <tr>
-                    <td>Name</td>
                     <td>Label</td>
-                    <td>Description</td>
+                    <td>?</td>
                     <td>Command</td>
                     <td>ID</td>
                     <td>Divisor</td>
@@ -414,6 +418,7 @@
                     <td>Unit</td>
                     <td>Type</td>
                     <td>Value Code</td>
+                    <td>Value</td>
                   </tr>
                 </table>
               </figure>
@@ -427,14 +432,8 @@
             <details>
               <summary role="button">Add custom command</summary>
               <p>                              
-                <label for="canDataName">Name:</label>
-                <input type="text" id="canDataName" name="canDataName"/>
-
                 <label for="canDataLabel">Label:</label>
                 <input type="text" id="canDataLabel" name="canDataLabel"/>
-
-                <label for="canDataDescription">Description:</label>
-                <input type="text" id="canDataDescription" name="canDataDescription"/>
 
                 <label for="canDataCommand">Command:</label>
                 <input type="text" id="canDataCommand" name="canDataCommand"/>
@@ -490,7 +489,7 @@
                 <label for="canDataValueCode">Value Code: <a href="#" role="button" id="linkAddValueCode" style="padding: 2pt; padding-bottom: 0pt; padding-top: 0pt;">+</a><a href="#" role="button" id="removeAddValueCode" style="margin-left: 3pt; padding: 4pt; padding-bottom: 0pt; padding-top: 0pt;">-</a></label>
                 <div id="canDataValueCode">&nbsp;</div>                            
 
-                <input type="button" onclick="addCustomCommand()" value="Add">
+                <input type="button" onclick="addCustomCanCommand()" value="Add">
               </p>
             </details>
           </div>
@@ -503,7 +502,7 @@
           </div> 
           <div>
             <input type="file" id="configFile" accept=".json" name="configFile" />
-            <input type="button" onclick="importConfig()" value="Import Config">
+            <input type="button" onclick="uploadConfig()" value="Import Config">
           </div>
         </div> 
       </article>
