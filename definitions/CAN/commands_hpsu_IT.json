@@ -465,142 +465,142 @@
     "description": "Con questo parametro si può attivare la funzione di asciugatura del massetto. La temperatura nominale di mandata viene regolata in base al programma massetto parametrato. Il giorno in cui viene attivata la funzione massetto non viene conteggiato nella durata del programma massetto. Il primo giorno comincia quindi al volgere del giorno ovvero alle ore 00:00. Per le restanti ore del giorno di attivazione, il riscaldamento segue l'impostazione del primo giorno di programma."
   },
   {
-    "name": "screed_day1",
+    "name": "t_screed_day1",
     "label": "Temp programma massetto giorno 1",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day2",
+    "name": "t_screed_day2",
     "label": "Temp programma massetto giorno 2",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day3",
+    "name": "t_screed_day3",
     "label": "Temp programma massetto giorno 3",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day4",
+    "name": "t_screed_day4",
     "label": "Temp programma massetto giorno 4",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day5",
+    "name": "t_screed_day5",
     "label": "Temp programma massetto giorno 5",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day6",
+    "name": "t_screed_day6",
     "label": "Temp programma massetto giorno 6",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day7",
+    "name": "t_screed_day7",
     "label": "Temp programma massetto giorno 7",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day8",
+    "name": "t_screed_day8",
     "label": "Temp programma massetto giorno 8",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day9",
+    "name": "t_screed_day9",
     "label": "Temp programma massetto giorno 9",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day10",
+    "name": "t_screed_day10",
     "label": "Temp programma massetto giorno 10",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day11",
+    "name": "t_screed_day11",
     "label": "Temp programma massetto giorno 11",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day12",
+    "name": "t_screed_day12",
     "label": "Temp programma massetto giorno 12",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day13",
+    "name": "t_screed_day13",
     "label": "Temp programma massetto giorno 13",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day14",
+    "name": "t_screed_day14",
     "label": "Temp programma massetto giorno 14",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day15",
+    "name": "t_screed_day15",
     "label": "Temp programma massetto giorno 15",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day16",
+    "name": "t_screed_day16",
     "label": "Temp programma massetto giorno 16",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day17",
+    "name": "t_screed_day17",
     "label": "Temp programma massetto giorno 17",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day18",
+    "name": "t_screed_day18",
     "label": "Temp programma massetto giorno 18",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day19",
+    "name": "t_screed_day19",
     "label": "Temp programma massetto giorno 19",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day20",
+    "name": "t_screed_day20",
     "label": "Temp programma massetto giorno 20",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day21",
+    "name": "t_screed_day21",
     "label": "Temp programma massetto giorno 21",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day22",
+    "name": "t_screed_day22",
     "label": "Temp programma massetto giorno 22",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day23",
+    "name": "t_screed_day23",
     "label": "Temp programma massetto giorno 23",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day24",
+    "name": "t_screed_day24",
     "label": "Temp programma massetto giorno 24",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day25",
+    "name": "t_screed_day25",
     "label": "Temp programma massetto giorno 25",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day26",
+    "name": "t_screed_day26",
     "label": "Temp programma massetto giorno 26",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day27",
+    "name": "t_screed_day27",
     "label": "Temp programma massetto giorno 27",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },
   {
-    "name": "screed_day28",
+    "name": "t_screed_day28",
     "label": "Temp programma massetto giorno 28",
     "description": "In questa immissione si può parametrare il programma di svolgimento del riscaldamento del massetto. Si può impostare una temperatura nominale di mandata propria per una durata massima di 28 giorni separatamente per ogni giorno. La fine del programma massetto viene definita il primo giorno con l'impostazione del valore nominale \"- - - -\"."
   },

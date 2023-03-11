@@ -5,4 +5,5 @@
 .vscode/ipch
 private/
 webui/*.gz
+definitions/CAN/*.conv.json
 .vscode/settings.json
