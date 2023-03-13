@@ -17,7 +17,7 @@ window.addEventListener('load', async function () {
     document.getElementById('startUpdate').addEventListener('click', sendUpdate);
     document.getElementById('btnWifiListRefresh').addEventListener('click', loadWifiNetworks);
     document.getElementById('linkAddValueCode').addEventListener('click', addValueCode);
-    document.getElementById('removeAddValueCode').addEventListener('click', removeValueCode);
+    document.getElementById('linkRemoveValueCode').addEventListener('click', removeValueCode);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
     
     await loadBoardDefaults();
@@ -219,8 +219,13 @@ async function loadConfig()
         }                
         
         customParametersList = data['PARAMETERS'];
+        customCommandsList = data['COMMANDS'];
+        
         updateParametersTable('selectedParametersTable', customParametersList);
         updateParameters();        
+
+        updateCommandsTable('selectedCommandsTable', customCommandsList);
+        updateCommands();        
     })
     .catch(function(err) {
         alert('Fetching config failed! Message: ' + err);
@@ -397,6 +402,7 @@ async function sendConfigData(event)
     }
 
     formData.append("definedParameters", JSON.stringify(customParametersList));
+    formData.append("definedCommands", JSON.stringify(customCommandsList));
 
     await fetch(form.getAttribute('action'), {
         method: form.getAttribute('method'),
@@ -751,62 +757,10 @@ function updateParametersTable(tableId, parameters)
         dataSizeCell.appendChild(document.createTextNode(data[3]));
         dataTypeCell.appendChild(document.createTextNode(data[4]));
         
-        if(data[6] != undefined)
+        if(data[6] != null)
         {
             const valueCell = row.insertCell(6);
             valueCell.appendChild(document.createTextNode(data[6]));
-        }
-    }
-}
-
-function updateCommandsTable(tableId, commands)
-{
-    const selectedCommandsTable = document.getElementById(tableId);
-
-    while (selectedCommandsTable.rows.length > 1) {                
-        selectedCommandsTable.deleteRow(1);
-    }
-
-    for (let i in commands) {
-        const data = commands[i];
-
-        const row = selectedCommandsTable.insertRow(-1);
-        row.setAttribute('data-row-index', i);
-        row.addEventListener("click", function(event) {selectRow(tableId, i);});
-        
-        const labelCell = row.insertCell(0);
-        const helpCell = row.insertCell(1);
-        const commandCell = row.insertCell(2);
-        const idCell = row.insertCell(3);
-        const divisorCell = row.insertCell(4);
-        const writableCell = row.insertCell(5);
-        const unitCell = row.insertCell(6);
-        const typeCell = row.insertCell(7);
-        const valueCodeCell = row.insertCell(8);
-
-        labelCell.appendChild(document.createTextNode(data["label"]));
-
-        const helpLink = document.createElement("a");
-        helpLink.href = "javascript:alert('" + data["description"] + "')";
-        helpLink.text = "?";
-        helpCell.appendChild(helpLink);   
-                
-        commandCell.appendChild(document.createTextNode(data["command"]));
-        idCell.appendChild(document.createTextNode(data["id"]));
-        divisorCell.appendChild(document.createTextNode(data["divisor"]));
-        writableCell.appendChild(document.createTextNode(data["writable"]));
-        unitCell.appendChild(document.createTextNode(data["unit"]));
-        typeCell.appendChild(document.createTextNode(data["type"]));
-
-        if(data["value_code"] == undefined)
-            valueCodeCell.appendChild(document.createTextNode(""));
-        else
-            valueCodeCell.appendChild(document.createTextNode(data["value_code"]));
-        
-        if(data["value"] != undefined)
-        {
-            const valueCell = row.insertCell(10);
-            valueCell.appendChild(document.createTextNode(data["value"]));
         }
     }
 }
@@ -1066,8 +1020,10 @@ async function addValueCode(event)
     const rightTextbox = document.createElement("input");
 
     leftTextbox.type = "text";
+    leftTextbox.setAttribute("data-value-code-name", "");
     leftTextbox.name = "[valueCodeLeft][" + row + "]";
     rightTextbox.type = "text";
+    rightTextbox.setAttribute("data-value-code-content", "");
     rightTextbox.name = "[valueCodeRight][" + row + "]";
 
     leftNode.appendChild(leftTextbox);
@@ -1234,7 +1190,7 @@ function addSelectedCanCommands()
         const id = parseInt(e.getAttribute('data-row-index'));
         const paramToAdd = modelCommands[id];
 
-        AddCanCommand(paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? "");
+        AddCanCommand(paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? null);
         e.classList.remove('row-selected');
     });
 
@@ -1250,7 +1206,7 @@ function addCanCommands()
         const id = parseInt(e.getAttribute('data-row-index'));
         const paramToAdd = modelCommands[id];
 
-        AddCanCommand(paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? "");
+        AddCanCommand(paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? null);
         e.classList.remove('row-selected');
     });
 
@@ -1258,10 +1214,9 @@ function addCanCommands()
 }
 
 function AddCanCommand(label, command, id, divisor, writable, unit, type, valueCode)
-{
-    
+{    
     for (let i in customCommandsList) {
-        if(customCommandsList[i][1] == command)
+        if(customCommandsList[i]["command"] == command)
         {
             alert("Command settings of '" + label + "' already exists. Skip adding");
             return false;
@@ -1283,7 +1238,7 @@ function AddCanCommand(label, command, id, divisor, writable, unit, type, valueC
     return true;
 }
 
-function addCustomCanCommand()
+function addCustomCanCommand(event)
 {    
     const label = document.getElementById('canDataLabel');
     const command = document.getElementById('canDataCommand');
@@ -1300,7 +1255,25 @@ function addCustomCanCommand()
         return false;
     }
 
-    const result = AddCanCommand(command.value, command.value, id.value, divisor.value, writable.checked, unit.value, type.value);
+    const listValueCodeNameFields = document.querySelectorAll("input[data-value-code-name]");
+    const listValueCodeContentFields = document.querySelectorAll("input[data-value-code-content]");
+
+    let valueCodes = {};
+
+    for (let i = 0; i < listValueCodeNameFields.length; i++) {
+        let valueCodeName = listValueCodeNameFields[i].value;
+        let valueCodeContent = listValueCodeContentFields[i].value;
+
+        if(valueCodeName == '' || valueCodeContent == '')
+        {
+            alert("Please fill in all value code fields correctly!");
+            return false;
+        }
+
+        valueCodes[valueCodeName] = valueCodeContent;
+    }
+
+    const result = AddCanCommand(command.value, command.value, id.value, divisor.value, writable.checked, unit.value, type.value, Object.keys(valueCodes).length == 0 ? null : valueCodes);
 
     if(!result)
         return;
@@ -1308,10 +1281,15 @@ function addCustomCanCommand()
     label.value = '';
     command.value = '';
 
+    const rows = document.getElementById("canDataValueCode").querySelectorAll("input[data-value-code-name]").length;
+
+    for(let i = 0; i < rows; i++)
+        removeValueCode(event);
+
     updateCommandsTable('selectedCommandsTable', customCommandsList);
 }
 
-function removeSelectedCustomCommands()
+function removeSelectedCommands()
 {    
     let counterRun = 0;
 
@@ -1334,8 +1312,63 @@ function removeSelectedCustomCommands()
     updateCommandsTable('selectedCommandsTable', customCommandsList);
 }
 
-function clearCustomParameters()
+function clearCommands()
 {    
     customCommandsList = [];
     updateCommandsTable('selectedCommandsTable', customCommandsList);
+}
+
+function updateCommandsTable(tableId, commands)
+{
+    const selectedCommandsTable = document.getElementById(tableId);
+
+    while (selectedCommandsTable.rows.length > 1) {                
+        selectedCommandsTable.deleteRow(1);
+    }
+
+    for (let i in commands) {
+        const data = commands[i];
+
+        const row = selectedCommandsTable.insertRow(-1);
+        row.setAttribute('data-row-index', i);
+        row.addEventListener("click", function(event) {selectRow(tableId, i);});
+        
+        const labelCell = row.insertCell(0);
+        const helpCell = row.insertCell(1);
+        const commandCell = row.insertCell(2);
+        const idCell = row.insertCell(3);
+        const divisorCell = row.insertCell(4);
+        const writableCell = row.insertCell(5);
+        const unitCell = row.insertCell(6);
+        const typeCell = row.insertCell(7);
+        const valueCodeCell = row.insertCell(8);
+
+        labelCell.appendChild(document.createTextNode(data["label"]));
+
+        if(data["description"] != null)
+        {
+            const helpLink = document.createElement("a");
+            helpLink.href = "javascript:alert('" + data["description"] + "')";
+            helpLink.text = "?";
+            helpCell.appendChild(helpLink);   
+        }
+                
+        commandCell.appendChild(document.createTextNode(data["command"]));
+        idCell.appendChild(document.createTextNode(data["id"]));
+        divisorCell.appendChild(document.createTextNode(data["divisor"]));
+        writableCell.appendChild(document.createTextNode(data["writable"]));
+        unitCell.appendChild(document.createTextNode(data["unit"]));
+        typeCell.appendChild(document.createTextNode(data["type"]));
+
+        if(data["value_code"] == null)
+            valueCodeCell.appendChild(document.createTextNode(""));
+        else
+            valueCodeCell.appendChild(document.createTextNode(JSON.stringify(data["value_code"])));
+        
+        if(data["value"] != null)
+        {
+            const valueCell = row.insertCell(10);
+            valueCell.appendChild(document.createTextNode(data["value"]));
+        }
+    }
 }

@@ -402,7 +402,7 @@
 
               <input type="button" onclick="addSelectedCanCommands()" value="Add to selected commands">
               <input type="button" onclick="addCanCommands()" value="Add all commands">
-              <button id="loadCommandsTable" onclick="beginLoadData('fileCommandsTable')">Load command values</button>
+              <button id="loadCommandsTable" onclick="alert('Not yet implemented')">Load command values</button>
             </div>          
             <div class="parametersSection">
               <label for="selectedCommandsTable">Selected Commands:</label>            
@@ -425,7 +425,7 @@
 
               <input type="button" onclick="removeSelectedCommands()" value="Remove from selected commands" />
               <input type="button" onclick="clearCommands()" value="Remove all commands" />
-              <button id="loadSelectedCommandsTable" onclick="beginLoadData('selectedCommandsTable')">Load command values</button>
+              <button id="loadSelectedCommandsTable" onclick="alert('Not yet implemented')">Load command values</button>
             </div>
           </div>
           <div class="customParameterSection">                        
@@ -486,10 +486,10 @@
                   </div>
                 </div>
 
-                <label for="canDataValueCode">Value Code: <a href="#" role="button" id="linkAddValueCode" style="padding: 2pt; padding-bottom: 0pt; padding-top: 0pt;">+</a><a href="#" role="button" id="removeAddValueCode" style="margin-left: 3pt; padding: 4pt; padding-bottom: 0pt; padding-top: 0pt;">-</a></label>
+                <label for="canDataValueCode">Value Code: <a href="#" role="button" id="linkAddValueCode" style="padding: 2pt; padding-bottom: 0pt; padding-top: 0pt;">+</a><a href="#" role="button" id="linkRemoveValueCode" style="margin-left: 3pt; padding: 4pt; padding-bottom: 0pt; padding-top: 0pt;">-</a></label>
                 <div id="canDataValueCode">&nbsp;</div>                            
 
-                <input type="button" onclick="addCustomCanCommand()" value="Add">
+                <input type="button" onclick="addCustomCanCommand(event)" value="Add">
               </p>
             </details>
           </div>
