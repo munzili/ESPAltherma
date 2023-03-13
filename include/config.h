@@ -226,6 +226,21 @@ void saveConfig()
         parameter.add(config->PARAMETERS[i]->dataType);
         parameter.add(config->PARAMETERS[i]->label);
     }
+
+    JsonArray commands = configDoc.createNestedArray("COMMANDS");
+    for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+    {
+        JsonArray command = commands.createNestedArray();
+        command.add(config->COMMANDS[i]->label);
+        command.add(config->COMMANDS[i]->name);
+        command.add(config->COMMANDS[i]->command);
+        command.add(config->COMMANDS[i]->id);
+        command.add(config->COMMANDS[i]->divisor);
+        command.add(config->COMMANDS[i]->writable);
+        command.add(config->COMMANDS[i]->unit);
+        command.add(config->COMMANDS[i]->type);
+        command.add(config->COMMANDS[i]->valueCode);
+    }
     
     configDoc["WEBUI_SELECTION_VALUES"] = config->WEBUI_SELECTION_VALUES;
 

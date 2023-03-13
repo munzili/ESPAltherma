@@ -639,6 +639,38 @@ void onSaveConfig(AsyncWebServerRequest *request)
     config->PARAMETERS = nullptr;
   }
 
+  
+  if(request->hasParam("definedCommands", true))
+  {
+    DynamicJsonDocument jsonCommands(MODELS_CONFIG_SIZE);
+    deserializeJson(jsonCommands, request->getParam("definedCommands", true)->value()); 
+    JsonArray commandsArray = jsonCommands.as<JsonArray>();
+
+    config->COMMANDS_LENGTH = commandsArray.size();
+    config->COMMANDS = new CommandDef*[config->COMMANDS_LENGTH];
+
+    int counter = 0;
+    for (JsonArray value : commandsArray) 
+    {
+      config->COMMANDS[counter] = new CommandDef(
+        value[0],
+        value[1],
+        value[2].as<uint8_t*>(), 
+        value[3].as<const uint16_t>(), 
+        value[4].as<const float>(), 
+        value[5].as<const bool>(),
+        value[6].as<char*>(),
+        value[7].as<char*>(),
+        value[8]);        
+      counter++;
+    }
+  }
+  else
+  {
+    config->COMMANDS_LENGTH = 0;
+    config->COMMANDS = nullptr;
+  }
+
   StaticJsonDocument<WEBUI_SELECTION_VALUE_SIZE> webuiSelectionValues;
   webuiSelectionValues["model"] = (char *)request->getParam("model", true)->value().c_str();
   webuiSelectionValues["language"] = (char *)request->getParam("language", true)->value().c_str();
