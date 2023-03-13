@@ -25,7 +25,7 @@ for file in files_to_convert:
     srcFile = os.path.join(data_src_dir, os.path.basename(file))
     newFileName = os.path.splitext(srcFile)[0] + ".conv.json"
 
-    languageFile = open(srcFile)
+    languageFile = open(srcFile, "r", encoding='utf8')
     languageDefinition = json.load(languageFile)
     languageFile.close() 
 
@@ -42,7 +42,7 @@ for file in files_to_convert:
     if os.path.exists(newFileName):
         os.remove(newFileName)
 
-    with open(newFileName, "w") as outfile:
-        json.dump(languageDefinition, outfile)
+    with open(newFileName, "w", encoding='utf8') as outfile:
+        json.dump(languageDefinition, outfile, ensure_ascii=False)
 
 print('Finished generating CAN language files!')
