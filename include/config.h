@@ -2,6 +2,7 @@
 #define CONFIG_H
 #include <stdint.h>
 #include "labeldef.h"
+#include "commandDef.h"
 #include "ArduinoJson.h"
 #include <LittleFS.h>
 
@@ -42,6 +43,8 @@ struct Config
     uint8_t PIN_ENABLE_CONFIG;
     size_t PARAMETERS_LENGTH;
     LabelDef** PARAMETERS;
+    size_t COMMANDS_LENGTH;
+    CommandDef** COMMANDS;
     char* WEBUI_SELECTION_VALUES;
 
     ~Config()
@@ -53,6 +56,15 @@ struct Config
                 delete PARAMETERS[i];
             }
             delete[] PARAMETERS;
+        }
+
+        if(COMMANDS_LENGTH)
+        {
+            for (size_t i = 0; i < COMMANDS_LENGTH; i++)
+            {
+                delete COMMANDS[i];
+            }
+            delete[] COMMANDS;
         }
     }
 };
@@ -132,6 +144,25 @@ void readConfig()
             parameter[3].as<const int>(), 
             parameter[4].as<const int>(), 
             parameter[5]);
+    }
+
+    JsonArray commands = configDoc["COMMANDS"].as<JsonArray>();
+    config->COMMANDS_LENGTH = commands.size();
+    config->COMMANDS = new CommandDef*[config->COMMANDS_LENGTH];
+
+    for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+    {
+        JsonArray command = commands[i];
+        config->COMMANDS[i] = new CommandDef(
+            command[0],
+            command[1],
+            command[2].as<uint8_t*>(), 
+            command[3].as<const uint16_t>(), 
+            command[4].as<const float>(), 
+            command[5].as<const bool>(),
+            command[6].as<char*>(),
+            command[7].as<char*>(),
+            command[8]);
     }
 
     config->WEBUI_SELECTION_VALUES = (char *)configDoc["WEBUI_SELECTION_VALUES"].as<const char*>();    
