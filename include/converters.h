@@ -3,12 +3,12 @@
 //convert read registry value to the expected format based on convID
 // #include <registrys.h>
 #include <Arduino.h>
-#include "labeldef.h"
+#include "parameterDef.h"
 
 class Converter
 {
 public:
-    void convert(LabelDef *def, char *data)
+    void convert(ParameterDef *def, char *data)
     {
         def->asString[0] = {0};
         int convId = def->convid;

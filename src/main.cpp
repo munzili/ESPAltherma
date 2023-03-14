@@ -35,7 +35,7 @@ uint8_t getFragmentation() {
 }
 
 //Converts to string and add the value to the JSON message
-void updateValues(LabelDef *labelDef)
+void updateValues(ParameterDef *labelDef)
 {
   bool alpha = false;
   for (size_t j = 0; j < strlen(labelDef->asString); j++)

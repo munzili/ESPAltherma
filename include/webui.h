@@ -2,7 +2,7 @@
 #define WEBUI_H
 #include <LittleFS.h>
 #include <Update.h>
-#include "ESPAsyncWebServer.h" 
+#include "ESPAsyncWebServer.h"
 #include "ArduinoJson.h"
 #include "comm.h"
 #include "esp_task_wdt.h"
@@ -60,17 +60,17 @@ bool formatDefaultFS()
 }
 
 void onLoadWifiNetworks(AsyncWebServerRequest *request)
-{  
+{
   DynamicJsonDocument networksDoc(MODELS_DOC_SIZE);
 
   scan_wifi();
 
-  for (int16_t i = 0; i < lastWifiScanResultAmount; i++) 
+  for (int16_t i = 0; i < lastWifiScanResultAmount; i++)
   {
     JsonObject networkDetails = networksDoc.createNestedObject();
     networkDetails["SSID"] = lastWifiScanResults[i]->SSID;
     networkDetails["RSSI"] = lastWifiScanResults[i]->RSSI;
-    networkDetails["EncryptionType"] = (lastWifiScanResults[i]->EncryptionType == WIFI_AUTH_OPEN) ? "":"*"; 
+    networkDetails["EncryptionType"] = (lastWifiScanResults[i]->EncryptionType == WIFI_AUTH_OPEN) ? "":"*";
     delay(10);
   }
 
@@ -85,12 +85,12 @@ void onLoadWifiNetworks(AsyncWebServerRequest *request)
 void onLoadBoardInfo(AsyncWebServerRequest *request)
 {
 #if defined(ARDUINO_M5Stick_C)
-  const String response = 
+  const String response =
     "{"
       "\"Pins\": {"
         "\"0\": \"GPIO0 - ADC2_1,TOUCH1\","
 #if defined(ARDUINO_M5Stick_C_Plus)
-        "\"25\": \"GPIO25 - ADC2_8,DAC_1\","      
+        "\"25\": \"GPIO25 - ADC2_8,DAC_1\","
 #endif
         "\"26\": \"GPIO26 - ADC2_9,DAC_2\","
         "\"32\": \"GPIO32 - ADC1_4,TOUCH9,XTAL32\","
@@ -115,7 +115,7 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
       "}"
     "}";
 #elif defined(ESP32)
-  const String response = 
+  const String response =
     "{"
       "\"Pins\": {"
         "\"0\": \"GPIO0 - ADC2_1,TOUCH1\","
@@ -123,7 +123,7 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"2\": \"GPIO2 - ADC2_2,TOUCH2,CS\","
         "\"3\": \"GPIO3 - U0_RXD,CLK2\","
         "\"4\": \"GPIO4 - ADC2_0,TOUCH0\","
-        "\"5\": \"GPIO5 - VSPI_CS\","       
+        "\"5\": \"GPIO5 - VSPI_CS\","
         "\"12\": \"GPIO12 - ADC2_5,TOUCH5,HSPI_MISO\","
         "\"13\": \"GPIO13 - ADC2_4,TOUCH4,HSPI_MOSI\","
         "\"14\": \"GPIO14 - ADC2_6,TOUCH6,HSPI_CLK\","
@@ -157,18 +157,18 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
         "\"mqtt_onetopic\": \"espaltherma/OneATTR/\","
-        "\"mqtt_port\": 1883"        
+        "\"mqtt_port\": 1883"
       "}"
     "}";
 #else
-  const String response = "{\"Pins\": {}, \"Default\": {}}"; 
+  const String response = "{\"Pins\": {}, \"Default\": {}}";
 #endif
 
   request->send(200, "application/json", response);
 }
 
 void onIndex(AsyncWebServerRequest *request)
-{    
+{
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", indexHTML_start, indexHTML_end - indexHTML_start);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
@@ -211,7 +211,7 @@ void onFormat(AsyncWebServerRequest *request)
     esp_restart();
   });
 
-  request->send(200, "text/javascript", String(result ? "OK" : "FAILED"));  
+  request->send(200, "text/javascript", String(result ? "OK" : "FAILED"));
 }
 
 void onLoadModels(AsyncWebServerRequest *request)
@@ -226,11 +226,11 @@ void onLoadCommands(AsyncWebServerRequest *request)
 
 void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t* data, size_t len, bool final)
 {
-  String logmessage;  
+  String logmessage;
   String fsFilename;
-  
-  if (!index) 
-  {      
+
+  if (!index)
+  {
     do
     {
       fsFilename = "/P" + String(millis()) + ".json";
@@ -242,28 +242,28 @@ void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t in
     Serial.println(logmessage);
   }
 
-  if (len) 
+  if (len)
   {
     // stream the incoming chunk to the opened file
-    request->_tempFile.write(data, len);    
+    request->_tempFile.write(data, len);
     logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
     Serial.println(logmessage);
   }
 
-  if (final) 
-  {       
+  if (final)
+  {
     lastUploadFileName = "/" + String(request->_tempFile.name());
 
-    logmessage = "Upload Complete: " + String(filename) + ", size: " + String(index + len);    
+    logmessage = "Upload Complete: " + String(filename) + ", size: " + String(index + len);
     Serial.println(logmessage);
 
     // close the file handle as the upload is now done
-    request->_tempFile.close();    
+    request->_tempFile.close();
 
     // minimize json file
     File modelsFile = LittleFS.open(lastUploadFileName, FILE_READ);
     DynamicJsonDocument modelsDoc(MODEL_DEFINITION_UPLOAD_SIZE);
-    deserializeJson(modelsDoc, modelsFile); 
+    deserializeJson(modelsDoc, modelsFile);
     modelsFile.close();
 
     modelsFile = LittleFS.open(lastUploadFileName, FILE_WRITE);
@@ -271,7 +271,7 @@ void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t in
     size_t newFileSize = modelsFile.size();
     modelsFile.close();
 
-    logmessage = "JSON Minify Complete: " + String(lastUploadFileName) + ", new size: " + String(newFileSize);    
+    logmessage = "JSON Minify Complete: " + String(lastUploadFileName) + ", new size: " + String(newFileSize);
     Serial.println(logmessage);
   }
 }
@@ -282,24 +282,24 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
   {
     request->send(422, "text/plain", "Missing parameter file");
     return;
-  }  
-  
+  }
+
   String fsFilename = lastUploadFileName;
   Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
-  
+
   File modelsFile = LittleFS.open(MODELS_FILE, FILE_READ);
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
-  deserializeJson(modelsDoc, modelsFile); 
+  deserializeJson(modelsDoc, modelsFile);
   JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
   modelsFile.close();
-  
+
   File uploadFileFS = LittleFS.open(fsFilename, FILE_READ);
   DynamicJsonDocument uploadDoc(MODEL_DEFINITION_DOC_SIZE);
-  deserializeJson(uploadDoc, uploadFileFS); 
+  deserializeJson(uploadDoc, uploadFileFS);
   uploadFileFS.close();
-  
+
   bool newModel = true;
-  for (JsonObject model : modelsDocArr) 
+  for (JsonObject model : modelsDocArr)
   {
     if(strcmp(model["Model"].as<const char*>(), uploadDoc["Model"].as<const char*>()) == 0)
     {
@@ -308,7 +308,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
       newModel = false;
 
       bool existingLanguage = false;
-      for (JsonPair kv : model["Files"].as<JsonObject>()) 
+      for (JsonPair kv : model["Files"].as<JsonObject>())
       {
         if(strcmp(kv.key().c_str(), uploadDoc["Language"].as<const char*>()) == 0)
         {
@@ -324,7 +324,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
         Serial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"].as<const char*>());
         model["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
       }
-    }    
+    }
   }
 
   if(newModel)
@@ -335,7 +335,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
     newModelObect["Model"] = uploadDoc["Model"].as<const char*>();
     newModelObect["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
   }
-  
+
   serializeJson(modelsDoc, Serial);
 
   modelsFile = LittleFS.open(MODELS_FILE, FILE_WRITE);
@@ -352,12 +352,12 @@ void onUploadConfigFile(AsyncWebServerRequest *request)
   {
     request->send(422, "text/plain", "Missing config file");
     return;
-  }  
-  
+  }
+
   String fsFilename = lastUploadFileName;
   Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
 
-  if(LittleFS.exists(CONFIG_FILE))    
+  if(LittleFS.exists(CONFIG_FILE))
   {
     LittleFS.remove(CONFIG_FILE);
   }
@@ -368,7 +368,7 @@ void onUploadConfigFile(AsyncWebServerRequest *request)
   {
     esp_restart();
   });
-          
+
   request->send(200);
 }
 
@@ -408,7 +408,7 @@ void onLoadValues(AsyncWebServerRequest *request)
 
   webuiScanRegisterConfig.PinRx = request->getParam("PIN_RX", true)->value().toInt();
   webuiScanRegisterConfig.PinTx = request->getParam("PIN_TX", true)->value().toInt();
-  webuiScanRegisterConfig.Params = request->getParam("PARAMS", true)->value();  
+  webuiScanRegisterConfig.Params = request->getParam("PARAMS", true)->value();
 
   valueLoadState = Pending;
 
@@ -422,7 +422,7 @@ void onLoadModel(AsyncWebServerRequest *request)
     request->send(422, "text/plain", "Missing model file");
     return;
   }
-  
+
   String modelFile = request->getParam("modelFile", true)->value();
 
   Serial.print("Found model file: ");
@@ -444,7 +444,7 @@ void onLoadCommand(AsyncWebServerRequest *request)
     request->send(422, "text/plain", "Missing command file");
     return;
   }
-  
+
   String commandFile = request->getParam("commandFile", true)->value();
 
   Serial.print("Found command file: ");
@@ -460,9 +460,9 @@ void onLoadCommand(AsyncWebServerRequest *request)
 }
 
 void onLoadConfig(AsyncWebServerRequest *request)
-{  
+{
   if(!LittleFS.exists(CONFIG_FILE))
-  {    
+  {
     request->send(200, "text/json", "{}");
     return;
   }
@@ -471,11 +471,11 @@ void onLoadConfig(AsyncWebServerRequest *request)
 }
 
 void onExportConfig(AsyncWebServerRequest *request)
-{  
+{
   AsyncWebServerResponse *response;
 
   if(!LittleFS.exists(CONFIG_FILE))
-  {    
+  {
     response = request->beginResponse(200, "text/json", "{}");
     response->addHeader("Content-Disposition", "attachment; filename=\"config.json\"");
     response->addHeader("Content-Length", "2");
@@ -494,8 +494,8 @@ void onExportConfig(AsyncWebServerRequest *request)
 }
 
 void onSaveConfig(AsyncWebServerRequest *request)
-{  
-  #pragma region Validate_Input_Params  
+{
+  #pragma region Validate_Input_Params
   if(!request->hasParam("standalone_wifi", true))
   {
     if(!request->hasParam("ssid", true) || !request->hasParam("ssid_password", true))
@@ -504,10 +504,10 @@ void onSaveConfig(AsyncWebServerRequest *request)
       return;
     }
 
-    if(request->hasParam("ssid_staticip", true) && (!request->hasParam("ssid_ip", true) || 
-                                                    !request->hasParam("ssid_subnet", true) || 
-                                                    !request->hasParam("ssid_gateway", true) || 
-                                                    !request->hasParam("primary_dns", true) || 
+    if(request->hasParam("ssid_staticip", true) && (!request->hasParam("ssid_ip", true) ||
+                                                    !request->hasParam("ssid_subnet", true) ||
+                                                    !request->hasParam("ssid_gateway", true) ||
+                                                    !request->hasParam("primary_dns", true) ||
                                                     !request->hasParam("secondary_dns", true)))
     {
       request->send(422, "text/plain", "Missing parameter(s) for static ip");
@@ -555,7 +555,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   if(config)
     delete config;
-  
+
   config = new Config();
   config->configStored = true;
   config->STANDALONE_WIFI = request->hasParam("standalone_wifi", true);
@@ -575,7 +575,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
       config->SSID_SECONDARY_DNS = (char *)request->getParam("secondary_dns", true)->value().c_str();
     }
   }
-  
+
   config->MQTT_SERVER = (char *)request->getParam("mqtt_server", true)->value().c_str();
   config->MQTT_USERNAME = (char *)request->getParam("mqtt_username", true)->value().c_str();
   config->MQTT_PASSWORD = (char *)request->getParam("mqtt_password", true)->value().c_str();
@@ -591,7 +591,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
   config->MQTT_PORT = request->getParam("mqtt_port", true)->value().toInt();
   config->PIN_RX = request->getParam("pin_rx", true)->value().toInt();
   config->PIN_TX = request->getParam("pin_tx", true)->value().toInt();
-  config->PIN_THERM = request->getParam("pin_therm", true)->value().toInt();  
+  config->PIN_THERM = request->getParam("pin_therm", true)->value().toInt();
   config->SG_ENABLED = request->hasParam("sg_enabled", true);
   config->CAN_ENABLED = request->hasParam("can_enabled", true);
 
@@ -604,30 +604,30 @@ void onSaveConfig(AsyncWebServerRequest *request)
   if(config->CAN_ENABLED)
   {
     config->PIN_CAN_RX = request->getParam("pin_can_rx", true)->value().toInt();
-    config->PIN_CAN_TX = request->getParam("pin_can_tx", true)->value().toInt();    
+    config->PIN_CAN_TX = request->getParam("pin_can_tx", true)->value().toInt();
   }
 
   config->CAN_SPEED_KBPS = request->getParam("can_speed_kbps", true)->value().toInt();
   config->SG_RELAY_HIGH_TRIGGER = request->hasParam("sg_relay_trigger", true);
   config->PIN_ENABLE_CONFIG = request->getParam("pin_enable_config", true)->value().toInt();
-  
+
   if(request->hasParam("definedParameters", true))
   {
     DynamicJsonDocument jsonParameters(MODELS_CONFIG_SIZE);
-    deserializeJson(jsonParameters, request->getParam("definedParameters", true)->value()); 
+    deserializeJson(jsonParameters, request->getParam("definedParameters", true)->value());
     JsonArray parametersArray = jsonParameters.as<JsonArray>();
 
     config->PARAMETERS_LENGTH = parametersArray.size();
-    config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
+    config->PARAMETERS = new ParameterDef*[config->PARAMETERS_LENGTH];
 
     int counter = 0;
-    for (JsonArray value : parametersArray) 
+    for (JsonArray value : parametersArray)
     {
-      config->PARAMETERS[counter] = new LabelDef(
-        value[0].as<const int>(), 
-        value[1].as<const int>(), 
-        value[2].as<const int>(), 
-        value[3].as<const int>(), 
+      config->PARAMETERS[counter] = new ParameterDef(
+        value[0].as<const int>(),
+        value[1].as<const int>(),
+        value[2].as<const int>(),
+        value[3].as<const int>(),
         value[4].as<const int>(),
         value[5]);
       counter++;
@@ -639,29 +639,39 @@ void onSaveConfig(AsyncWebServerRequest *request)
     config->PARAMETERS = nullptr;
   }
 
-  
   if(request->hasParam("definedCommands", true))
   {
     DynamicJsonDocument jsonCommands(MODELS_CONFIG_SIZE);
-    deserializeJson(jsonCommands, request->getParam("definedCommands", true)->value()); 
+    deserializeJson(jsonCommands, request->getParam("definedCommands", true)->value());
     JsonArray commandsArray = jsonCommands.as<JsonArray>();
 
     config->COMMANDS_LENGTH = commandsArray.size();
     config->COMMANDS = new CommandDef*[config->COMMANDS_LENGTH];
 
     int counter = 0;
-    for (JsonArray value : commandsArray) 
+    for (JsonArray value : commandsArray)
     {
+      JsonArray commandBytes = value[1];
+      byte commandArray[] = {
+          commandBytes[0].as<const byte>(),
+          commandBytes[1].as<const byte>(),
+          commandBytes[2].as<const byte>(),
+          commandBytes[3].as<const byte>(),
+          commandBytes[4].as<const byte>(),
+          commandBytes[5].as<const byte>(),
+          commandBytes[6].as<const byte>()
+      };
+
       config->COMMANDS[counter] = new CommandDef(
         value[0],
-        value[1],
-        value[2].as<uint8_t*>(), 
-        value[3].as<const uint16_t>(), 
-        value[4].as<const float>(), 
+        commandArray/*,
+        value[3].as<const uint16_t>(),
+        value[4].as<const float>(),
         value[5].as<const bool>(),
         value[6].as<char*>(),
         value[7].as<char*>(),
-        value[8]);        
+        value[8]*/);
+
       counter++;
     }
   }
@@ -678,7 +688,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   String serializedWebuiSelectionValues;
   serializeJson(webuiSelectionValues, serializedWebuiSelectionValues);
-  config->WEBUI_SELECTION_VALUES = (char *)serializedWebuiSelectionValues.c_str();  
+  config->WEBUI_SELECTION_VALUES = (char *)serializedWebuiSelectionValues.c_str();
 
   saveConfig();
 
@@ -691,7 +701,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
 }
 
 void onUpdate(AsyncWebServerRequest *request)
-{  
+{
   bool hasError = Update.hasError();
 
   request->onDisconnect([hasError]()
@@ -710,12 +720,12 @@ void onUpdate(AsyncWebServerRequest *request)
 
 void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-  //Upload handler chunks in data       
-  if (!index) 
+  //Upload handler chunks in data
+  if (!index)
   {
-    Serial.print("Start Web OTA Update - MD5: ");    
+    Serial.print("Start Web OTA Update - MD5: ");
 
-    if(!request->hasParam("MD5", true)) 
+    if(!request->hasParam("MD5", true))
     {
       return request->send(400, "text/plain", "MD5 parameter missing");
     }
@@ -728,7 +738,7 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
     }
 
     Serial.println(md5);
-   
+
     #if defined(ESP8266)
         int cmd = (filename == "filesystem") ? U_FS : U_FLASH;
         Update.runAsync(true);
@@ -749,18 +759,18 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
   // Write chunked data to the free sketch space
   if(len)
   {
-    if (Update.write(data, len) != len) 
+    if (Update.write(data, len) != len)
     {
         return request->send(400, "text/plain", "OTA could not begin");
     }
-    Serial.print("."); 
+    Serial.print(".");
   }
-      
-  if (final) 
+
+  if (final)
   { // if the final flag is set then this is the last frame of data
-    Serial.print("\n--> Update finished!\n");  
+    Serial.print("\n--> Update finished!\n");
     webOTAIsBusy = false;
-    if (!Update.end(true)) 
+    if (!Update.end(true))
     { //true to set the size to the current progress
       Update.printError(Serial);
       return request->send(400, "text/plain", "Could not end OTA");
@@ -774,24 +784,24 @@ void onUploadCANFile(AsyncWebServerRequest *request)
   {
     request->send(422, "text/plain", "Missing CAN file");
     return;
-  }  
-  
+  }
+
   String fsFilename = lastUploadFileName;
   Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
-  
+
   File canCommandsFile = LittleFS.open(CAN_COMMANDS_FILE, FILE_READ);
   DynamicJsonDocument canCommandsDoc(MODELS_DOC_SIZE);
-  deserializeJson(canCommandsDoc, canCommandsFile); 
+  deserializeJson(canCommandsDoc, canCommandsFile);
   JsonArray canCommandsDocArr = canCommandsDoc.as<JsonArray>();
   canCommandsFile.close();
-  
+
   File uploadFileFS = LittleFS.open(fsFilename, FILE_READ);
   DynamicJsonDocument uploadDoc(COMMANDS_DEFINITION_UPLOAD_SIZE);
-  deserializeJson(uploadDoc, uploadFileFS); 
+  deserializeJson(uploadDoc, uploadFileFS);
   uploadFileFS.close();
-  
+
   bool newModel = true;
-  for (JsonObject canCommands : canCommandsDocArr) 
+  for (JsonObject canCommands : canCommandsDocArr)
   {
     if(strcmp(canCommands["Model"].as<const char*>(), uploadDoc["Model"].as<const char*>()) == 0)
     {
@@ -800,7 +810,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
       newModel = false;
 
       bool existingLanguage = false;
-      for (JsonPair kv : canCommands["Files"].as<JsonObject>()) 
+      for (JsonPair kv : canCommands["Files"].as<JsonObject>())
       {
         if(strcmp(kv.key().c_str(), uploadDoc["Language"].as<const char*>()) == 0)
         {
@@ -816,7 +826,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
         Serial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"].as<const char*>());
         canCommands["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
       }
-    }    
+    }
   }
 
   if(newModel)
@@ -827,7 +837,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
     newModelObect["Model"] = uploadDoc["Model"].as<const char*>();
     newModelObect["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
   }
-  
+
   serializeJson(canCommandsDoc, Serial);
 
   canCommandsFile = LittleFS.open(CAN_COMMANDS_FILE, FILE_WRITE);
@@ -851,20 +861,20 @@ void WebUI_Init()
   server.on("/md5.min.js", HTTP_GET, onRequestMD5JS);
   server.on("/loadModel", HTTP_POST, onLoadModel);
   server.on("/loadCommand", HTTP_POST, onLoadCommand);
-  server.on("/loadBoardInfo", HTTP_GET, onLoadBoardInfo);  
+  server.on("/loadBoardInfo", HTTP_GET, onLoadBoardInfo);
   server.on("/loadModels", HTTP_GET, onLoadModels);
   server.on("/loadCommands", HTTP_GET, onLoadCommands);
   server.on("/loadValues", HTTP_POST, onLoadValues);
   server.on("/loadValuesResult", HTTP_GET, onLoadValuesResult);
   server.on("/saveConfig", HTTP_POST, onSaveConfig);
-  server.on("/exportConfig", HTTP_GET, onExportConfig);  
+  server.on("/exportConfig", HTTP_GET, onExportConfig);
   server.on("/loadConfig", HTTP_GET, onLoadConfig);
   server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
   server.on("/format", HTTP_GET, onFormat);
   server.on("/update", HTTP_POST, onUpdate, handleUpdate);
   server.on("/upload/config", HTTP_POST, onUploadConfigFile, handleFileUpload);
   server.on("/upload/X10A", HTTP_POST, onUploadX10AFile, handleFileUpload);
-  server.on("/upload/CAN", HTTP_POST, onUploadCANFile, handleFileUpload);  
+  server.on("/upload/CAN", HTTP_POST, onUploadCANFile, handleFileUpload);
   server.begin();
 }
 #endif

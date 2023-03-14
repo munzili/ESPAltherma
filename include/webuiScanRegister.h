@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "X10A.h"
 #include "ArduinoJson.h"
-#include "labeldef.h"
+#include "parameterDef.h"
 #include "arrayFunctions.h"
 #include "comm.h"
 #include "converters.h"
@@ -54,12 +54,12 @@ void webuiScanRegister()
   Serial.printf("Creating labelDefs %i\n", modelsDocArr.size());
 
   size_t labelsSize = modelsDocArr.size();
-  LabelDef **labelsToLoad = new LabelDef*[labelsSize];
+  ParameterDef **labelsToLoad = new ParameterDef*[labelsSize];
   
   uint8_t counter = 0;
   for (JsonArray model : modelsDocArr) 
   {
-    labelsToLoad[counter] = new LabelDef(model[0], model[1], model[2], model[3], model[4], model[5]);
+    labelsToLoad[counter] = new ParameterDef(model[0], model[1], model[2], model[3], model[4], model[5]);
     counter++;
   }  
 

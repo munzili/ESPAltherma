@@ -19,7 +19,7 @@ window.addEventListener('load', async function () {
     document.getElementById('linkAddValueCode').addEventListener('click', addValueCode);
     document.getElementById('linkRemoveValueCode').addEventListener('click', removeValueCode);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
-    
+
     await loadBoardDefaults();
     await refreshModels();
     await refreshCANCommands();
@@ -33,7 +33,7 @@ window.addEventListener('load', async function () {
 });
 
 async function handleNavigation(event)
-{    
+{
     event.preventDefault();
 
     document.getElementById('nav-main').querySelectorAll('a').forEach(function(navLink) {
@@ -61,15 +61,15 @@ async function loadBoardDefaults()
         const pinSelects = document.querySelectorAll('select[data-pins]');
 
         const pins = data["Pins"];
-        
+
         for (let key in pins) {
             if (pins.hasOwnProperty(key)) {
                 pinSelects.forEach((select) => {
                     const option = document.createElement("option");
                     option.text = pins[key];
-                    option.value = key;                
+                    option.value = key;
                     select.add(option);
-                });            
+                });
             }
         }
 
@@ -78,14 +78,14 @@ async function loadBoardDefaults()
     })
     .catch(function(err) {
         alert('Fetching pins data failed! Message: ' + err);
-    }); 
+    });
 }
 
 async function updateWifiFields()
 {
-    let useStandalone = document.getElementById('standalone_wifi').checked;        
+    let useStandalone = document.getElementById('standalone_wifi').checked;
     let localUpdateFunction = function(fieldId) {
-        if(useStandalone)        
+        if(useStandalone)
             document.getElementById(fieldId).setAttribute("disabled", true);
         else
             document.getElementById(fieldId).removeAttribute("disabled");
@@ -94,11 +94,11 @@ async function updateWifiFields()
     localUpdateFunction('ssid');
     localUpdateFunction('ssid_select');
     localUpdateFunction('btnWifiListRefresh');
-    localUpdateFunction('ssid_password');    
-    
+    localUpdateFunction('ssid_password');
+
     if(useStandalone && document.getElementById('ssid_staticip').checked)
     {
-        document.getElementById('ssid_staticip').checked = false;        
+        document.getElementById('ssid_staticip').checked = false;
         show('staticip', true);
     }
     else
@@ -119,18 +119,18 @@ async function resetToDefaults()
     if(!Object.keys(boardDefaults).length)
         return;
 
-    document.getElementById('pin_rx').value = boardDefaults['pin_rx']; 
-    document.getElementById('pin_tx').value = boardDefaults['pin_tx']; 
-    document.getElementById('pin_therm').value = boardDefaults['pin_therm']; 
-    document.getElementById('pin_sg1').value = boardDefaults['pin_sg1']; 
-    document.getElementById('pin_sg2').value = boardDefaults['pin_sg2']; 
-    document.getElementById('pin_can_rx').value = boardDefaults['pin_can_rx']; 
-    document.getElementById('pin_can_tx').value = boardDefaults['pin_can_tx']; 
-    document.getElementById('can_speed_kbps').value = boardDefaults['can_speed_kbps']; 
-    document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config']; 
-    document.getElementById('frequency').value = boardDefaults['frequency']; 
-    document.getElementById('mqtt_onetopic').value = boardDefaults['mqtt_onetopic']; 
-    document.getElementById('mqtt_port').value = boardDefaults['mqtt_port']; 
+    document.getElementById('pin_rx').value = boardDefaults['pin_rx'];
+    document.getElementById('pin_tx').value = boardDefaults['pin_tx'];
+    document.getElementById('pin_therm').value = boardDefaults['pin_therm'];
+    document.getElementById('pin_sg1').value = boardDefaults['pin_sg1'];
+    document.getElementById('pin_sg2').value = boardDefaults['pin_sg2'];
+    document.getElementById('pin_can_rx').value = boardDefaults['pin_can_rx'];
+    document.getElementById('pin_can_tx').value = boardDefaults['pin_can_tx'];
+    document.getElementById('can_speed_kbps').value = boardDefaults['can_speed_kbps'];
+    document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config'];
+    document.getElementById('frequency').value = boardDefaults['frequency'];
+    document.getElementById('mqtt_onetopic').value = boardDefaults['mqtt_onetopic'];
+    document.getElementById('mqtt_port').value = boardDefaults['mqtt_port'];
 }
 
 async function loadConfig()
@@ -144,8 +144,8 @@ async function loadConfig()
         if(Object.keys(data).length == 0)
             return;
 
-        document.getElementById('standalone_wifi').checked = data['STANDALONE_WIFI'];      
-            
+        document.getElementById('standalone_wifi').checked = data['STANDALONE_WIFI'];
+
         if(!data['STANDALONE_WIFI'])
         {
             document.getElementById('ssid').value = data['SSID'];
@@ -153,7 +153,7 @@ async function loadConfig()
             document.getElementById('ssid_staticip').checked = data['SSID_STATIC_IP'];
 
             if(data['SSID_STATIC_IP'])
-            {        
+            {
                 document.getElementById('ssid_ip').value = data['SSID_IP'];
                 document.getElementById('ssid_subnet').value = data['SSID_SUBNET'];
                 document.getElementById('ssid_gateway').value = data['SSID_GATEWAY'];
@@ -166,12 +166,12 @@ async function loadConfig()
 
         document.getElementById('mqtt_server').value = data['MQTT_SERVER'];
         document.getElementById('mqtt_username').value = data['MQTT_USERNAME'];
-        document.getElementById('mqtt_password').value = data['MQTT_PASSWORD'];    
+        document.getElementById('mqtt_password').value = data['MQTT_PASSWORD'];
         document.getElementById('mqtt_jsontable').checked = data['MQTT_USE_JSONTABLE'];
         document.getElementById('mqtt_use_onetopic').checked = data['MQTT_USE_ONETOPIC'];
 
         if(data['MQTT_USE_ONETOPIC'])
-        { 
+        {
             document.getElementById('mqtt_onetopic').value = data['MQTT_ONETOPIC_NAME'];
             show('onetopic');
         }
@@ -183,9 +183,9 @@ async function loadConfig()
         document.getElementById('pin_therm').value = data['PIN_THERM'];
         document.getElementById('sg_enabled').checked = data['SG_ENABLED'];
         document.getElementById('can_enabled').checked = data['CAN_ENABLED'];
-        
+
         if(data['SG_ENABLED'])
-        { 
+        {
             document.getElementById('pin_sg1').value = data['PIN_SG1'];
             document.getElementById('pin_sg2').value = data['PIN_SG2'];
             document.getElementById('sg_relay_trigger').checked = data['SG_RELAY_HIGH_TRIGGER'];
@@ -193,49 +193,75 @@ async function loadConfig()
         }
 
         if(data['CAN_ENABLED'])
-        { 
+        {
             document.getElementById('pin_can_rx').value = data['PIN_CAN_RX'];
             document.getElementById('pin_can_tx').value = data['PIN_CAN_TX'];
             show('can_pins');
         }
-        
-        document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];   
-        document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];   
+
+        document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];
+        document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];
 
         let webuiSelectionValues = JSON.parse(data['WEBUI_SELECTION_VALUES']);
 
         if(document.getElementById('model').querySelector('option[value="' + webuiSelectionValues['model'] + '"]'))
         {
             document.getElementById('model').value = webuiSelectionValues['model'];
-            await refreshLanguages();               
+            await refreshLanguages();
         }
 
         if(document.getElementById('language').querySelector('option[value="' + webuiSelectionValues['language'] + '"]'))
         {
-            document.getElementById('language').value = webuiSelectionValues['language'];  
-            await updatePresets();                
+            document.getElementById('language').value = webuiSelectionValues['language'];
+            await updatePresets();
 
             document.getElementById('presetParameters').value = webuiSelectionValues['presetParameters'];
-        }                
-        
+        }
+
         customParametersList = data['PARAMETERS'];
-        customCommandsList = data['COMMANDS'];
-        
+
+        let convertedCommandsList = [];
+        data['COMMANDS'].forEach(command => {
+            let hexBytes = [];
+            command[1].forEach(intByte => {
+                hexBytes.push(intByte.toString(16));
+            });
+
+            const dataArray = [
+                command["label"],
+                hexBytes.join(' '),
+                command["id"].toString(),
+                command["divisor"].toString(),
+                command["writable"].toString(),
+                command["unit"],
+                command["type"]
+            ];
+
+            if(command["value_code"] != null)
+            {
+                dataArray.push(command["value_code"]);
+            }
+
+            convertedCommandsList.push(dataArray);
+        });
+
+        customCommandsList = convertedCommandsList;
+
         updateParametersTable('selectedParametersTable', customParametersList);
-        updateParameters();        
+        updateParameters();
 
         updateCommandsTable('selectedCommandsTable', customCommandsList);
-        updateCommands();        
+        updateCommands();
     })
     .catch(function(err) {
         alert('Fetching config failed! Message: ' + err);
-    });    
+    });
 }
 
 async function selectWifiNetwork(event)
-{    
+{
     event.preventDefault();
-    
+
     const ssid = document.getElementById('ssid');
     const ssidSelect = document.getElementById('ssid_select');
 
@@ -247,17 +273,17 @@ async function selectWifiNetwork(event)
 }
 
 async function loadWifiNetworks(event)
-{    
+{
     const ssidSelect = document.getElementById('ssid_select');
     const btnWifiListRefresh = document.getElementById('btnWifiListRefresh');
 
     if(btnWifiListRefresh.getAttribute('aria-busy') == 'true')
         return;
-    
+
     const btnValue = btnWifiListRefresh.text;
     btnWifiListRefresh.text = '';
-    btnWifiListRefresh.setAttribute('aria-busy', 'true'); 
-        
+    btnWifiListRefresh.setAttribute('aria-busy', 'true');
+
     while (ssidSelect.options.length > 1)
         ssidSelect.remove(1);
 
@@ -269,15 +295,15 @@ async function loadWifiNetworks(event)
         for (let key in data) {
             let option = document.createElement("option");
             option.text = data[key]["SSID"] + " (Quality:" + data[key]["RSSI"] + ") " + data[key]["EncryptionType"];
-            option.value = data[key]["SSID"];                
+            option.value = data[key]["SSID"];
             ssidSelect.add(option);
         }
     })
     .catch(function(err) {
         alert('Fetching wifi list failed! Message: ' + err);
-    });       
+    });
 
-    btnWifiListRefresh.setAttribute('aria-busy', 'false'); 
+    btnWifiListRefresh.setAttribute('aria-busy', 'false');
     btnWifiListRefresh.text = btnValue;
 }
 
@@ -297,7 +323,7 @@ async function sendConfigData(event)
 
         const ssid_staticip = document.getElementById('ssid_staticip');
         if(ssid_staticip.checked)
-        {        
+        {
             const ssid_ip = document.getElementById('ssid_ip');
             ssid_ip.setAttribute('aria-invalid',  ssid_ip.value == '' || !ValidateIPaddress(ssid_ip.value));
 
@@ -334,7 +360,7 @@ async function sendConfigData(event)
 
     const mqtt_use_onetopic = document.getElementById('mqtt_use_onetopic');
     if(mqtt_use_onetopic.checked)
-    { 
+    {
         const mqtt_onetopic = document.getElementById('mqtt_onetopic');
         mqtt_onetopic.setAttribute('aria-invalid', mqtt_onetopic.value == '' || !ValidateMQTTTopic(mqtt_onetopic.value));
     }
@@ -342,7 +368,7 @@ async function sendConfigData(event)
     {
         clearHiddenValidationResult("onetopic");
     }
-    
+
     const mqtt_port = document.getElementById('mqtt_port');
     mqtt_port.setAttribute('aria-invalid', mqtt_port.value == '' || mqtt_port.value < 0 || mqtt_port.value > 65535);
 
@@ -357,10 +383,10 @@ async function sendConfigData(event)
 
     const pin_therm = document.getElementById('pin_therm');
     pin_therm.setAttribute('aria-invalid', pin_therm.value == '');
-    
+
     const sg_enabled = document.getElementById('sg_enabled');
     if(sg_enabled.checked)
-    { 
+    {
         const pin_sg1 = document.getElementById('pin_sg1');
         pin_sg1.setAttribute('aria-invalid', pin_sg1.value == '');
 
@@ -374,7 +400,7 @@ async function sendConfigData(event)
 
     const can_enabled = document.getElementById('can_enabled');
     if(can_enabled.checked)
-    { 
+    {
         const pin_can_rx = document.getElementById('pin_can_rx');
         pin_can_rx.setAttribute('aria-invalid', pin_can_rx.value == '');
 
@@ -388,10 +414,10 @@ async function sendConfigData(event)
 
     const can_speed_kbps = document.getElementById('can_speed_kbps');
     can_speed_kbps.setAttribute('aria-invalid', can_speed_kbps.value == '');
-    
+
     const pin_enable_config = document.getElementById('pin_enable_config');
     pin_enable_config.setAttribute('aria-invalid', pin_enable_config.value == '');
-    
+
     const validationErrorField = document.querySelector('[aria-invalid="true"]');
     if(validationErrorField)
     {
@@ -402,13 +428,39 @@ async function sendConfigData(event)
     }
 
     formData.append("definedParameters", JSON.stringify(customParametersList));
-    formData.append("definedCommands", JSON.stringify(customCommandsList));
+
+    let convertedCommandsList = [];
+    customCommandsList.forEach(command => {
+        const dataArray = [
+            command["label"],
+            [],
+            parseInt(command["id"]),
+            parseFloat(command["divisor"]),
+            command["writable"] == "true",
+            command["unit"],
+            command["type"]
+        ];
+
+        let hexBytes = command["command"].split(' ');
+        hexBytes.forEach(byte => {
+            dataArray[1].push(parseInt(byte, 16));
+        });
+
+        if(command["value_code"] != null)
+        {
+            dataArray.push(command["value_code"]);
+        }
+
+        convertedCommandsList.push(dataArray);
+    });
+
+    formData.append("definedCommands", JSON.stringify(convertedCommandsList));
 
     await fetch(form.getAttribute('action'), {
         method: form.getAttribute('method'),
         body: formData
     })
-    .then(function(response) {         
+    .then(function(response) {
         if(response.status != 200)
         {
             alert("Error saving config: " + response.data);
@@ -416,14 +468,14 @@ async function sendConfigData(event)
         }
 
         alert("Config successfully saved! ESP32 will restart now with new config. Reloading page in 3 Seconds");
-        
+
         setTimeout(() => {
             document.location.reload();
         }, 3000);
     })
     .catch(function(err) {
         alert('Saving config failed! Message: ' + err);
-    });    
+    });
 }
 
 async function sendUpdate(event)
@@ -432,7 +484,7 @@ async function sendUpdate(event)
     const file = updateFile.files[0];
 
     updateFile.setAttribute('aria-invalid', !file);
-    
+
     if(!file)
         return;
 
@@ -441,14 +493,14 @@ async function sendUpdate(event)
         const data = event.target.result;
         if (data) {
             const md5Hash = SparkMD5.ArrayBuffer.hash(data);
-                        
-            const formData = new FormData();                       
+
+            const formData = new FormData();
             formData.append("type", document.querySelector('input[name="updateType"]:checked').value);
-            formData.append("MD5", md5Hash);          
+            formData.append("MD5", md5Hash);
             formData.append("file", updateFile.files[0], "update.bin");
-            
+
             const request = new XMLHttpRequest();
-            request.addEventListener('load', () => {          
+            request.addEventListener('load', () => {
                 let oatError = "";
                 document.getElementById("startUpdate").disabled = false;
                 if (request.status === 200) {
@@ -475,7 +527,7 @@ async function sendUpdate(event)
             request.upload.addEventListener('progress', (e) => {
                 document.getElementById("otaProgress").innerText = Math.trunc((e.loaded / e.total) * 100) + "%";
             });
-              
+
             try {
                 document.getElementById("startUpdate").disabled = true;
                 document.getElementById("oatErrorDisplay").classList.add("hidden");
@@ -484,13 +536,13 @@ async function sendUpdate(event)
 
                 request.open('post', '/update');
                 request.send(formData);
-            }            
-            catch(error) 
+            }
+            catch(error)
             {
                 document.getElementById("oatErrorDisplay").classList.remove("hidden");
                 document.getElementById("oatErrorDisplay").innerText = "Unknown error while upload, check the console for details.";
-            }            
-        }  
+            }
+        }
     }
     reader.readAsArrayBuffer(file);
 }
@@ -504,14 +556,14 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function ValidateIPaddress(ipaddress) 
+function ValidateIPaddress(ipaddress)
 {
-    return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress);  
+    return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress);
 }
 
-function ValidateHostname(hostname) 
+function ValidateHostname(hostname)
 {
-    return /^[a-zA-Z][a-zA-Z\d-]{1,22}[a-zA-Z\d]$/.test(hostname);  
+    return /^[a-zA-Z][a-zA-Z\d-]{1,22}[a-zA-Z\d]$/.test(hostname);
 }
 
 function ValidateIPOrHostname(input)
@@ -521,7 +573,7 @@ function ValidateIPOrHostname(input)
 
 function ValidateMQTTTopic(topicName)
 {
-    return /^(?:(?:[a-zA-Z0-9_-]+)\/)*([a-zA-Z0-9_-]+\/)$/.test(topicName);  
+    return /^(?:(?:[a-zA-Z0-9_-]+)\/)*([a-zA-Z0-9_-]+\/)$/.test(topicName);
 }
 
 function show(id, force = undefined)
@@ -534,15 +586,15 @@ async function updatePresets()
     const modelFile = document.getElementById('language').value;
 
     if(modelFile == '')
-    {                
+    {
         selectedModelPresets = [];
         selectedModelParameters = [];
         filteredModelParameters = [];
-        
-        const presetParametersSelect = document.getElementById('presetParameters');        
+
+        const presetParametersSelect = document.getElementById('presetParameters');
 
         presetParametersSelect.value = '';
-        
+
         while (presetParametersSelect.options.length > 1)
             presetParametersSelect.remove(1);
 
@@ -551,7 +603,7 @@ async function updatePresets()
         return;
     }
 
-    const formData = new FormData();           
+    const formData = new FormData();
     formData.append("modelFile", modelFile);
     await fetch('/loadModel', {
         method: "POST",
@@ -562,9 +614,9 @@ async function updatePresets()
         selectedModelPresets = data['Presets'];
         selectedModelParameters = data['Parameters'];
         filteredModelParameters = [];
-        
+
         const presetParametersSelect = document.getElementById('presetParameters');
-        
+
         while (presetParametersSelect.options.length > 1)
             presetParametersSelect.remove(1);
 
@@ -580,11 +632,11 @@ async function updatePresets()
         const optionAll = document.createElement("option");
         optionAll.text = "All";
         optionAll.value = "all";
-        presetParametersSelect.add(optionAll);        
+        presetParametersSelect.add(optionAll);
     })
     .catch(function(err) {
         alert('Fetching parameter data failed! Message: ' + err);
-    });    
+    });
 }
 
 async function updateParameters()
@@ -608,7 +660,7 @@ async function updateParameters()
     else if(presetParametersSelect != '')
     {
         let presetIndexes = JSON.parse(presetParametersSelect);
-        filteredModelParameters = selectedModelParameters.filter((el, i) => presetIndexes.some(j => i == j));        
+        filteredModelParameters = selectedModelParameters.filter((el, i) => presetIndexes.some(j => i == j));
     }
 
     updateParametersTable('parametersTable', filteredModelParameters);
@@ -620,16 +672,16 @@ async function uploadX10AFile() {
     const file = parametersFile.files[0];
 
     parametersFile.setAttribute('aria-invalid', !file);
-    
+
     if(!file)
         return;
 
-    const formData = new FormData();           
+    const formData = new FormData();
     formData.append("file", parametersFile.files[0]);
     await fetch('/upload/X10A', {
-        method: "POST", 
+        method: "POST",
         body: formData
-    })  
+    })
     .then(function(response) {
         if (response.status == 200) {
             parametersFile.removeAttribute('aria-invalid');
@@ -640,7 +692,7 @@ async function uploadX10AFile() {
     })
     .catch(function(err) {
         alert('File upload failed! Message: ' + err);
-    });        
+    });
 }
 
 async function uploadConfig() {
@@ -649,16 +701,16 @@ async function uploadConfig() {
     const file = parametersFile.files[0];
 
     parametersFile.setAttribute('aria-invalid', !file);
-    
+
     if(!file)
         return;
 
-    const formData = new FormData();           
+    const formData = new FormData();
     formData.append("file", parametersFile.files[0]);
     await fetch('/upload/config', {
-        method: "POST", 
+        method: "POST",
         body: formData
-    })  
+    })
     .then(function(response) {
         if (response.status == 200) {
             parametersFile.removeAttribute('aria-invalid');
@@ -668,17 +720,17 @@ async function uploadConfig() {
     })
     .catch(function(err) {
         alert('Config upload failed! Message: ' + err);
-    });        
+    });
 }
 
 function AddParameter(regid, offset, convid, dataSize, dataType, dataName)
 {
-    
+
     for (let i in customParametersList) {
-        if(customParametersList[i][0] == regid && 
-           customParametersList[i][1] == offset &&            
-           customParametersList[i][2] == convid && 
-           customParametersList[i][3] == dataSize && 
+        if(customParametersList[i][0] == regid &&
+           customParametersList[i][1] == offset &&
+           customParametersList[i][2] == convid &&
+           customParametersList[i][3] == dataSize &&
            customParametersList[i][4] == dataType)
         {
             alert("Parameter settings of '" + dataName + "' already exists. Skip adding");
@@ -693,7 +745,7 @@ function AddParameter(regid, offset, convid, dataSize, dataType, dataName)
 }
 
 function addCustomParameter()
-{    
+{
     const regid = document.getElementById('regid');
     const offset = document.getElementById('offset');
     const convid = document.getElementById('convid');
@@ -702,8 +754,8 @@ function addCustomParameter()
     const dataName = document.getElementById('dataName');
 
     if( regid.value == '' || isNaN(regid.value) ||
-        offset.value == '' || isNaN(offset.value) ||        
-        convid.value == '' || isNaN(convid.value) || 
+        offset.value == '' || isNaN(offset.value) ||
+        convid.value == '' || isNaN(convid.value) ||
         dataSize.value == '' || isNaN(dataSize.value) ||
         dataType.value == '' || isNaN(dataType.value) ||
         dataName.value.trim() == '')
@@ -731,7 +783,7 @@ function updateParametersTable(tableId, parameters)
 {
     const selectedParametersTable = document.getElementById(tableId);
 
-    while (selectedParametersTable.rows.length > 1) {                
+    while (selectedParametersTable.rows.length > 1) {
         selectedParametersTable.deleteRow(1);
     }
 
@@ -741,22 +793,22 @@ function updateParametersTable(tableId, parameters)
         const row = selectedParametersTable.insertRow(-1);
         row.setAttribute('data-row-index', i);
         row.addEventListener("click", function(event) {selectRow(tableId, i);});
-        
+
         const nameCell = row.insertCell(0);
-       
+
         const regidCell = row.insertCell(1);
-        const offsetCell = row.insertCell(2);        
+        const offsetCell = row.insertCell(2);
         const convidCell = row.insertCell(3);
         const dataSizeCell = row.insertCell(4);
-        const dataTypeCell = row.insertCell(5);        
+        const dataTypeCell = row.insertCell(5);
 
         nameCell.appendChild(document.createTextNode(data[5]));
         regidCell.appendChild(document.createTextNode(data[0]));
-        offsetCell.appendChild(document.createTextNode(data[1]));        
+        offsetCell.appendChild(document.createTextNode(data[1]));
         convidCell.appendChild(document.createTextNode(data[2]));
         dataSizeCell.appendChild(document.createTextNode(data[3]));
         dataTypeCell.appendChild(document.createTextNode(data[4]));
-        
+
         if(data[6] != null)
         {
             const valueCell = row.insertCell(6);
@@ -812,7 +864,7 @@ function addPredefinedParameters()
 }
 
 function removeSelectedCustomParameters()
-{    
+{
     let counterRun = 0;
 
     document
@@ -821,12 +873,12 @@ function removeSelectedCustomParameters()
     .forEach(function(e) {
         let id = parseInt(e.getAttribute('data-row-index'));
         id -= counterRun;
-        customParametersList = customParametersList.filter(function(value, index){ 
+        customParametersList = customParametersList.filter(function(value, index){
             let keep = index != id;
 
             if(!keep)
                 counterRun++;
-                
+
             return keep;
         });
     });
@@ -835,7 +887,7 @@ function removeSelectedCustomParameters()
 }
 
 function clearCustomParameters()
-{    
+{
     customParametersList = [];
     updateParametersTable('selectedParametersTable', customParametersList);
 }
@@ -853,16 +905,16 @@ async function finishLoadData()
 
     await fetch('/loadValuesResult', {
         method: "GET"
-    })  
-    .then(function(response) { 
+    })
+    .then(function(response) {
         if(response.status != 200)
         {
             throw new Error("A!" + response.text);
         }
 
-        return response.json(); 
+        return response.json();
     })
-    .then(function(data){        
+    .then(function(data){
         params.forEach((model, index) => {
             model[6] = data[index];
         });
@@ -874,10 +926,10 @@ async function finishLoadData()
         }
         else
         {
-            selectedModelParameters = params;     
-            updateParametersTable(fetchDataIntervalId, selectedModelParameters);   
+            selectedModelParameters = params;
+            updateParametersTable(fetchDataIntervalId, selectedModelParameters);
         }
-        
+
         clearInterval(fetchDataIntervalHandler);
         buttonLoadValues.removeAttribute('aria-busy');
         buttonLoadValues.toggleAttribute('disabled');
@@ -894,7 +946,7 @@ async function finishLoadData()
             buttonLoadValues.toggleAttribute('disabled');
             alert('Fetching param values failed! Message: ' + err);
         }
-    });    
+    });
 }
 
 async function beginLoadData(tableId)
@@ -912,7 +964,7 @@ async function beginLoadData(tableId)
         pinTx == '' || isNaN(pinTx))
     {
         alert("Need valid PIN RX/TX to fetch values! Canceled");
-        return;   
+        return;
     }
 
     const buttonId = 'load' + tableId.charAt(0).toUpperCase() + tableId.slice(1);
@@ -920,14 +972,14 @@ async function beginLoadData(tableId)
     buttonLoadValues.setAttribute('aria-busy', 'true');
     buttonLoadValues.toggleAttribute('disabled');
 
-    const formData = new FormData();           
+    const formData = new FormData();
     formData.append("PIN_RX", pinRx);
     formData.append("PIN_TX", pinTx);
     formData.append('PARAMS', JSON.stringify(params));
     await fetch('/loadValues', {
-        method: "POST", 
+        method: "POST",
         body: formData
-    })  
+    })
     .then(function(response) {
         if(response.status == 200)
         {
@@ -936,7 +988,7 @@ async function beginLoadData(tableId)
         }
         else
         {
-            response.text().then(function(text) {                
+            response.text().then(function(text) {
                 alert("Begin fetching param values failed! Message: " + text);
             })
             .finally(function() {
@@ -949,7 +1001,7 @@ async function beginLoadData(tableId)
         buttonLoadValues.removeAttribute('aria-busy');
         buttonLoadValues.toggleAttribute('disabled');
         alert('Begin fetching param values failed! Message: ' + err);
-    });    
+    });
 }
 
 async function refreshModels()
@@ -962,7 +1014,7 @@ async function refreshModels()
         models = data;
 
         const modelSelect = document.getElementById('model');
-        
+
         while (modelSelect.options.length > 1)
             modelSelect.remove(1);
 
@@ -975,14 +1027,14 @@ async function refreshModels()
     })
     .catch(function(err) {
         alert('Fetching models data failed! Message: ' + err);
-    });    
+    });
 }
 
 async function refreshLanguages()
 {
     const languageSelect = document.getElementById('language');
     const selectedModel = document.getElementById('model').value;
-            
+
     while (languageSelect.options.length > 1)
         languageSelect.remove(1);
 
@@ -998,7 +1050,7 @@ async function refreshLanguages()
             languageSelect.add(option);
         });
     }
-    
+
     await updatePresets();
 }
 
@@ -1010,7 +1062,7 @@ async function addValueCode(event)
 
     if(container.innerHTML == "&nbsp;")
         container.innerHTML = "";
-    
+
     const row = (container.querySelectorAll("input").length / 2);
 
     const leftNode = document.createElement("div");
@@ -1048,7 +1100,7 @@ async function removeValueCode(event)
 
     if(rows == 0)
         return;
-    
+
     if(rows == 1)
     {
         container.innerHTML = "&nbsp;";
@@ -1064,16 +1116,16 @@ async function uploadCANFile() {
     const file = canBusFile.files[0];
 
     canBusFile.setAttribute('aria-invalid', !file);
-    
+
     if(!file)
         return;
 
-    const formData = new FormData();           
+    const formData = new FormData();
     formData.append("file", canBusFile.files[0]);
     await fetch('/upload/CAN', {
-        method: "POST", 
+        method: "POST",
         body: formData
-    })  
+    })
     .then(function(response) {
         if (response.status == 200) {
             canBusFile.removeAttribute('aria-invalid');
@@ -1084,7 +1136,7 @@ async function uploadCANFile() {
     })
     .catch(function(err) {
         alert('File upload failed! Message: ' + err);
-    });        
+    });
 }
 
 async function refreshCANCommands()
@@ -1097,7 +1149,7 @@ async function refreshCANCommands()
         canCommands = data;
 
         const canModelSelect = document.getElementById('canModel');
-        
+
         while (canModelSelect.options.length > 1)
             canModelSelect.remove(1);
 
@@ -1110,7 +1162,7 @@ async function refreshCANCommands()
     })
     .catch(function(err) {
         alert('Fetching CAN Files data failed! Message: ' + err);
-    });    
+    });
 }
 
 async function updateCanLanguages()
@@ -1140,15 +1192,15 @@ async function updateCanCommands()
     const commandsFile = document.getElementById('canLanguage').value;
 
     if(commandsFile == '')
-    {                
+    {
         modelCommands = [];
-        
+
         updateCommandsTable('fileCommandsTable', modelCommands);
         updateCommands();
         return;
     }
 
-    const formData = new FormData();           
+    const formData = new FormData();
     formData.append("commandFile", commandsFile);
     await fetch('/loadCommand', {
         method: "POST",
@@ -1156,12 +1208,12 @@ async function updateCanCommands()
     })
     .then(function(response) { return response.json(); })
     .then(function(data){
-        modelCommands = data['Commands'];     
-        updateCommands();   
+        modelCommands = data['Commands'];
+        updateCommands();
     })
     .catch(function(err) {
         alert('Fetching parameter data failed! Message: ' + err);
-    });    
+    });
 }
 
 async function updateCommands()
@@ -1214,7 +1266,7 @@ function addCanCommands()
 }
 
 function AddCanCommand(label, command, id, divisor, writable, unit, type, valueCode)
-{    
+{
     for (let i in customCommandsList) {
         if(customCommandsList[i]["command"] == command)
         {
@@ -1226,11 +1278,11 @@ function AddCanCommand(label, command, id, divisor, writable, unit, type, valueC
     const dataArray = {
         "label": label,
         "command": command,
-        "id": id, 
+        "id": id,
         "divisor": divisor,
         "writable": writable,
-        "unit": unit, 
-        "type": type, 
+        "unit": unit,
+        "type": type,
         "value_code": valueCode
     };
 
@@ -1239,7 +1291,7 @@ function AddCanCommand(label, command, id, divisor, writable, unit, type, valueC
 }
 
 function addCustomCanCommand(event)
-{    
+{
     const label = document.getElementById('canDataLabel');
     const command = document.getElementById('canDataCommand');
     const id = document.getElementById('canDataID');
@@ -1290,7 +1342,7 @@ function addCustomCanCommand(event)
 }
 
 function removeSelectedCommands()
-{    
+{
     let counterRun = 0;
 
     document
@@ -1299,12 +1351,12 @@ function removeSelectedCommands()
     .forEach(function(e) {
         let id = parseInt(e.getAttribute('data-row-index'));
         id -= counterRun;
-        customCommandsList = customCommandsList.filter(function(value, index){ 
+        customCommandsList = customCommandsList.filter(function(value, index){
             let keep = index != id;
 
             if(!keep)
                 counterRun++;
-                
+
             return keep;
         });
     });
@@ -1313,7 +1365,7 @@ function removeSelectedCommands()
 }
 
 function clearCommands()
-{    
+{
     customCommandsList = [];
     updateCommandsTable('selectedCommandsTable', customCommandsList);
 }
@@ -1322,7 +1374,7 @@ function updateCommandsTable(tableId, commands)
 {
     const selectedCommandsTable = document.getElementById(tableId);
 
-    while (selectedCommandsTable.rows.length > 1) {                
+    while (selectedCommandsTable.rows.length > 1) {
         selectedCommandsTable.deleteRow(1);
     }
 
@@ -1332,7 +1384,7 @@ function updateCommandsTable(tableId, commands)
         const row = selectedCommandsTable.insertRow(-1);
         row.setAttribute('data-row-index', i);
         row.addEventListener("click", function(event) {selectRow(tableId, i);});
-        
+
         const labelCell = row.insertCell(0);
         const helpCell = row.insertCell(1);
         const commandCell = row.insertCell(2);
@@ -1350,9 +1402,9 @@ function updateCommandsTable(tableId, commands)
             const helpLink = document.createElement("a");
             helpLink.href = "javascript:alert('" + data["description"] + "')";
             helpLink.text = "?";
-            helpCell.appendChild(helpLink);   
+            helpCell.appendChild(helpLink);
         }
-                
+
         commandCell.appendChild(document.createTextNode(data["command"]));
         idCell.appendChild(document.createTextNode(data["id"]));
         divisorCell.appendChild(document.createTextNode(data["divisor"]));
@@ -1364,7 +1416,7 @@ function updateCommandsTable(tableId, commands)
             valueCodeCell.appendChild(document.createTextNode(""));
         else
             valueCodeCell.appendChild(document.createTextNode(JSON.stringify(data["value_code"])));
-        
+
         if(data["value"] != null)
         {
             const valueCell = row.insertCell(10);

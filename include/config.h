@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include <stdint.h>
-#include "labeldef.h"
+#include "parameterDef.h"
 #include "commandDef.h"
 #include "ArduinoJson.h"
 #include <LittleFS.h>
@@ -42,7 +42,7 @@ struct Config
     uint16_t CAN_SPEED_KBPS;
     uint8_t PIN_ENABLE_CONFIG;
     size_t PARAMETERS_LENGTH;
-    LabelDef** PARAMETERS;
+    ParameterDef** PARAMETERS;
     size_t COMMANDS_LENGTH;
     CommandDef** COMMANDS;
     char* WEBUI_SELECTION_VALUES;
@@ -75,21 +75,21 @@ void readConfig()
 {
     if(config != nullptr)
         delete config;
-        
+
     config = new Config();
-    
-    if(!LittleFS.exists(CONFIG_FILE))    
-        return;    
+
+    if(!LittleFS.exists(CONFIG_FILE))
+        return;
 
     File configFile = LittleFS.open(CONFIG_FILE, FILE_READ);
     DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
-    deserializeJson(configDoc, configFile);     
+    deserializeJson(configDoc, configFile);
     serializeJsonPretty(configDoc, Serial);
-    configFile.close();    
+    configFile.close();
 
     config->configStored = true;
     config->STANDALONE_WIFI = configDoc["STANDALONE_WIFI"].as<const bool>();
-    
+
     if(!config->STANDALONE_WIFI)
     {
         config->SSID = (char *)configDoc["SSID"].as<const char*>();
@@ -110,7 +110,7 @@ void readConfig()
     config->MQTT_PASSWORD = (char *)configDoc["MQTT_PASSWORD"].as<const char*>();
     config->MQTT_USE_JSONTABLE = configDoc["MQTT_USE_JSONTABLE"].as<const bool>();
     config->MQTT_USE_ONETOPIC = configDoc["MQTT_USE_ONETOPIC"].as<const bool>();
-  
+
     if(config->MQTT_USE_ONETOPIC)
     {
         config->MQTT_ONETOPIC_NAME = (char *)configDoc["MQTT_ONETOPIC_NAME"].as<const char*>();
@@ -132,17 +132,17 @@ void readConfig()
 
     JsonArray parameters = configDoc["PARAMETERS"].as<JsonArray>();
     config->PARAMETERS_LENGTH = parameters.size();
-    config->PARAMETERS = new LabelDef*[config->PARAMETERS_LENGTH];
+    config->PARAMETERS = new ParameterDef*[config->PARAMETERS_LENGTH];
 
     for(size_t i = 0; i < config->PARAMETERS_LENGTH; i++)
     {
         JsonArray parameter = parameters[i];
-        config->PARAMETERS[i] = new LabelDef(
+        config->PARAMETERS[i] = new ParameterDef(
             parameter[0].as<const int>(),
             parameter[1].as<const int>(),
-            parameter[2].as<const int>(), 
-            parameter[3].as<const int>(), 
-            parameter[4].as<const int>(), 
+            parameter[2].as<const int>(),
+            parameter[3].as<const int>(),
+            parameter[4].as<const int>(),
             parameter[5]);
     }
 
@@ -153,20 +153,32 @@ void readConfig()
     for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
     {
         JsonArray command = commands[i];
+
+        JsonArray commandBytes = command[1];
+        byte commandArray[] = {
+            commandBytes[0],
+            commandBytes[1],
+            commandBytes[2],
+            commandBytes[3],
+            commandBytes[4],
+            commandBytes[5],
+            commandBytes[6]
+        };
+
         config->COMMANDS[i] = new CommandDef(
             command[0],
-            command[1],
-            command[2].as<uint8_t*>(), 
-            command[3].as<const uint16_t>(), 
-            command[4].as<const float>(), 
+            commandArray/*,
+            command[3].as<const uint16_t>(),
+            command[4].as<const float>(),
             command[5].as<const bool>(),
             command[6].as<char*>(),
             command[7].as<char*>(),
-            command[8]);
+            command[8]*/);
     }
 
-    config->WEBUI_SELECTION_VALUES = (char *)configDoc["WEBUI_SELECTION_VALUES"].as<const char*>();    
+    config->WEBUI_SELECTION_VALUES = (char *)configDoc["WEBUI_SELECTION_VALUES"].as<const char*>();
 }
+
 
 void saveConfig()
 {
@@ -194,7 +206,7 @@ void saveConfig()
     configDoc["MQTT_PASSWORD"] = config->MQTT_PASSWORD;
     configDoc["MQTT_USE_JSONTABLE"] = config->MQTT_USE_JSONTABLE;
     configDoc["MQTT_USE_ONETOPIC"] = config->MQTT_USE_ONETOPIC;
-    
+
     if(config->MQTT_USE_ONETOPIC)
     {
         configDoc["MQTT_ONETOPIC_NAME"] = config->MQTT_ONETOPIC_NAME;
@@ -226,22 +238,34 @@ void saveConfig()
         parameter.add(config->PARAMETERS[i]->dataType);
         parameter.add(config->PARAMETERS[i]->label);
     }
-
+Serial.println("SAVING COMMANDS!!");
+Serial.print("Commands length: ");
+Serial.println(config->COMMANDS_LENGTH);
     JsonArray commands = configDoc.createNestedArray("COMMANDS");
     for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
     {
         JsonArray command = commands.createNestedArray();
+Serial.print("Label: ");
+Serial.println(config->COMMANDS[i]->label);
         command.add(config->COMMANDS[i]->label);
-        command.add(config->COMMANDS[i]->name);
-        command.add(config->COMMANDS[i]->command);
-        command.add(config->COMMANDS[i]->id);
+
+        JsonArray commandBytes = command.createNestedArray();
+
+        for (uint8_t i = 0; i < COMMAND_BYTE_LENGTH; i++)
+        {
+Serial.print("Bytes Calc: ");
+Serial.println(config->COMMANDS[i]->command[i]);
+            commandBytes.add(config->COMMANDS[i]->command[i]);
+        }
+
+        /*command.add(config->COMMANDS[i]->id);
         command.add(config->COMMANDS[i]->divisor);
         command.add(config->COMMANDS[i]->writable);
         command.add(config->COMMANDS[i]->unit);
         command.add(config->COMMANDS[i]->type);
-        command.add(config->COMMANDS[i]->valueCode);
+        command.add(config->COMMANDS[i]->valueCode);*/
     }
-    
+
     configDoc["WEBUI_SELECTION_VALUES"] = config->WEBUI_SELECTION_VALUES;
 
     File configFile = LittleFS.open(CONFIG_FILE, FILE_WRITE);
