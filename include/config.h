@@ -154,7 +154,7 @@ void readConfig()
     {
         JsonArray command = commands[i];
 
-        JsonArray commandBytes = command[1];
+        JsonArray commandBytes = command[COMMANDDEF_INDEX_COMMAND];
         byte commandArray[] = {
             commandBytes[0],
             commandBytes[1],
@@ -165,20 +165,42 @@ void readConfig()
             commandBytes[6]
         };
 
+
+        CommandDefValueCode** valueCodes;
+        uint8_t valueCodeSize = 0;
+
+        if(command.size() > COMMANDDEF_INDEX_VALUE_CODE)
+        {
+            JsonObject valueCodeCommands = command[COMMANDDEF_INDEX_VALUE_CODE].as<JsonObject>();
+            valueCodeSize = valueCodeCommands.size();
+            valueCodes = new CommandDefValueCode*[valueCodeSize];
+
+            uint8_t valueCodeCounter = 0;
+
+            for (JsonPair keyValue : valueCodeCommands) {
+                valueCodes[valueCodeCounter] = new CommandDefValueCode(keyValue.key().c_str(), keyValue.value().as<String>());
+                valueCodeCounter++;
+            }
+        }
+        else
+        {
+            valueCodes = new CommandDefValueCode*[0];
+        }
+
         config->COMMANDS[i] = new CommandDef(
-            command[0],
-            commandArray/*,
-            command[3].as<const uint16_t>(),
-            command[4].as<const float>(),
-            command[5].as<const bool>(),
-            command[6].as<char*>(),
-            command[7].as<char*>(),
-            command[8]*/);
+            command[COMMANDDEF_INDEX_LABEL],
+            commandArray,
+            command[COMMANDDEF_INDEX_ID].as<const uint16_t>(),
+            command[COMMANDDEF_INDEX_DIVISOR].as<const float>(),
+            command[COMMANDDEF_INDEX_WRITABLE].as<const bool>(),
+            command[COMMANDDEF_INDEX_UNIT],
+            command[COMMANDDEF_INDEX_TYPE],
+            valueCodeSize,
+            valueCodes);
     }
 
     config->WEBUI_SELECTION_VALUES = (char *)configDoc["WEBUI_SELECTION_VALUES"].as<const char*>();
 }
-
 
 void saveConfig()
 {
@@ -238,32 +260,34 @@ void saveConfig()
         parameter.add(config->PARAMETERS[i]->dataType);
         parameter.add(config->PARAMETERS[i]->label);
     }
-Serial.println("SAVING COMMANDS!!");
-Serial.print("Commands length: ");
-Serial.println(config->COMMANDS_LENGTH);
+
     JsonArray commands = configDoc.createNestedArray("COMMANDS");
     for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
     {
         JsonArray command = commands.createNestedArray();
-Serial.print("Label: ");
-Serial.println(config->COMMANDS[i]->label);
         command.add(config->COMMANDS[i]->label);
 
         JsonArray commandBytes = command.createNestedArray();
-
-        for (uint8_t i = 0; i < COMMAND_BYTE_LENGTH; i++)
+        for (uint8_t j = 0; j < COMMAND_BYTE_LENGTH; j++)
         {
-Serial.print("Bytes Calc: ");
-Serial.println(config->COMMANDS[i]->command[i]);
-            commandBytes.add(config->COMMANDS[i]->command[i]);
+            commandBytes.add(config->COMMANDS[i]->command[j]);
         }
 
-        /*command.add(config->COMMANDS[i]->id);
+        command.add(config->COMMANDS[i]->id);
         command.add(config->COMMANDS[i]->divisor);
         command.add(config->COMMANDS[i]->writable);
         command.add(config->COMMANDS[i]->unit);
         command.add(config->COMMANDS[i]->type);
-        command.add(config->COMMANDS[i]->valueCode);*/
+
+        if(config->COMMANDS[i]->valueCodeSize > 0)
+        {
+            JsonObject valueCodeObject = command.createNestedObject();
+
+            for(uint8_t j = 0; j < config->COMMANDS[i]->valueCodeSize; j++)
+            {
+                valueCodeObject[config->COMMANDS[i]->valueCode[j]->key] = config->COMMANDS[i]->valueCode[j]->value;
+            }
+        }
     }
 
     configDoc["WEBUI_SELECTION_VALUES"] = config->WEBUI_SELECTION_VALUES;

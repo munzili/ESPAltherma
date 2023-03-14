@@ -651,7 +651,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
     int counter = 0;
     for (JsonArray value : commandsArray)
     {
-      JsonArray commandBytes = value[1];
+      JsonArray commandBytes = value[COMMANDDEF_INDEX_COMMAND];
       byte commandArray[] = {
           commandBytes[0].as<const byte>(),
           commandBytes[1].as<const byte>(),
@@ -662,15 +662,37 @@ void onSaveConfig(AsyncWebServerRequest *request)
           commandBytes[6].as<const byte>()
       };
 
+      CommandDefValueCode** valueCodes;
+      uint8_t valueCodeSize = 0;
+
+      if(value.size() > COMMANDDEF_INDEX_VALUE_CODE)
+      {
+        JsonObject valueCodeCommands = value[COMMANDDEF_INDEX_VALUE_CODE].as<JsonObject>();
+        valueCodeSize = valueCodeCommands.size();
+        valueCodes = new CommandDefValueCode*[valueCodeSize];
+
+        uint8_t valueCodeCounter = 0;
+
+        for (JsonPair keyValue : valueCodeCommands) {
+          valueCodes[valueCodeCounter] = new CommandDefValueCode(keyValue.key().c_str(), keyValue.value().as<String>());
+          valueCodeCounter++;
+        }
+      }
+      else
+      {
+        valueCodes = new CommandDefValueCode*[0];
+      }
+
       config->COMMANDS[counter] = new CommandDef(
-        value[0],
-        commandArray/*,
-        value[3].as<const uint16_t>(),
-        value[4].as<const float>(),
-        value[5].as<const bool>(),
-        value[6].as<char*>(),
-        value[7].as<char*>(),
-        value[8]*/);
+        value[COMMANDDEF_INDEX_LABEL],
+        commandArray,
+        value[COMMANDDEF_INDEX_ID].as<const uint16_t>(),
+        value[COMMANDDEF_INDEX_DIVISOR].as<const float>(),
+        value[COMMANDDEF_INDEX_WRITABLE].as<const bool>(),
+        value[COMMANDDEF_INDEX_UNIT],
+        value[COMMANDDEF_INDEX_TYPE],
+        valueCodeSize,
+        valueCodes);
 
       counter++;
     }

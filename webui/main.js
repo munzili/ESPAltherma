@@ -224,22 +224,22 @@ async function loadConfig()
         data['COMMANDS'].forEach(command => {
             let hexBytes = [];
             command[1].forEach(intByte => {
-                hexBytes.push(intByte.toString(16));
+                hexBytes.push(('0'+intByte.toString(16)).substr(-2).toUpperCase());
             });
 
-            const dataArray = [
-                command["label"],
-                hexBytes.join(' '),
-                command["id"].toString(),
-                command["divisor"].toString(),
-                command["writable"].toString(),
-                command["unit"],
-                command["type"]
-            ];
+            const dataArray = {
+                "label":    command[0],
+                "command":  hexBytes.join(' '),
+                "id":       command[2].toString(),
+                "divisor":  command[3].toString(),
+                "writable": command[4].toString(),
+                "unit":     command[5],
+                "type":     command[6]
+            };
 
-            if(command["value_code"] != null)
+            if(command[7] != null)
             {
-                dataArray.push(command["value_code"]);
+                dataArray["value_code"] = command[7];
             }
 
             convertedCommandsList.push(dataArray);
