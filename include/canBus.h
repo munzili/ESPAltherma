@@ -1,49 +1,55 @@
 #ifndef CAN_BUS_H
 #define CAN_BUS_H
 
-#include <ESP32CAN.h>
-#include <CAN_config.h>
+#include <CAN.h>
 #include "mqttserial.h"
+#include "hpsu.h"
 
-CAN_device_t CAN_cfg;
-const int rx_queue_size = 10;
-
-void canBus_setup(int8_t rxPin, int8_t txPin, uint16_t speed)
+void canBus_setup(int8_t rxPin, int8_t txPin, uint8_t speed)
 {
-  CAN_cfg.speed = (CAN_speed_t)speed;
-  CAN_cfg.tx_pin_id = (gpio_num_t)txPin;
-  CAN_cfg.rx_pin_id = (gpio_num_t)rxPin;
-  CAN_cfg.rx_queue = xQueueCreate(rx_queue_size, sizeof(CAN_frame_t));
-  ESP32Can.CANInit();
+  CAN.setPins(rxPin, txPin);
+  CAN.begin(speed * 1000);
+
   mqttSerial.println("CAN-Bus inited");
 }
 
 void canBus_loop()
 {
-  CAN_frame_t rx_frame;
+  // try to parse packet
+  int packetSize = CAN.parsePacket();
 
-  unsigned long currentMillis = millis();
+  if (packetSize) {
+    // received a packet
+    mqttSerial.print("Received ");
 
-  // Receive next CAN frame from queue
-  if (xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE) {
-
-    if (rx_frame.FIR.B.FF == CAN_frame_std) {
-      mqttSerial.printf("New standard frame");
-    }
-    else {
-      mqttSerial.printf("New extended frame");
+    if (CAN.packetExtended()) {
+      mqttSerial.print("extended ");
     }
 
-    if (rx_frame.FIR.B.RTR == CAN_RTR) {
-      mqttSerial.printf(" RTR from 0x%08X, DLC %d\r\n", rx_frame.MsgID,  rx_frame.FIR.B.DLC);
+    if (CAN.packetRtr()) {
+      // Remote transmission request, packet contains no data
+      mqttSerial.print("RTR ");
     }
-    else {
-      mqttSerial.printf(" from 0x%08X, DLC %d, Data ", rx_frame.MsgID,  rx_frame.FIR.B.DLC);
-      for (int i = 0; i < rx_frame.FIR.B.DLC; i++) {
-        mqttSerial.printf("0x%02X ", rx_frame.data.u8[i]);
-      }
-      mqttSerial.printf("\n");
+
+    mqttSerial.print("packet with id 0x");
+    mqttSerial.print(CAN.packetId(), HEX);
+
+    if (CAN.packetRtr()) {
+      mqttSerial.print(" and requested length ");
+      mqttSerial.println(CAN.packetDlc());
+    } else {
+      mqttSerial.print(" and length ");
+      mqttSerial.println(packetSize);
     }
+
+    // only print packet data for non-RTR packets
+    while (CAN.available()) {
+      mqttSerial.print(CAN.read(), HEX);
+      mqttSerial.print(" ");
+    }
+    mqttSerial.println();
+
+    mqttSerial.println();
   }
 }
 
