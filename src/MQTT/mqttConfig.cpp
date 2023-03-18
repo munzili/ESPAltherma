@@ -1,4 +1,4 @@
-#include "mqttConfig.h"
+#include "mqttConfig.hpp"
 
 char jsonbuff[MAX_MSG_SIZE];
 bool SG_RELAY_ACTIVE_STATE;

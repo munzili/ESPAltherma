@@ -1,4 +1,4 @@
-#include "wireless.h"
+#include "wireless.hpp"
 
 WifiDetails **lastWifiScanResults = nullptr;
 int16_t lastWifiScanResultAmount;

@@ -1,4 +1,4 @@
-#include "main.h"
+#include "main.hpp"
 
 size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data

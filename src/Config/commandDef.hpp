@@ -2,7 +2,7 @@
 #define COMMANDDEF_H
 
 #include <pgmspace.h>
-#include "ArduinoC.h"
+#include "ArduinoC.hpp"
 
 #define COMMAND_LABEL_LENGTH 21
 #define COMMAND_BYTE_LENGTH 7

@@ -1,4 +1,4 @@
-#include "hpsu.h"
+#include "hpsu.hpp"
 
 HPSU::HPSU()
 {

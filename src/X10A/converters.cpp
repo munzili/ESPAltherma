@@ -1,4 +1,4 @@
-#include "converters.h"
+#include "converters.hpp"
 
 using ESPAltherma::Converter;
 

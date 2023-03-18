@@ -2,8 +2,8 @@
 #define WIRELESS_H
 #include <WiFi.h>
 #include <string.h>
-#include "MQTT/mqttSerial.h"
-#include "Config/config.h"
+#include "MQTT/mqttSerial.hpp"
+#include "Config/config.hpp"
 
 struct WifiDetails
 {

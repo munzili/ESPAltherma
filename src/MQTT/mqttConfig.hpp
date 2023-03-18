@@ -1,7 +1,7 @@
 #ifndef MQTT_CONFIG_H
 #define MQTT_CONFIG_H
 
-#include "Config/config.h"
+#include "Config/config.hpp"
 
 #define MAX_MSG_SIZE 4096//max size of the json message sent in mqtt
 

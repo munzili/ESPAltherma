@@ -2,8 +2,8 @@
 #define PERSISTENCE_H
 
 #include <Preferences.h>
-#include "Config/config.h"
-#include "MQTT/mqttSerial.h"
+#include "Config/config.hpp"
+#include "MQTT/mqttSerial.hpp"
 
 #define NAME_NAMESPACE "ESPAltherma"
 #define NAME_INITED "Inited"

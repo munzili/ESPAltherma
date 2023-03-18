@@ -1,4 +1,4 @@
-#include "X10A.h"
+#include "X10A.hpp"
 
 HardwareSerial SerialX10A(1);
 

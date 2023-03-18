@@ -1,4 +1,4 @@
-#include "canBus.h"
+#include "canBus.hpp"
 
 void canBus_setup(int8_t rxPin, int8_t txPin, uint8_t speed)
 {

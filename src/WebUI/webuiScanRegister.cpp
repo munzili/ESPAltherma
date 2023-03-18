@@ -1,4 +1,4 @@
-#include "webuiScanRegister.h"
+#include "webuiScanRegister.hpp"
 
 WebUIScanRegister webuiScanRegisterConfig;
 ValueLoadState valueLoadState = NotLoading;

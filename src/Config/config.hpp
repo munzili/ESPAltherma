@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 #include <LittleFS.h>
-#include "parameterDef.h"
-#include "commandDef.h"
+#include "parameterDef.hpp"
+#include "commandDef.hpp"
 #include "ArduinoJson.h"
 
 #define CONFIG_FILE "/config.json"

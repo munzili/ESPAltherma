@@ -1,16 +1,17 @@
 #ifndef WEBUI_H
 #define WEBUI_H
+
 #include <LittleFS.h>
 #include <Update.h>
 #include "ESPAsyncWebServer.h"
-#include "ArduinoJson.h"
-#include "X10A/comm.h"
 #include "esp_task_wdt.h"
-#include "Config/config.h"
-#include "wireless.h"
-#include "persistence.h"
-#include "arrayFunctions.h"
-#include "webuiScanRegister.h"
+#include "ArduinoJson.h"
+#include "X10A/comm.hpp"
+#include "Config/config.hpp"
+#include "wireless.hpp"
+#include "persistence.hpp"
+#include "arrayFunctions.hpp"
+#include "webuiScanRegister.hpp"
 
 #define MODELS_FILE "/models.json"
 #define CAN_COMMANDS_FILE "/CANCommands.json"

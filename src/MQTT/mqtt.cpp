@@ -1,4 +1,4 @@
-#include "mqtt.h"
+#include "mqtt.hpp"
 
 WiFiClient espClient;
 PubSubClient client(espClient);

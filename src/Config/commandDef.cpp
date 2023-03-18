@@ -1,4 +1,4 @@
-#include "commandDef.h"
+#include "commandDef.hpp"
 
 CommandDefValueCode::CommandDefValueCode(String keyp, String valuep) : key(keyp), value(valuep)
 {

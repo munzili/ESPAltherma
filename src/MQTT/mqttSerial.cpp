@@ -1,4 +1,4 @@
-#include "mqttSerial.h"
+#include "mqttSerial.hpp"
 
 MQTTSerial mqttSerial;
 

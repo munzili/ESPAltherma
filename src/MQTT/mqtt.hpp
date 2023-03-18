@@ -2,9 +2,9 @@
 #define MQTT_H
 
 #include <PubSubClient.h>
-#include "Config/config.h"
-#include "mqttConfig.h"
-#include "persistence.h"
+#include "Config/config.hpp"
+#include "mqttConfig.hpp"
+#include "persistence.hpp"
 
 #define MQTT_attr "espaltherma/ATTR"
 #define MQTT_lwt "espaltherma/LWT"

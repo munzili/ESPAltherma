@@ -2,7 +2,7 @@
 #define PARAMETERDEF_H
 
 #include <pgmspace.h>
-#include "ArduinoC.h"
+#include "ArduinoC.hpp"
 
 struct ParameterDef
 {

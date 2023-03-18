@@ -1,4 +1,4 @@
-#include "comm.h"
+#include "comm.hpp"
 
 char getCRC(char *src, int len)
 {

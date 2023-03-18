@@ -2,8 +2,8 @@
 #define HPSU_H
 
 #include <CAN.h>
-#include "Config/config.h"
-#include "Config/commandDef.h"
+#include "Config/config.hpp"
+#include "Config/commandDef.hpp"
 
 #define UM_DEGREE "deg"
 #define UM_BOOLEAN "bool"

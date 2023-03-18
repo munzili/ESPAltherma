@@ -1,8 +1,8 @@
 #ifndef CONVERTERS_H
 #define CONVERTERS_H
 
-#include <Arduino.h>
-#include "Config/parameterDef.h"
+#include "ArduinoC.hpp"
+#include "Config/parameterDef.hpp"
 
 namespace ESPAltherma
 {

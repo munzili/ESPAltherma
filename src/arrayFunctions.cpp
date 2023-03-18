@@ -1,4 +1,4 @@
-#include "arrayFunctions.h"
+#include "arrayFunctions.hpp"
 
 bool contains(uint8_t *array, size_t size, uint8_t value)
 {

@@ -4,7 +4,7 @@
 #include <PubSubClient.h>
 #include <WiFi.h>
 #include "Stream.h"
-#include "ArduinoC.h"
+#include "ArduinoC.hpp"
 
 class MQTTSerial: public Stream
 {
