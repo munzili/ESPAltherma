@@ -1,34 +1,11 @@
-#ifdef ARDUINO_M5Stick_C_Plus
-#include <M5StickCPlus.h>
-#elif ARDUINO_M5Stick_C
-#include <M5StickC.h>
-#else
-#include <Arduino.h>
-#endif
-
-#include <PubSubClient.h>
-
-#include "config.h"
-#include "mqttConfig.h"
-#include "mqttSerial.h"
-#include "converters.h"
-#include "comm.h"
-#include "mqtt.h"
-#include "webui.h"
-#include "wireless.h"
-#include "persistence.h"
-#include "X10A.h"
-#include "canBus.h"
-#include "arrayFunctions.h"
+#include "main.h"
 
 size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
 
-bool doRestartInStandaloneWifi = false; 
+bool doRestartInStandaloneWifi = false;
 
-#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
-long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
-#endif
+uint16_t loopcount = 0;
 
 uint8_t getFragmentation() {
   return 100 - heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) * 100.0 / heap_caps_get_free_size(MALLOC_CAP_8BIT);
@@ -52,9 +29,9 @@ void updateValues(ParameterDef *labelDef)
   {
     client.publish((config->MQTT_ONETOPIC_NAME + labelDef->label).c_str(), labelDef->asString);
   }
-  
+
   if (alpha)
-  {      
+  {
     snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":\"%s\",", labelDef->label, labelDef->asString);
   }
   else //number, no quotes
@@ -62,8 +39,6 @@ void updateValues(ParameterDef *labelDef)
     snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":%s,", labelDef->label, labelDef->asString);
   }
 }
-
-uint16_t loopcount =0;
 
 void extraLoop()
 {
@@ -83,7 +58,7 @@ void extraLoop()
   }
   M5.update();
 #endif
-  
+
   if(!doRestartInStandaloneWifi)
    return;
 
@@ -95,13 +70,13 @@ void extraLoop()
 
 void initRegistries()
 {
-  //getting the list of registries to query from the selected values  
-  registryBufferSize = 0;  
+  //getting the list of registries to query from the selected values
+  registryBufferSize = 0;
   uint8_t* tempRegistryIDs = new uint8_t[config->PARAMETERS_LENGTH];
 
   size_t i;
   for (i = 0; i < config->PARAMETERS_LENGTH; i++)
-  {            
+  {
     auto &&label = *config->PARAMETERS[i];
 
     if (!contains(tempRegistryIDs, config->PARAMETERS_LENGTH, label.registryID))
@@ -157,13 +132,13 @@ void IRAM_ATTR restartInStandaloneWifi() {
 void setup()
 {
   Serial.begin(115200);
-  
-  if(!LittleFS.begin(true)) 
+
+  if(!LittleFS.begin(true))
   {
       Serial.println("An Error has occurred while mounting LittleFS");
       return;
   }
-  
+
   initPersistence();
 
   readConfig();
@@ -171,12 +146,12 @@ void setup()
   if(config->STANDALONE_WIFI || !config->configStored)
   {
     mqttSerial.println("Start in standalone mode..");
-    start_standalone_wifi();    
+    start_standalone_wifi();
     WebUI_Init();
   }
 
   initMQTTConfig(config);
-  
+
   setupScreen();
 
   if(!config->configStored)
@@ -239,7 +214,7 @@ void waitLoop(uint ms){
     if(valueLoadState == Pending)
       return;
 
-    extraLoop();   
+    extraLoop();
   }
 }
 
@@ -270,7 +245,7 @@ void loop()
   }
 
   for (size_t i = 0; i < config->PARAMETERS_LENGTH; i++)
-  {            
+  {
     auto &&label = *config->PARAMETERS[i];
 
     for (size_t j = 0; j < registryBufferSize; j++)
@@ -287,9 +262,9 @@ void loop()
         break;
       }
     }
-  }  
-  
+  }
+
   sendValues();//Send the full json message
-  mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);  
+  mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);
   waitLoop(config->FREQUENCY);
 }

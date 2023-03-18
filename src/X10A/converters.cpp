@@ -1,27 +1,23 @@
-#ifndef CONVERTERS_H
-#define CONVERTERS_H
-//convert read registry value to the expected format based on convID
-// #include <registrys.h>
-#include <Arduino.h>
-#include "parameterDef.h"
+#include "converters.h"
 
-class Converter
+using ESPAltherma::Converter;
+
+Converter converter;
+
+void Converter::convert(ParameterDef *def, char *data)
 {
-public:
-    void convert(ParameterDef *def, char *data)
+    def->asString[0] = {0};
+    int convId = def->convid;
+    int num = def->dataSize;
+    double dblData = NAN;
+    Serial.print("Converting from:");
+    for (size_t i = 0; i < num; i++)
     {
-        def->asString[0] = {0};
-        int convId = def->convid;
-        int num = def->dataSize;
-        double dblData = NAN;
-        Serial.print("Converting from:");
-        for (size_t i = 0; i < num; i++)
-        {
-            Serial.printf(" 0x%02x ", data[i]);
-        }
+        Serial.printf(" 0x%02x ", data[i]);
+    }
 
-        switch (convId)
-        {
+    switch (convId)
+    {
         case 100:
             strlcat(def->asString, data, num);
             return;
@@ -191,182 +187,180 @@ public:
             //conversion is not available
             sprintf(def->asString, "Conv %d not avail.", convId);
             return;
-        }
-        if (dblData != NAN)
-        {
-            sprintf(def->asString, "%g", dblData);
-        }
-        Serial.printf("-> %s\n", def->asString);
     }
 
-private:
-    void convertTable300(char *data, int tableID, char *ret)
+    if (dblData != NAN)
     {
-        Serial.printf("Bin Conv %02x with tableID %d \n", data[0], tableID);
-        char b = 1;
-        b = (char)(b << tableID % 10);
-        if ((data[0] & b) > 0)
-        {
-            strcat(ret, "ON");
-        }
-        else
-        {
-            strcat(ret, "OFF");
-        }
-        return;
+        sprintf(def->asString, "%g", dblData);
     }
 
-    void convertTable203(char *data, char *ret)
-    {
-        switch (data[0])
-        {
-        case 0:
-            strcat(ret, "Normal");
-            break;
-        case 1:
-            strcat(ret, "Error");
-            break;
-        case 2:
-            strcat(ret, "Warning");
-            break;
-        case 3:
-            strcat(ret, "Caution");
-            break;
-        default:
-            strcat(ret, "");
-            ;
-        }
-    }
+    Serial.printf("-> %s\n", def->asString);
+}
 
-    void convertTable204(char *data, char *ret)
+void Converter::convertTable300(char *data, int tableID, char *ret)
+{
+    Serial.printf("Bin Conv %02x with tableID %d \n", data[0], tableID);
+    char b = 1;
+    b = (char)(b << tableID % 10);
+    if ((data[0] & b) > 0)
     {
-        char array[] = " ACEHFJLPU987654";
-        char array2[] = "0123456789AHCJEF";
-        int num = data[0] >> 4 & 15;
-        int num2 = (int)(data[0] & 15);
-        ret[0] = array[num];
-        ret[1] = array2[num2];
-        ret[2] = 0;
+        strcat(ret, "ON");
     }
+    else
+    {
+        strcat(ret, "OFF");
+    }
+    return;
+}
 
-    void convertTable315(char *data, char *ret)
+void Converter::convertTable203(char *data, char *ret)
+{
+    switch (data[0])
     {
-        char b = 240 & data[0];
-        b = (char)(b >> 4);
-        switch (b)
-        {
-        case 0:
-            strcat(ret, "Stop");
-            break;
-        case 1:
-            strcat(ret, "Heating");
-            break;
-        case 2:
-            strcat(ret, "Cooling");
-            break;
-        case 3:
-            strcat(ret, "??");
-            break;
-        case 4:
-            strcat(ret, "DHW");
-            break;
-        case 5:
-            strcat(ret, "Heating + DHW");
-            break;
-        case 6:
-            strcat(ret, "Cooling + DHW");
-            break;
-        default:
-            strcat(ret, "");
-        }
+    case 0:
+        strcat(ret, "Normal");
+        break;
+    case 1:
+        strcat(ret, "Error");
+        break;
+    case 2:
+        strcat(ret, "Warning");
+        break;
+    case 3:
+        strcat(ret, "Caution");
+        break;
+    default:
+        strcat(ret, "");
+        ;
     }
+}
 
-    void convertTable316(char *data, char *ret)
-    {
-        char b = 240 & data[0];
-        b = (char)(b >> 4);
-        switch (b)
-        {
-        case 0:
-            strcat(ret, "H/P only");
-            break;
-        case 1:
-            strcat(ret, "Hybrid");
-            break;
-        case 2:
-            strcat(ret, "Boiler only");
-            break;
-        default:
-            strcat(ret, "Unknown");
-        }
-    }
+void Converter::convertTable204(char *data, char *ret)
+{
+    char array[] = " ACEHFJLPU987654";
+    char array2[] = "0123456789AHCJEF";
+    int num = data[0] >> 4 & 15;
+    int num2 = (int)(data[0] & 15);
+    ret[0] = array[num];
+    ret[1] = array2[num2];
+    ret[2] = 0;
+}
 
-    void convertTable200(char *data, char *ret)
+void Converter::convertTable315(char *data, char *ret)
+{
+    char b = 240 & data[0];
+    b = (char)(b >> 4);
+    switch (b)
     {
-        if (data[0] == 0)
-        {
-            strcat(ret, "OFF");
-        }
-        else
-        {
-            strcat(ret, "ON");
-        }
+    case 0:
+        strcat(ret, "Stop");
+        break;
+    case 1:
+        strcat(ret, "Heating");
+        break;
+    case 2:
+        strcat(ret, "Cooling");
+        break;
+    case 3:
+        strcat(ret, "??");
+        break;
+    case 4:
+        strcat(ret, "DHW");
+        break;
+    case 5:
+        strcat(ret, "Heating + DHW");
+        break;
+    case 6:
+        strcat(ret, "Cooling + DHW");
+        break;
+    default:
+        strcat(ret, "");
     }
-    //201
-    void convertTable217(char *data, char *ret)
-    {
-        char r217[][30] = {"Fan Only",
-                           "Heating",
-                           "Cooling",
-                           "Auto",
-                           "Ventilation",
-                           "Auto Cool",
-                           "Auto Heat",
-                           "Dry",
-                           "Aux.",
-                           "Cooling Storage",
-                           "Heating Storage",
-                           "UseStrdThrm(cl)1",
-                           "UseStrdThrm(cl)2",
-                           "UseStrdThrm(cl)3",
-                           "UseStrdThrm(cl)4",
-                           "UseStrdThrm(ht)1",
-                           "UseStrdThrm(ht)2",
-                           "UseStrdThrm(ht)3",
-                           "UseStrdThrm(ht)4"};
-        sprintf(ret, r217[(int)data[0]]);
-    }
+}
 
-    unsigned short getUnsignedValue(char *data, int dataSize, int cnvflg)
+void Converter::convertTable316(char *data, char *ret)
+{
+    char b = 240 & data[0];
+    b = (char)(b >> 4);
+    switch (b)
     {
-        unsigned short result;
-        if (dataSize == 1)
-        {
-            result = (unsigned short)data[0];
-        }
-        else if (cnvflg == 0)
-        {
-            result = ((unsigned short)(data[1] << 8) | (unsigned short)data[0]);
-        }
-        else
-        {
-            result = ((unsigned short)(data[0] << 8) | (unsigned short)data[1]);
-        }
-        return result;
+    case 0:
+        strcat(ret, "H/P only");
+        break;
+    case 1:
+        strcat(ret, "Hybrid");
+        break;
+    case 2:
+        strcat(ret, "Boiler only");
+        break;
+    default:
+        strcat(ret, "Unknown");
     }
-    short getSignedValue(char *data, int datasize, int cnvflg)
-    {
-        unsigned short num = getUnsignedValue(data, datasize, cnvflg);
-        short result = (short)num;
-        if ((num & 32768) != 0)
-        {
-            num = ~num;
-            num += 1;
-            result = (short)((int)num * -1);
-        }
-        return result;
-    }
-};
+}
 
-Converter converter;
-#endif
+void Converter::convertTable200(char *data, char *ret)
+{
+    if (data[0] == 0)
+    {
+        strcat(ret, "OFF");
+    }
+    else
+    {
+        strcat(ret, "ON");
+    }
+}
+
+void Converter::convertTable217(char *data, char *ret)
+{
+    char r217[][30] = {"Fan Only",
+                        "Heating",
+                        "Cooling",
+                        "Auto",
+                        "Ventilation",
+                        "Auto Cool",
+                        "Auto Heat",
+                        "Dry",
+                        "Aux.",
+                        "Cooling Storage",
+                        "Heating Storage",
+                        "UseStrdThrm(cl)1",
+                        "UseStrdThrm(cl)2",
+                        "UseStrdThrm(cl)3",
+                        "UseStrdThrm(cl)4",
+                        "UseStrdThrm(ht)1",
+                        "UseStrdThrm(ht)2",
+                        "UseStrdThrm(ht)3",
+                        "UseStrdThrm(ht)4"};
+    sprintf(ret, r217[(int)data[0]]);
+}
+
+unsigned short Converter::getUnsignedValue(char *data, int dataSize, int cnvflg)
+{
+    unsigned short result;
+    if (dataSize == 1)
+    {
+        result = (unsigned short)data[0];
+    }
+    else if (cnvflg == 0)
+    {
+        result = ((unsigned short)(data[1] << 8) | (unsigned short)data[0]);
+    }
+    else
+    {
+        result = ((unsigned short)(data[0] << 8) | (unsigned short)data[1]);
+    }
+    return result;
+}
+
+short Converter::getSignedValue(char *data, int datasize, int cnvflg)
+{
+    unsigned short num = getUnsignedValue(data, datasize, cnvflg);
+    short result = (short)num;
+    if ((num & 32768) != 0)
+    {
+        num = ~num;
+        num += 1;
+        result = (short)((int)num * -1);
+    }
+    return result;
+}

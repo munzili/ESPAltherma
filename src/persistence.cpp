@@ -1,12 +1,4 @@
-#ifndef PERSISTENCE_H
-#define PERSISTENCE_H
-#include <Preferences.h>
-#include "config.h"
-#include "mqttSerial.h"
-
-#define NAME_NAMESPACE "ESPAltherma"
-#define NAME_INITED "Inited"
-#define NAME_STATE_THERM "Therm"
+#include "persistence.h"
 
 Preferences preferences;
 
@@ -17,14 +9,16 @@ void resetPersistence()
 
 void initPersistence()
 {
-  preferences.begin(NAME_NAMESPACE, false); 
+  preferences.begin(NAME_NAMESPACE, false);
 }
 
-void savePersistence(uint8_t state){
+void savePersistence(uint8_t state)
+{
   preferences.putUChar(NAME_STATE_THERM, state);
 }
 
-void readPersistence(){
+void readPersistence()
+{
   bool inited = preferences.getBool(NAME_INITED);
 
   if (inited)
@@ -41,5 +35,3 @@ void readPersistence(){
     digitalWrite(config->PIN_THERM, HIGH);
   }
 }
-
-#endif

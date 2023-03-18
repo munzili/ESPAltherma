@@ -1,41 +1,10 @@
-#ifndef WEBUI_H
-#define WEBUI_H
-#include <LittleFS.h>
-#include <Update.h>
-#include "ESPAsyncWebServer.h"
-#include "ArduinoJson.h"
-#include "comm.h"
-#include "esp_task_wdt.h"
-#include "config.h"
-#include "wireless.h"
-#include "persistence.h"
-#include "arrayFunctions.h"
-#include "webuiScanRegister.h"
-
-#define MODELS_FILE "/models.json"
-#define CAN_COMMANDS_FILE "/CANCommands.json"
-#define MODEL_DEFINITION_DOC_SIZE 1024*25
-#define MODEL_DEFINITION_UPLOAD_SIZE 1024*50
-#define COMMANDS_DEFINITION_UPLOAD_SIZE 1024*100
-#define MODELS_DOC_SIZE 1024*10
-#define WEBUI_SELECTION_VALUE_SIZE 1024
-
-// Set web server port number to 80
-AsyncWebServer server(80);
-
-extern const uint8_t mainJS_start[] asm("_binary_webui_main_js_gz_start");
-extern const uint8_t mainJS_end[] asm("_binary_webui_main_js_gz_end");
-extern const uint8_t md5JS_start[] asm("_binary_webui_md5_min_js_gz_start");
-extern const uint8_t md5JS_end[] asm("_binary_webui_md5_min_js_gz_end");
-extern const uint8_t indexHTML_start[] asm("_binary_webui_index_html_gz_start");
-extern const uint8_t indexHTML_end[] asm("_binary_webui_index_html_gz_end");
-extern const uint8_t picoCSS_start[] asm("_binary_webui_pico_min_css_gz_start");
-extern const uint8_t picoCSS_end[] asm("_binary_webui_pico_min_css_gz_end");
-extern const uint8_t mainCSS_start[] asm("_binary_webui_main_css_gz_start");
-extern const uint8_t mainCSS_end[] asm("_binary_webui_main_css_gz_end");
+#include "webui.h"
 
 String lastUploadFileName;
 bool webOTAIsBusy = false;
+
+// Set web server port number to 80
+AsyncWebServer server(80);
 
 bool formatDefaultFS()
 {
@@ -344,7 +313,6 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
 
   request->send(200);
 }
-
 
 void onUploadConfigFile(AsyncWebServerRequest *request)
 {
@@ -899,4 +867,3 @@ void WebUI_Init()
   server.on("/upload/CAN", HTTP_POST, onUploadCANFile, handleFileUpload);
   server.begin();
 }
-#endif

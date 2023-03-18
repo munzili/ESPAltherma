@@ -1,25 +1,16 @@
-#ifndef WIRELESS_H
-#define WIRELESS_H
-#include <WiFi.h>
-#include <string.h>
-#include "mqttSerial.h"
-#include "config.h"
+#include "wireless.h"
 
-struct WifiDetails
-{
-  const String SSID;    
-  const int32_t RSSI;
-  const wifi_auth_mode_t EncryptionType;
-};
+WifiDetails **lastWifiScanResults = nullptr;
+int16_t lastWifiScanResultAmount;
 
 void start_standalone_wifi()
-{  
-  IPAddress local_ip(192, 168, 1, 1); 
-  IPAddress gateway(192, 168, 1, 1); 
+{
+  IPAddress local_ip(192, 168, 1, 1);
+  IPAddress gateway(192, 168, 1, 1);
   IPAddress subnet(255, 255, 255, 0);
-  WiFi.softAP("ESPAltherma-Config-WiFi");   
+  WiFi.softAP("ESPAltherma-Config-WiFi");
   WiFi.softAPConfig(local_ip, gateway, subnet);
-  WiFi.setHostname("ESPAltherma");    
+  WiFi.setHostname("ESPAltherma");
 }
 
 void setup_wifi()
@@ -69,9 +60,6 @@ void setup_wifi()
   mqttSerial.printf("Connected. IP Address: %s\n", WiFi.localIP().toString().c_str());
 }
 
-WifiDetails **lastWifiScanResults = nullptr;
-int16_t lastWifiScanResultAmount;
-
 void scan_wifi_delete_result()
 {
   for (int16_t i = 0; i < lastWifiScanResultAmount; i++) {
@@ -82,7 +70,7 @@ void scan_wifi_delete_result()
 }
 
 void scan_wifi()
-{  
+{
   lastWifiScanResultAmount = WiFi.scanNetworks();
   lastWifiScanResults = new WifiDetails*[lastWifiScanResultAmount];
 
@@ -99,5 +87,3 @@ void scan_wifi()
     delay(10);
   }
 }
-
-#endif

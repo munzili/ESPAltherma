@@ -1,29 +1,4 @@
-#ifndef WEBUI_SCAN_REGISTER_H
-#define WEBUI_SCAN_REGISTER_H
-#include <Arduino.h>
-#include "X10A.h"
-#include "ArduinoJson.h"
-#include "parameterDef.h"
-#include "arrayFunctions.h"
-#include "comm.h"
-#include "converters.h"
-#include "config.h"
-#include "mqttSerial.h"
-
-#define MODELS_DOC_SIZE 1024*10
-
-struct WebUIScanRegister {
-  int8_t PinRx;
-  int8_t PinTx;
-  String Params;
-};
-
-enum ValueLoadState {
-  NotLoading,
-  Pending,
-  Loading,
-  LoadingFinished
-};
+#include "webuiScanRegister.h"
 
 WebUIScanRegister webuiScanRegisterConfig;
 ValueLoadState valueLoadState = NotLoading;
@@ -37,7 +12,7 @@ void webuiScanRegister()
   }
 
   valueLoadState = Loading;
-  
+
   bool serialX10AWasInited = SerialX10A;
 
   Serial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", webuiScanRegisterConfig.PinRx, webuiScanRegisterConfig.PinTx);
@@ -48,28 +23,28 @@ void webuiScanRegister()
   X10AInit(webuiScanRegisterConfig.PinRx, webuiScanRegisterConfig.PinTx);
 
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
-  deserializeJson(modelsDoc, webuiScanRegisterConfig.Params); 
+  deserializeJson(modelsDoc, webuiScanRegisterConfig.Params);
   JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
 
   Serial.printf("Creating labelDefs %i\n", modelsDocArr.size());
 
   size_t labelsSize = modelsDocArr.size();
   ParameterDef **labelsToLoad = new ParameterDef*[labelsSize];
-  
+
   uint8_t counter = 0;
-  for (JsonArray model : modelsDocArr) 
+  for (JsonArray model : modelsDocArr)
   {
     labelsToLoad[counter] = new ParameterDef(model[0], model[1], model[2], model[3], model[4], model[5]);
     counter++;
-  }  
+  }
 
-  //getting the list of registries to query from the selected values  
-  uint8_t loadRegistryBufferSize = 0;  
+  //getting the list of registries to query from the selected values
+  uint8_t loadRegistryBufferSize = 0;
   uint8_t* tempRegistryIDs = new uint8_t[labelsSize];
 
   size_t i;
   for (i = 0; i < labelsSize; i++)
-  {            
+  {
     auto &&label = *labelsToLoad[i];
 
     if (!contains(tempRegistryIDs, labelsSize, label.registryID))
@@ -78,7 +53,7 @@ void webuiScanRegister()
       tempRegistryIDs[loadRegistryBufferSize++] = label.registryID;
     }
   }
-  
+
   RegistryBuffer loadRegistryBuffers[loadRegistryBufferSize];
 
   for(i = 0; i < loadRegistryBufferSize; i++)
@@ -96,7 +71,7 @@ void webuiScanRegister()
   }
 
   Serial.println("Fetching Values");
-  
+
   //Querying all registries and store results
   for (size_t i = 0; i < loadRegistryBufferSize; i++)
   {
@@ -107,9 +82,9 @@ void webuiScanRegister()
       delay(1000);
     }
   }
-  
+
   for (size_t i = 0; i < labelsSize; i++)
-  {            
+  {
     auto &&label = *labelsToLoad[i];
 
     for (size_t j = 0; j < loadRegistryBufferSize; j++)
@@ -123,16 +98,16 @@ void webuiScanRegister()
         break;
       }
     }
-  }  
-  
+  }
+
   Serial.println("Returning Values");
 
   DynamicJsonDocument resultDoc(labelsSize*JSON_OBJECT_SIZE(2));
   JsonArray obj = resultDoc.to<JsonArray>();
-  
+
   for (uint8_t i = 0; i < labelsSize; i++) {
     obj.add(labelsToLoad[i]->asString);
-  } 
+  }
 
   for (size_t i = 0; i < labelsSize; i++)
   {
@@ -151,10 +126,8 @@ void webuiScanRegister()
   }
 
   Serial.println("Finished registry scan");
-  
+
   serializeJson(resultDoc, valueLoadResponse);
 
   valueLoadState = LoadingFinished;
 }
-
-#endif

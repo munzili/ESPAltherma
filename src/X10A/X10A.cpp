@@ -1,7 +1,4 @@
-#ifndef X10A_H
-#define X10A_H
-
-#include <HardwareSerial.h>
+#include "X10A.h"
 
 HardwareSerial SerialX10A(1);
 
@@ -18,5 +15,3 @@ void X10AInit(int8_t rxPin, int8_t txPin)
   X10AEnd();
   SerialX10A.begin(9600, SERIAL_8E1, rxPin, txPin);
 }
-
-#endif

@@ -1,7 +1,4 @@
-#ifndef MQTT_CONFIG_H
-#define MQTT_CONFIG_H
-
-#define MAX_MSG_SIZE 4096//max size of the json message sent in mqtt 
+#include "mqttConfig.h"
 
 char jsonbuff[MAX_MSG_SIZE];
 bool SG_RELAY_ACTIVE_STATE;
@@ -17,4 +14,3 @@ void initMQTTConfig(Config *config)
   SG_RELAY_ACTIVE_STATE = config->SG_RELAY_HIGH_TRIGGER == true;
   SG_RELAY_INACTIVE_STATE != SG_RELAY_ACTIVE_STATE;
 }
-#endif
