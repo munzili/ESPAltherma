@@ -1,17 +1,19 @@
 #ifndef PORT_SERIAL_H
 #define PORT_SERIAL_H
 
-#include <BluetoothSerial.h>
 #include "ArduinoC.hpp"
 #include "CAN/CANPort.hpp"
 
 class PortSerial : CANPort
 {
 public:
-    PortSerial(char* btName);
-    PortSerial(int8_t rxPin, int8_t txPin, uint8_t baudrate);
+    PortSerial(int8_t uartNr, uint8_t baudrate);
 
-    void write(const char* bytes);
+    void setID(const uint16_t id);
+    void writePart(const char* bytes, size_t size);
+    void writePart(const byte* bytes, size_t size);
+    void write(const char* bytes, size_t size);
+    void write(const byte* bytes, size_t size);
     const char* read();
 };
 

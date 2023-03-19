@@ -11,7 +11,7 @@ protected:
 
 public:
     virtual bool initInterface(CANPort* port, int baudrate);
-    virtual const char* sendCommandWithID(CommandDef cmd, bool setValue);
+    virtual const char* sendCommandWithID(CommandDef cmd, bool setValue = false, int value = 0);
 };
 
 #endif

@@ -8,7 +8,7 @@ class DriverELM327 : CANDriver
 {
 public:
     bool initInterface(CANPort* port, int baudrate);
-    const char* sendCommandWithID(CommandDef* cmd, bool setValue);
+    const char* sendCommandWithID(CommandDef* cmd, bool setValue = false, int value = 0);
 };
 
 #endif
