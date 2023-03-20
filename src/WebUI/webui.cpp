@@ -71,7 +71,8 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
       "\"Default\": {"
         "\"pin_rx\": 36,"
         "\"pin_tx\": 26,"
-        "\"pin_therm\": 0,"
+        "\"pin_heating\": 0,"
+        "\"pin_cooling\": 0,"
         "\"pin_sg1\": 32,"
         "\"pin_sg2\": 33,"
         "\"pin_can_rx\": 32,"
@@ -117,7 +118,8 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
       "\"Default\": {"
         "\"pin_rx\": 16,"
         "\"pin_tx\": 17,"
-        "\"pin_therm\": 13,"
+        "\"pin_hearing\": 13,"
+        "\"pin_cooling\": 14,"
         "\"pin_sg1\": 32,"
         "\"pin_sg2\": 33,"
         "\"pin_can_rx\": 4,"
@@ -495,7 +497,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
     return;
   }
 
-  if(!request->hasParam("pin_rx", true) || !request->hasParam("pin_tx", true) || !request->hasParam("pin_therm", true))
+  if(!request->hasParam("pin_rx", true) || !request->hasParam("pin_tx", true) || !request->hasParam("pin_heating", true))
   {
     request->send(422, "text/plain", "Missing parameter(s) for MQTT onetopic");
     return;
@@ -559,7 +561,8 @@ void onSaveConfig(AsyncWebServerRequest *request)
   config->MQTT_PORT = request->getParam("mqtt_port", true)->value().toInt();
   config->PIN_RX = request->getParam("pin_rx", true)->value().toInt();
   config->PIN_TX = request->getParam("pin_tx", true)->value().toInt();
-  config->PIN_THERM = request->getParam("pin_therm", true)->value().toInt();
+  config->PIN_HEATING = request->getParam("pin_heating", true)->value().toInt();
+  config->PIN_COOLING = request->getParam("pin_cooling", true)->value().toInt();
   config->SG_ENABLED = request->hasParam("sg_enabled", true);
   config->CAN_ENABLED = request->hasParam("can_enabled", true);
 

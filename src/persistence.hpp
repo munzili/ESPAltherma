@@ -7,7 +7,8 @@
 
 #define NAME_NAMESPACE "ESPAltherma"
 #define NAME_INITED "Inited"
-#define NAME_STATE_THERM "Therm"
+#define NAME_STATE_HEATING "Heating"
+#define NAME_STATE_COOLING "Cooling"
 
 extern Preferences preferences;
 
@@ -15,7 +16,7 @@ void resetPersistence();
 
 void initPersistence();
 
-void savePersistence(uint8_t state);
+void savePersistence();
 
 void readPersistence();
 

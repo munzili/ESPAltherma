@@ -71,7 +71,8 @@ void readConfig()
     config->FREQUENCY = configDoc["FREQUENCY"].as<uint32_t>();
     config->PIN_RX = configDoc["PIN_RX"].as<uint8_t>();
     config->PIN_TX = configDoc["PIN_TX"].as<uint8_t>();
-    config->PIN_THERM = configDoc["PIN_THERM"].as<uint8_t>();
+    config->PIN_HEATING = configDoc["PIN_HEATING"].as<uint8_t>();
+    config->PIN_COOLING = configDoc["PIN_COOLING"].as<uint8_t>();
     config->SG_ENABLED = configDoc["SG_ENABLED"].as<const bool>();
     config->PIN_SG1 = configDoc["PIN_SG1"].as<uint8_t>();
     config->PIN_SG2 = configDoc["PIN_SG2"].as<uint8_t>();
@@ -190,7 +191,8 @@ void saveConfig()
     configDoc["FREQUENCY"] = config->FREQUENCY;
     configDoc["PIN_RX"] = config->PIN_RX;
     configDoc["PIN_TX"] = config->PIN_TX;
-    configDoc["PIN_THERM"] = config->PIN_THERM;
+    configDoc["PIN_HEATING"] = config->PIN_HEATING;
+    configDoc["PIN_COOLING"] = config->PIN_COOLING;
     configDoc["SG_ENABLED"] = config->SG_ENABLED;
     configDoc["PIN_SG1"] = config->PIN_SG1;
     configDoc["PIN_SG2"] = config->PIN_SG2;

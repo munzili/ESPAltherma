@@ -32,7 +32,8 @@ struct Config
     uint32_t FREQUENCY;
     uint8_t PIN_RX;
     uint8_t PIN_TX;
-    uint8_t PIN_THERM;
+    uint8_t PIN_HEATING;
+    uint8_t PIN_COOLING;
     bool SG_ENABLED;
     uint8_t PIN_SG1;
     uint8_t PIN_SG2;

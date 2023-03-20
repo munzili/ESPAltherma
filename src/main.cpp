@@ -161,8 +161,10 @@ void setup()
   }
 
   X10AInit(config->PIN_RX, config->PIN_TX);
-  pinMode(config->PIN_THERM, OUTPUT);
-  digitalWrite(config->PIN_THERM, HIGH);
+  pinMode(config->PIN_HEATING, OUTPUT);
+  digitalWrite(config->PIN_HEATING, HIGH);
+  pinMode(config->PIN_COOLING, OUTPUT);
+  digitalWrite(config->PIN_COOLING, HIGH);
 
   if(config->SG_ENABLED)
   {

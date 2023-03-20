@@ -10,14 +10,14 @@
   <script src="md5.min.js"></script>
   <script src="main.js"></script>
 </head>
-<body>  
+<body>
   <main class="container">
     <dialog id="loading-dialog" open>
       <article aria-busy="true">
         Loading, please wait...
       </article>
     </dialog>
-    <header><h1>ESPAltherma Config</h1></header>    
+    <header><h1>ESPAltherma Config</h1></header>
     <nav id="nav-main">
       <ul>
         <li><a href="#" data-link="form-network" role="button" >Network</a></li>
@@ -29,8 +29,8 @@
       </ul>
     </nav>
     <form id="configForm" action="/saveConfig" method="post">
-      <article id="form-network" role="tab">      
-        <label for="standalone_wifi" >          
+      <article id="form-network" role="tab">
+        <label for="standalone_wifi" >
           <input type="checkbox" id="standalone_wifi" name="standalone_wifi" role="switch" onclick="updateWifiFields()"/>
           Use standalone WiFi
         </label>
@@ -39,9 +39,9 @@
             <label for="ssid">WIFI SSID:</label>
             <input type="text" id="ssid" name="ssid"/>
           </div>
-          
+
           <label for="ssid_select" id="ssidSelectLabel">
-            Select a Wifi in range            
+            Select a Wifi in range
             <div class="grid-wifi"  >
               <div class="container-wifilist">
                   <select id="ssid_select" name="ssid_select">
@@ -57,9 +57,9 @@
 
         <label for="ssid_password">WIFI Password:</label>
         <input type="password" id="ssid_password" name="ssid_password"/>
-        <small>Leave empty for open networks</small> 
+        <small>Leave empty for open networks</small>
 
-        <label for="ssid_staticip" >          
+        <label for="ssid_staticip" >
           <input type="checkbox" id="ssid_staticip" name="ssid_staticip" role="switch" onclick="show('staticip');"/>
           WIFI use static IP
         </label>
@@ -67,7 +67,7 @@
         <article id="staticip" class="hidden">
           <div>
             <label for="ssid_ip">WIFI IP:</label>
-            <input type="text" id="ssid_ip" name="ssid_ip"/>          
+            <input type="text" id="ssid_ip" name="ssid_ip"/>
 
             <label for="ssid_subnet">WIFI Subnet:</label>
             <input type="text" id="ssid_subnet" name="ssid_subnet"/>
@@ -77,11 +77,11 @@
 
             <label for="primary_dns">Primary DNS:</label>
             <input type="text" id="primary_dns" name="primary_dns"/>
-            <small>Optional</small> 
+            <small>Optional</small>
 
             <label for="secondary_dns">Secondary DNS:</label>
             <input type="text" id="secondary_dns" name="secondary_dns"/>
-            <small>Optional</small> 
+            <small>Optional</small>
         </article>
 
         <label for="mqtt_server">MQTT Server:</label>
@@ -93,12 +93,12 @@
         <label for="mqtt_password">MQTT Password:</label>
         <input type="password" id="mqtt_password" name="mqtt_password"/>
 
-        <label for="mqtt_jsontable" >          
+        <label for="mqtt_jsontable" >
           <input type="checkbox" id="mqtt_jsontable" name="mqtt_jsontable" role="switch"/>
           MQTT use JSON Table
         </label>
 
-        <label for="mqtt_use_onetopic" >          
+        <label for="mqtt_use_onetopic" >
           <input type="checkbox" id="mqtt_use_onetopic" name="mqtt_use_onetopic" role="switch" onclick="show('onetopic');"/>
           MQTT one Topic
         </label>
@@ -108,7 +108,7 @@
           <input type="text" id="mqtt_onetopic" name="mqtt_onetopic"/>
           <small>Needs to end with a slash</small>
         </article>
-        
+
         <label for="mqtt_port">MQTT Port:</label>
         <input type="number" id="mqtt_port" name="mqtt_port" min="0" max="65535"/>
 
@@ -123,8 +123,8 @@
             <option value="600000">10 min</option>
           </select>
         </label>
-      </article>  
-      <article id="form-pins" role="tab" style="display: none;">      
+      </article>
+      <article id="form-pins" role="tab" style="display: none;">
         <div class="grid">
           <label for="pin_rx">
             PIN RX
@@ -137,13 +137,19 @@
           </label>
         </div>
 
-        <label for="pin_therm">
-          PIN THERM
-          <select id="pin_therm" name="pin_therm" data-pins>
-          </select>                            
+        <label for="pin_heating">
+          PIN HEATING
+          <select id="pin_heating" name="pin_heating" data-pins>
+          </select>
         </label>
 
-        <label for="sg_enabled" >          
+        <label for="pin_cooling">
+          PIN COOLING
+          <select id="pin_cooling" name="pin_cooling" data-pins>
+          </select>
+        </label>
+
+        <label for="sg_enabled" >
           <input type="checkbox" id="sg_enabled" name="sg_enabled" role="switch" onclick="show('smartgrid');"/>
           SmartGrid enabled
         </label>
@@ -154,14 +160,14 @@
               PIN SG1
               <select id="pin_sg1" name="pin_sg1" data-pins></select>
             </label>
-            
+
             <label for="pin_sg2">
               PIN SG2
               <select id="pin_sg2" name="pin_sg2" data-pins></select>
             </label>
           </div>
 
-          <label for="sg_relay_trigger" >          
+          <label for="sg_relay_trigger" >
             <input type="checkbox" id="sg_relay_trigger" name="sg_relay_trigger" role="switch"/>
             SG Relay high trigger
           </label>
@@ -174,7 +180,7 @@
           <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the standalone wifi mode.</small>
         </label>
 
-        <label for="can_enabled" >          
+        <label for="can_enabled" >
           <input type="checkbox" id="can_enabled" name="can_enabled" role="switch" onclick="show('can_pins');"/>
           CAN-Bus enabled
         </label>
@@ -185,7 +191,7 @@
               PIN CAN RX
               <select id="pin_can_rx" name="pin_can_rx" data-pins></select>
             </label>
-            
+
             <label for="pin_can_tx">
               PIN CAN TX
               <select id="pin_can_tx" name="pin_can_tx" data-pins></select>
@@ -193,7 +199,7 @@
           </div>
         </article>
       </article>
-      <article id="form-x10a" role="tab" style="display: none;">      
+      <article id="form-x10a" role="tab" style="display: none;">
         <div class="grid">
           <div>
             <label for="model">Model:</label>
@@ -210,8 +216,8 @@
             <select id="presetParameters" name="presetParameters" onchange="updateParameters()">
               <option value="" selected>Select a preset...</option>
             </select>
-          </div>          
-          <div>            
+          </div>
+          <div>
             <label for="parametersFile">Upload Parameters file:</label>
             <input type="file" id="parametersFile" accept=".json" name="parametersFile"/>
             <small>Add a model config file to the predefined model list</small>
@@ -227,34 +233,34 @@
               <figure >
                 <table id="parametersTable">
                   <tr>
-                    <td>Name</td>  
-                    <td>RegID</td>                
-                    <td>Offset</td>                    
+                    <td>Name</td>
+                    <td>RegID</td>
+                    <td>Offset</td>
                     <td>ConvID</td>
                     <td>Data size</td>
                     <td>Data type</td>
                     <td>Value</td>
-                  </tr>                
+                  </tr>
                 </table>
               </figure>
 
               <input type="button" onclick="addSelectedPredefinedParameters()" value="Add to selected parameters">
               <input type="button" onclick="addPredefinedParameters()" value="Add all parameters">
-              <button id="loadParametersTable" onclick="beginLoadData('parametersTable')">Load model values</button>           
-            </div>          
+              <button id="loadParametersTable" onclick="beginLoadData('parametersTable')">Load model values</button>
+            </div>
             <div class="parametersSection">
-              <label for="selectedParametersTable">Selected Parameters:</label>            
+              <label for="selectedParametersTable">Selected Parameters:</label>
               <figure>
                 <table id="selectedParametersTable">
                   <tr>
-                    <td>Name</td>  
-                    <td>RegID</td>                
-                    <td>Offset</td>                    
+                    <td>Name</td>
+                    <td>RegID</td>
+                    <td>Offset</td>
                     <td>ConvID</td>
                     <td>Data size</td>
                     <td>Data type</td>
                     <td>Value</td>
-                  </tr>                
+                  </tr>
                 </table>
               </figure>
 
@@ -263,7 +269,7 @@
               <button id="loadSelectedParametersTable" onclick="beginLoadData('selectedParametersTable')">Load parameter values</button>
             </div>
           </div>
-          <div class="customParameterSection">                        
+          <div class="customParameterSection">
             <details>
               <summary role="button">Add custom Parameter</summary>
               <p>
@@ -271,12 +277,12 @@
                   <div>
                     <label for="regid">RegID:</label>
                     <input type="number" id="regid" name="regid" min="0" max="127"/>
-                  </div>              
+                  </div>
                   <div>
                     <label for="offset">Offset:</label>
                     <input type="number" id="offset" name="offset" min="0" max="31"/>
                   </div>
-                  <div >                    
+                  <div >
                     <label for="convid">ConvID:</label>
                     <select id="convid" name="convid">
                       <option value="100">100</option>
@@ -325,7 +331,7 @@
                       <option value="316">316</option>
                     </select>
                   </div>
-                  <div>                  
+                  <div>
                     <label for="dataSize">Data size:</label>
                     <select id="dataSize" name="dataSize">
                       <option value="0">0</option>
@@ -343,7 +349,7 @@
                       <option value="2">2</option>
                     </select>
                   </div>
-                </div>              
+                </div>
 
                 <label for="dataName">Data name:</label>
                 <input type="text" id="dataName" name="dataName"/>
@@ -354,7 +360,7 @@
           </div>
         </article>
       </article>
-      <article id="form-can" role="tab" style="display: none;">      
+      <article id="form-can" role="tab" style="display: none;">
         <label for="can_speed_kbps">CAN-Bus Speed in kbps:</label>
         <input type="number" id="can_speed_kbps" name="can_speed_kbps" min="1" max="1000"/>
 
@@ -369,8 +375,8 @@
             <select id="canLanguage" name="canLanguage" onchange="updateCanCommands()">
               <option value="" selected>Select a language...</option>
             </select>
-          </div>          
-          <div>            
+          </div>
+          <div>
             <label for="canFileUpload">Upload CAN-Bus definition file:</label>
             <input type="file" id="canFileUpload" accept=".json" name="canFileUpload"/>
             <small>Add a commands file for the CAN-Bus</small>
@@ -386,26 +392,26 @@
               <figure >
                 <table id="fileCommandsTable">
                   <tr>
-                    <td>Label</td>  
-                    <td>?</td>  
-                    <td>Command</td>                
-                    <td>ID</td>                    
+                    <td>Label</td>
+                    <td>?</td>
+                    <td>Command</td>
+                    <td>ID</td>
                     <td>Divisor</td>
                     <td>Writable</td>
                     <td>Unit</td>
                     <td>Type</td>
                     <td>Value Code</td>
                     <td>Value</td>
-                  </tr>                
+                  </tr>
                 </table>
               </figure>
 
               <input type="button" onclick="addSelectedCanCommands()" value="Add to selected commands">
               <input type="button" onclick="addCanCommands()" value="Add all commands">
               <button id="loadCommandsTable" onclick="alert('Not yet implemented')">Load command values</button>
-            </div>          
+            </div>
             <div class="parametersSection">
-              <label for="selectedCommandsTable">Selected Commands:</label>            
+              <label for="selectedCommandsTable">Selected Commands:</label>
               <figure>
                 <table id="selectedCommandsTable">
                   <tr>
@@ -428,10 +434,10 @@
               <button id="loadSelectedCommandsTable" onclick="alert('Not yet implemented')">Load command values</button>
             </div>
           </div>
-          <div class="customParameterSection">                        
+          <div class="customParameterSection">
             <details>
               <summary role="button">Add custom command</summary>
-              <p>                              
+              <p>
                 <label for="canDataLabel">Label:</label>
                 <input type="text" id="canDataLabel" name="canDataLabel"/>
 
@@ -446,7 +452,7 @@
                       <option value="310">310</option>
                       <option value="610">610</option>
                     </select>
-                  </div>    
+                  </div>
                   <div>
                     <label for="canDataDivisor">Divisor:</label>
                     <select id="canDataDivisor" name="canDataDivisor">
@@ -456,12 +462,12 @@
                       <option value="100">100</option>
                       <option value="1000">1000</option>
                     </select>
-                  </div>                 
+                  </div>
                   <div>
                     <label for="canDataWriteable">Writeable:</label>
                     <input type="checkbox" id="canDataWriteable" name="canDataWriteable" />
                   </div>
-                  <div >                    
+                  <div >
                     <label for="canDataUnit">Unit:</label>
                     <select id="canDataUnit" name="canDataUnit">
                       <option value="deg">deg</option>
@@ -475,7 +481,7 @@
                       <option value="w">w</option>
                     </select>
                   </div>
-                  <div >                    
+                  <div >
                     <label for="canDataType">Type:</label>
                     <select id="canDataType" name="canDataType">
                       <option value="int">int</option>
@@ -487,7 +493,7 @@
                 </div>
 
                 <label for="canDataValueCode">Value Code: <a href="#" role="button" id="linkAddValueCode" style="padding: 2pt; padding-bottom: 0pt; padding-top: 0pt;">+</a><a href="#" role="button" id="linkRemoveValueCode" style="margin-left: 3pt; padding: 4pt; padding-bottom: 0pt; padding-top: 0pt;">-</a></label>
-                <div id="canDataValueCode">&nbsp;</div>                            
+                <div id="canDataValueCode">&nbsp;</div>
 
                 <input type="button" onclick="addCustomCanCommand(event)" value="Add">
               </p>
@@ -495,16 +501,16 @@
           </div>
         </article>
       </article>
-      <article id="form-export-import" role="tab" style="display: none;">      
+      <article id="form-export-import" role="tab" style="display: none;">
         <div class="grid">
           <div>
             <a href="/exportConfig" target="_blank" role="button" id="config-export">Export Config</a>
-          </div> 
+          </div>
           <div>
             <input type="file" id="configFile" accept=".json" name="configFile" />
             <input type="button" onclick="uploadConfig()" value="Import Config">
           </div>
-        </div> 
+        </div>
       </article>
       <article id="form-update" role="tab" style="display: none;">
         <h3>Update</h3>
@@ -530,8 +536,8 @@
             <div id="oatErrorDisplay" class="hidden" style="color: red;"></div>
         </p>
       </article>
-      <p><input type="submit" id="submit" value="SAVE CONFIG" role="button" /></p>               
-    </form>    
+      <p><input type="submit" id="submit" value="SAVE CONFIG" role="button" /></p>
+    </form>
   </main>
 </body>
 </html>

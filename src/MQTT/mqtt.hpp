@@ -18,7 +18,7 @@ void sendValues();
 
 void reconnect();
 
-void callbackTherm(byte *payload, unsigned int length);
+void callbackHeating(byte *payload, unsigned int length);
 
 //Smartgrid callbacks
 void callbackSg(byte *payload, unsigned int length);

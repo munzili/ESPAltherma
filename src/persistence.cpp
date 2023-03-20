@@ -12,9 +12,10 @@ void initPersistence()
   preferences.begin(NAME_NAMESPACE, false);
 }
 
-void savePersistence(uint8_t state)
+void savePersistence()
 {
-  preferences.putUChar(NAME_STATE_THERM, state);
+  preferences.putUChar(NAME_STATE_HEATING, digitalRead(config->PIN_HEATING));
+  preferences.putUChar(NAME_STATE_COOLING, digitalRead(config->PIN_COOLING));
 }
 
 void readPersistence()
@@ -23,15 +24,22 @@ void readPersistence()
 
   if (inited)
   {
-    uint8_t state = preferences.getUChar(NAME_STATE_THERM);
-    digitalWrite(config->PIN_THERM, state);
-    mqttSerial.printf("Restoring previous state: %s\n", (state == HIGH) ? "Off":"On" );
+    uint8_t heatingState = preferences.getUChar(NAME_STATE_HEATING);
+    uint8_t coolingState = preferences.getUChar(NAME_STATE_COOLING);
+
+    digitalWrite(config->PIN_HEATING, heatingState);
+    digitalWrite(config->PIN_COOLING, coolingState);
+    mqttSerial.printf("Restoring previous heating state: %s\n", (heatingState == HIGH) ? "Off":"On" );
+    mqttSerial.printf("Restoring previous cooling state: %s\n", (coolingState == HIGH) ? "Off":"On" );
   }
   else
   {
     mqttSerial.printf("Persistence not initialized (%d). Initializing...\n", inited);
     preferences.putBool(NAME_INITED, true);
-    preferences.putUChar(NAME_STATE_THERM, HIGH);
-    digitalWrite(config->PIN_THERM, HIGH);
+
+    digitalWrite(config->PIN_HEATING, HIGH);
+    digitalWrite(config->PIN_COOLING, HIGH);
+
+    savePersistence();
   }
 }

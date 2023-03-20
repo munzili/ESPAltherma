@@ -121,7 +121,8 @@ async function resetToDefaults()
 
     document.getElementById('pin_rx').value = boardDefaults['pin_rx'];
     document.getElementById('pin_tx').value = boardDefaults['pin_tx'];
-    document.getElementById('pin_therm').value = boardDefaults['pin_therm'];
+    document.getElementById('pin_heating').value = boardDefaults['pin_heating'];
+    document.getElementById('pin_cooling').value = boardDefaults['pin_cooling'];
     document.getElementById('pin_sg1').value = boardDefaults['pin_sg1'];
     document.getElementById('pin_sg2').value = boardDefaults['pin_sg2'];
     document.getElementById('pin_can_rx').value = boardDefaults['pin_can_rx'];
@@ -180,7 +181,8 @@ async function loadConfig()
         document.getElementById('frequency').value = data['FREQUENCY'];
         document.getElementById('pin_rx').value = data['PIN_RX'];
         document.getElementById('pin_tx').value = data['PIN_TX'];
-        document.getElementById('pin_therm').value = data['PIN_THERM'];
+        document.getElementById('pin_heating').value = data['PIN_HEATING'];
+        document.getElementById('pin_cooling').value = data['PIN_COOLING'];
         document.getElementById('sg_enabled').checked = data['SG_ENABLED'];
         document.getElementById('can_enabled').checked = data['CAN_ENABLED'];
 
@@ -381,8 +383,11 @@ async function sendConfigData(event)
     const pin_tx = document.getElementById('pin_tx');
     pin_tx.setAttribute('aria-invalid', pin_tx.value == '');
 
-    const pin_therm = document.getElementById('pin_therm');
-    pin_therm.setAttribute('aria-invalid', pin_therm.value == '');
+    const pin_heating = document.getElementById('pin_heating');
+    pin_heating.setAttribute('aria-invalid', pin_heating.value == '');
+
+    const pin_cooling = document.getElementById('pin_cooling');
+    pin_cooling.setAttribute('aria-invalid', pin_cooling.value == '');
 
     const sg_enabled = document.getElementById('sg_enabled');
     if(sg_enabled.checked)
