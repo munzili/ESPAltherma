@@ -18,14 +18,17 @@
       </article>
     </dialog>
     <header><h1>ESPAltherma Config</h1></header>
-    <nav id="nav-main">
-      <ul>
+    <nav>
+      <ul id="nav-main" style="overflow-x: auto">
         <li><a href="#" data-link="form-network" role="button" >Network</a></li>
         <li><a href="#" data-link="form-pins">Pins</a></li>
         <li><a href="#" data-link="form-x10a">X10A-Bus</a></li>
         <li><a href="#" data-link="form-can">CAN-Bus</a></li>
         <li><a href="#" data-link="form-export-import">Export/Import</a></li>
         <li><a href="#" data-link="form-update">Update</a></li>
+      </ul>
+      <ul>
+        <li><a href="/webserial" role="button" class="outline" target="_blank">Web Serial</a></li>
       </ul>
     </nav>
     <form id="configForm" action="/saveConfig" method="post">
