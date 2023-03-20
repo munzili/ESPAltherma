@@ -4,6 +4,7 @@
 #include <LittleFS.h>
 #include <Update.h>
 #include "ESPAsyncWebServer.h"
+#include <WebSerialLite.h>
 #include "esp_task_wdt.h"
 #include "ArduinoJson.h"
 #include "X10A/comm.hpp"

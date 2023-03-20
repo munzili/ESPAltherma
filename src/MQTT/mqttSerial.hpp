@@ -3,6 +3,7 @@
 
 #include <PubSubClient.h>
 #include <WiFi.h>
+#include <WebSerialLite.h>
 #include "Stream.h"
 #include "ArduinoC.hpp"
 

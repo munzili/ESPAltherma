@@ -21,6 +21,7 @@ size_t MQTTSerial::write(const uint8_t *buffer, size_t size)
         _client->publish(_topic,buffer,size);
     }
 
+    WebSerial.write(buffer,size);
     Serial.write(buffer,size);
 
     return size;

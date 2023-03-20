@@ -844,6 +844,9 @@ void WebUI_Init()
     formatDefaultFS();
   }
 
+  // WebSerial is accessible at "<IP Address>/webserial" in browser
+  WebSerial.begin(&server);
+
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
   server.on("/main.css", HTTP_GET, onRequestMainCSS);
