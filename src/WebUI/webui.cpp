@@ -840,6 +840,32 @@ void onUploadCANFile(AsyncWebServerRequest *request)
   request->send(200);
 }
 
+void onWebSerialCallback(const uint8_t *data, const size_t len)
+{
+  WebSerial.println(F("Received Data..."));
+
+  String inputMessage = "";
+  for(int i=0; i < len; i++){
+    inputMessage += char(data[i]);
+  }
+
+  WebSerial.println(inputMessage);
+
+  if(inputMessage == "freeMemory")
+  {
+    WebSerial.printf("Heap size: %d bytes\n", ESP.getHeapSize());
+    WebSerial.printf("Free memory: %d bytes\n", esp_get_free_heap_size());
+    WebSerial.printf("Free memory Heap: %d bytes\n", ESP.getFreeHeap());
+    WebSerial.printf("Lowest avaiable Memory: %d bytes\n", heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
+    WebSerial.printf("LittleFS space used: %d/%d bytes\n", LittleFS.usedBytes(), LittleFS.totalBytes());
+  }
+  else if(inputMessage == "getFragmentation")
+  {
+    WebSerial.print(F("Fragmentation is: "));
+    WebSerial.println(100 - heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) * 100.0 / heap_caps_get_free_size(MALLOC_CAP_8BIT));
+  }
+}
+
 void WebUI_Init()
 {
   if(!LittleFS.exists(MODELS_FILE))
@@ -849,6 +875,7 @@ void WebUI_Init()
 
   // WebSerial is accessible at "<IP Address>/webserial" in browser
   WebSerial.begin(&server);
+  WebSerial.onMessage(onWebSerialCallback);
 
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);

@@ -7,10 +7,6 @@ bool doRestartInStandaloneWifi = false;
 
 uint16_t loopcount = 0;
 
-uint8_t getFragmentation() {
-  return 100 - heap_caps_get_largest_free_block(MALLOC_CAP_8BIT) * 100.0 / heap_caps_get_free_size(MALLOC_CAP_8BIT);
-}
-
 //Converts to string and add the value to the JSON message
 void updateValues(ParameterDef *labelDef)
 {
