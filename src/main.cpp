@@ -62,7 +62,7 @@ void extraLoop()
   if(!doRestartInStandaloneWifi)
    return;
 
-  Serial.println("Restarting in standalone wifi mode");
+  mqttSerial.println("Restarting in standalone wifi mode");
   config->STANDALONE_WIFI = true;
   saveConfig();
   esp_restart();

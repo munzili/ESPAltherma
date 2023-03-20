@@ -208,7 +208,7 @@ void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t in
     logmessage = "Upload Start: " + String(filename);
     // open the file on first call and store the file handle in the request object
     request->_tempFile = LittleFS.open(fsFilename, "w");
-    Serial.println(logmessage);
+    mqttSerial.println(logmessage);
   }
 
   if (len)
@@ -216,7 +216,7 @@ void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t in
     // stream the incoming chunk to the opened file
     request->_tempFile.write(data, len);
     logmessage = "Writing file: " + String(filename) + " index=" + String(index) + " len=" + String(len);
-    Serial.println(logmessage);
+    mqttSerial.println(logmessage);
   }
 
   if (final)
@@ -224,7 +224,7 @@ void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t in
     lastUploadFileName = "/" + String(request->_tempFile.name());
 
     logmessage = "Upload Complete: " + String(filename) + ", size: " + String(index + len);
-    Serial.println(logmessage);
+    mqttSerial.println(logmessage);
 
     // close the file handle as the upload is now done
     request->_tempFile.close();
@@ -241,7 +241,7 @@ void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t in
     modelsFile.close();
 
     logmessage = "JSON Minify Complete: " + String(lastUploadFileName) + ", new size: " + String(newFileSize);
-    Serial.println(logmessage);
+    mqttSerial.println(logmessage);
   }
 }
 
@@ -254,7 +254,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
   }
 
   String fsFilename = lastUploadFileName;
-  Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
+  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename);
 
   File modelsFile = LittleFS.open(MODELS_FILE, FILE_READ);
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
@@ -272,7 +272,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
   {
     if(strcmp(model["Model"].as<const char*>(), uploadDoc["Model"].as<const char*>()) == 0)
     {
-      Serial.printf("Found existing Model: %s\n", model["Model"].as<const char*>());
+      mqttSerial.printf("Found existing Model: %s\n", model["Model"].as<const char*>());
 
       newModel = false;
 
@@ -281,7 +281,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
       {
         if(strcmp(kv.key().c_str(), uploadDoc["Language"].as<const char*>()) == 0)
         {
-          Serial.printf("Found existing Model file: %s\n", kv.key().c_str());
+          mqttSerial.printf("Found existing Model file: %s\n", kv.key().c_str());
           fsFilename = kv.value().as<const char*>();
           existingLanguage = true;
           break;
@@ -290,7 +290,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
 
       if(!existingLanguage)
       {
-        Serial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"].as<const char*>());
+        mqttSerial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"].as<const char*>());
         model["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
       }
     }
@@ -298,7 +298,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
 
   if(newModel)
   {
-    Serial.printf("Found new Model: %s\n", uploadDoc["Model"].as<const char*>());
+    mqttSerial.printf("Found new Model: %s\n", uploadDoc["Model"].as<const char*>());
 
     JsonObject newModelObect = modelsDocArr.createNestedObject();
     newModelObect["Model"] = uploadDoc["Model"].as<const char*>();
@@ -323,7 +323,7 @@ void onUploadConfigFile(AsyncWebServerRequest *request)
   }
 
   String fsFilename = lastUploadFileName;
-  Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
+  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename);
 
   if(LittleFS.exists(CONFIG_FILE))
   {
@@ -393,8 +393,8 @@ void onLoadModel(AsyncWebServerRequest *request)
 
   String modelFile = request->getParam("modelFile", true)->value();
 
-  Serial.print("Found model file: ");
-  Serial.println(modelFile);
+  mqttSerial.print("Found model file: ");
+  mqttSerial.println(modelFile);
 
   if(!LittleFS.exists(modelFile))
   {
@@ -415,8 +415,8 @@ void onLoadCommand(AsyncWebServerRequest *request)
 
   String commandFile = request->getParam("commandFile", true)->value();
 
-  Serial.print("Found command file: ");
-  Serial.println(commandFile);
+  mqttSerial.print("Found command file: ");
+  mqttSerial.println(commandFile);
 
   if(!LittleFS.exists(commandFile))
   {
@@ -713,7 +713,7 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
   //Upload handler chunks in data
   if (!index)
   {
-    Serial.print("Start Web OTA Update - MD5: ");
+    mqttSerial.print("Start Web OTA Update - MD5: ");
 
     if(!request->hasParam("MD5", true))
     {
@@ -727,7 +727,7 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
       return request->send(400, "text/plain", "MD5 parameter invalid");
     }
 
-    Serial.println(md5);
+    mqttSerial.println(md5);
 
     #if defined(ESP8266)
         int cmd = (filename == "filesystem") ? U_FS : U_FLASH;
@@ -753,16 +753,16 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
     {
         return request->send(400, "text/plain", "OTA could not begin");
     }
-    Serial.print(".");
+    mqttSerial.print(".");
   }
 
   if (final)
   { // if the final flag is set then this is the last frame of data
-    Serial.print("\n--> Update finished!\n");
+    mqttSerial.print("\n--> Update finished!\n");
     webOTAIsBusy = false;
     if (!Update.end(true))
     { //true to set the size to the current progress
-      Update.printError(Serial);
+      Update.printError(mqttSerial);
       return request->send(400, "text/plain", "Could not end OTA");
     }
   }
@@ -777,7 +777,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
   }
 
   String fsFilename = lastUploadFileName;
-  Serial.printf("Found LittleFS Filename: %s\n", fsFilename);
+  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename);
 
   File canCommandsFile = LittleFS.open(CAN_COMMANDS_FILE, FILE_READ);
   DynamicJsonDocument canCommandsDoc(MODELS_DOC_SIZE);
@@ -795,7 +795,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
   {
     if(strcmp(canCommands["Model"].as<const char*>(), uploadDoc["Model"].as<const char*>()) == 0)
     {
-      Serial.printf("Found existing Model: %s\n", canCommands["Model"].as<const char*>());
+      mqttSerial.printf("Found existing Model: %s\n", canCommands["Model"].as<const char*>());
 
       newModel = false;
 
@@ -804,7 +804,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
       {
         if(strcmp(kv.key().c_str(), uploadDoc["Language"].as<const char*>()) == 0)
         {
-          Serial.printf("Found existing Model file: %s\n", kv.key().c_str());
+          mqttSerial.printf("Found existing Model file: %s\n", kv.key().c_str());
           fsFilename = kv.value().as<const char*>();
           existingLanguage = true;
           break;
@@ -813,7 +813,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
 
       if(!existingLanguage)
       {
-        Serial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"].as<const char*>());
+        mqttSerial.printf("add new language to existing Model file: %s\n", uploadDoc["Language"].as<const char*>());
         canCommands["Files"][uploadDoc["Language"].as<const char *>()] = fsFilename;
       }
     }
@@ -821,7 +821,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
 
   if(newModel)
   {
-    Serial.printf("Found new Model: %s\n", uploadDoc["Model"].as<const char*>());
+    mqttSerial.printf("Found new Model: %s\n", uploadDoc["Model"].as<const char*>());
 
     JsonObject newModelObect = canCommandsDocArr.createNestedObject();
     newModelObect["Model"] = uploadDoc["Model"].as<const char*>();

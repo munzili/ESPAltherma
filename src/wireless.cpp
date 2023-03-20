@@ -51,7 +51,7 @@ void setup_wifi()
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
-    Serial.print(".");
+    mqttSerial.print(".");
     if (i++ == 100)
     {
       esp_restart();

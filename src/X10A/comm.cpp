@@ -60,14 +60,14 @@ bool queryRegistry(RegistryBuffer *registryBuffer)
 
   if (registryBuffer->CRC != registryBuffer->Buffer[len - 1])
   {
-    Serial.println("Wrong CRC!");
+    mqttSerial.println("Wrong CRC!");
     mqttSerial.printf("ERROR: Wrong CRC on register 0x%02x!", registryBuffer->RegistryID);
-    Serial.printf("Calculated 0x%2x but got 0x%2x\n", registryBuffer->CRC, registryBuffer->Buffer[len - 1]);
+    mqttSerial.printf("Calculated 0x%2x but got 0x%2x\n", registryBuffer->CRC, registryBuffer->Buffer[len - 1]);
     return false;
   }
   else
   {
-    Serial.println(".. CRC OK!");
+    mqttSerial.println(".. CRC OK!");
     registryBuffer->Success = true;
     return true;
   }

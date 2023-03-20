@@ -15,10 +15,10 @@ void webuiScanRegister()
 
   bool serialX10AWasInited = SerialX10A;
 
-  Serial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", webuiScanRegisterConfig.PinRx, webuiScanRegisterConfig.PinTx);
-  Serial.println("Waiting for registry scan to finish...");
+  mqttSerial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", webuiScanRegisterConfig.PinRx, webuiScanRegisterConfig.PinTx);
+  mqttSerial.println("Waiting for registry scan to finish...");
 
-  Serial.println("Starting registry scan...");
+  mqttSerial.println("Starting registry scan...");
 
   X10AInit(webuiScanRegisterConfig.PinRx, webuiScanRegisterConfig.PinTx);
 
@@ -26,7 +26,7 @@ void webuiScanRegister()
   deserializeJson(modelsDoc, webuiScanRegisterConfig.Params);
   JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
 
-  Serial.printf("Creating labelDefs %i\n", modelsDocArr.size());
+  mqttSerial.printf("Creating labelDefs %i\n", modelsDocArr.size());
 
   size_t labelsSize = modelsDocArr.size();
   ParameterDef **labelsToLoad = new ParameterDef*[labelsSize];
@@ -49,7 +49,7 @@ void webuiScanRegister()
 
     if (!contains(tempRegistryIDs, labelsSize, label.registryID))
     {
-      Serial.printf("Adding registry 0x%02x to be queried.\n", label.registryID);
+      mqttSerial.printf("Adding registry 0x%02x to be queried.\n", label.registryID);
       tempRegistryIDs[loadRegistryBufferSize++] = label.registryID;
     }
   }
@@ -70,7 +70,7 @@ void webuiScanRegister()
     return;
   }
 
-  Serial.println("Fetching Values");
+  mqttSerial.println("Fetching Values");
 
   //Querying all registries and store results
   for (size_t i = 0; i < loadRegistryBufferSize; i++)
@@ -78,7 +78,7 @@ void webuiScanRegister()
     uint8_t tries = 0;
     while (tries++ < 3 && !queryRegistry(&loadRegistryBuffers[i]))
     {
-      Serial.println("Retrying...");
+      mqttSerial.println("Retrying...");
       delay(1000);
     }
   }
@@ -100,7 +100,7 @@ void webuiScanRegister()
     }
   }
 
-  Serial.println("Returning Values");
+  mqttSerial.println("Returning Values");
 
   DynamicJsonDocument resultDoc(labelsSize*JSON_OBJECT_SIZE(2));
   JsonArray obj = resultDoc.to<JsonArray>();
@@ -117,7 +117,7 @@ void webuiScanRegister()
 
   if(serialX10AWasInited)
   {
-    Serial.println("Restoring original X10A connection");
+    mqttSerial.println("Restoring original X10A connection");
     X10AInit(config->PIN_RX, config->PIN_TX);
   }
   else
@@ -125,7 +125,7 @@ void webuiScanRegister()
     X10AEnd();
   }
 
-  Serial.println("Finished registry scan");
+  mqttSerial.println("Finished registry scan");
 
   serializeJson(resultDoc, valueLoadResponse);
 

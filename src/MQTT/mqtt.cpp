@@ -40,11 +40,11 @@ void reconnect()
   int i = 0;
   while (!client.connected())
   {
-    Serial.print("Attempting MQTT connection...\n");
+    mqttSerial.print("Attempting MQTT connection...\n");
 
     if (client.connect("ESPAltherma-dev", config->MQTT_USERNAME.c_str(), config->MQTT_PASSWORD.c_str(), MQTT_lwt, 0, true, "Offline"))
     {
-      Serial.println("connected!");
+      mqttSerial.println("connected!");
       client.publish("homeassistant/sensor/espAltherma/config", "{\"name\":\"AlthermaSensors\",\"stat_t\":\"~/STATESENS\",\"avty_t\":\"~/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"espaltherma\",\"device\":{\"identifiers\":[\"ESPAltherma\"]}, \"~\":\"espaltherma\",\"json_attr_t\":\"~/ATTR\"}", true);
       client.publish(MQTT_lwt, "Online", true);
       client.publish("homeassistant/switch/espAltherma/config", "{\"name\":\"Altherma\",\"cmd_t\":\"~/POWER\",\"stat_t\":\"~/STATE\",\"pl_off\":\"OFF\",\"pl_on\":\"ON\",\"~\":\"espaltherma\"}", true);
@@ -60,13 +60,13 @@ void reconnect()
     }
     else
     {
-      Serial.printf("failed, rc=%d, try again in 5 seconds", client.state());
+      mqttSerial.printf("failed, rc=%d, try again in 5 seconds", client.state());
       unsigned long start = millis();
       while (millis() < start + 5000) { }
 
       if (i++ == 100)
       {
-        Serial.printf("Tried for 500 sec, rebooting now.");
+        mqttSerial.printf("Tried for 500 sec, rebooting now.");
         esp_restart();
       }
     }
@@ -101,7 +101,7 @@ void callbackTherm(byte *payload, unsigned int length)
   }
   else
   {
-    Serial.printf("Unknown message: %s\n", payload);
+    mqttSerial.printf("Unknown message: %s\n", payload);
   }
 }
 
@@ -116,7 +116,7 @@ void callbackSg(byte *payload, unsigned int length)
     digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
     client.publish("espaltherma/sg/state", "0");
-    Serial.println("Set SG mode to 0 - Normal operation");
+    mqttSerial.println("Set SG mode to 0 - Normal operation");
   }
   else if (payload[0] == '1')
   {
@@ -124,7 +124,7 @@ void callbackSg(byte *payload, unsigned int length)
     digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_ACTIVE_STATE);
     client.publish("espaltherma/sg/state", "1");
-    Serial.println("Set SG mode to 1 - Forced OFF");
+    mqttSerial.println("Set SG mode to 1 - Forced OFF");
   }
   else if (payload[0] == '2')
   {
@@ -132,7 +132,7 @@ void callbackSg(byte *payload, unsigned int length)
     digitalWrite(config->PIN_SG1, SG_RELAY_ACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
     client.publish("espaltherma/sg/state", "2");
-    Serial.println("Set SG mode to 2 - Recommended ON");
+    mqttSerial.println("Set SG mode to 2 - Recommended ON");
   }
   else if (payload[0] == '3')
   {
@@ -140,17 +140,17 @@ void callbackSg(byte *payload, unsigned int length)
     digitalWrite(config->PIN_SG1, SG_RELAY_ACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_ACTIVE_STATE);
     client.publish("espaltherma/sg/state", "3");
-    Serial.println("Set SG mode to 3 - Forced ON");
+    mqttSerial.println("Set SG mode to 3 - Forced ON");
   }
   else
   {
-    Serial.printf("Unknown message: %s\n", payload);
+    mqttSerial.printf("Unknown message: %s\n", payload);
   }
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  Serial.printf("Message arrived [%s] : %s\n", topic, payload);
+  mqttSerial.printf("Message arrived [%s] : %s\n", topic, payload);
 
   if (strcmp(topic, "espaltherma/POWER") == 0)
   {
@@ -162,6 +162,6 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
   else
   {
-    Serial.printf("Unknown topic: %s\n", topic);
+    mqttSerial.printf("Unknown topic: %s\n", topic);
   }
 }
