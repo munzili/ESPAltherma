@@ -23,6 +23,10 @@
 
 extern PubSubClient client;
 
+void initMQTT();
+
+void updateValues(ParameterDef *labelDef);
+
 void sendValues();
 
 void reconnect();

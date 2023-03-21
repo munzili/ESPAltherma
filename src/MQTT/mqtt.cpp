@@ -15,6 +15,42 @@ String publishPowerTopic = "";
 String publishAttrTopic = "";
 String publishLWTTopic = "";
 
+void initMQTT()
+{
+  client.setServer(config->MQTT_SERVER.c_str(), config->MQTT_PORT);
+  client.setBufferSize(MAX_MSG_SIZE); // to support large json message
+  client.setCallback(callback);
+}
+
+//Converts to string and add the value to the JSON message
+void updateValues(ParameterDef *labelDef)
+{
+  bool alpha = false;
+  for (size_t j = 0; j < strlen(labelDef->asString); j++)
+  {
+    char c = labelDef->asString[j];
+    if (!isdigit(c) && c!='.')
+    {
+      alpha = true;
+      break;
+    }
+  }
+
+  if(config->MQTT_USE_ONETOPIC)
+  {
+    client.publish((config->MQTT_ONETOPIC_NAME + labelDef->label).c_str(), labelDef->asString);
+  }
+
+  if(alpha)
+  {
+    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":\"%s\",", labelDef->label, labelDef->asString);
+  }
+  else //number, no quotes
+  {
+    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":%s,", labelDef->label, labelDef->asString);
+  }
+}
+
 void sendValues()
 {
   mqttSerial.printf("Sending values in MQTT.\n");
@@ -66,7 +102,12 @@ void reconnect()
   {
     mqttSerial.print("Attempting MQTT connection...\n");
 
-    if (client.connect("ESPAltherma-dev", config->MQTT_USERNAME.c_str(), config->MQTT_PASSWORD.c_str(), publishLWTTopic.c_str(), 0, true, "Offline"))
+    String id = "ESPAltherma-";
+    id += WiFi.macAddress().substring(6);
+
+    mqttSerial.println(id);
+
+    if (client.connect(id.c_str(), config->MQTT_USERNAME.c_str(), config->MQTT_PASSWORD.c_str(), publishLWTTopic.c_str(), 0, true, "Offline"))
     {
       mqttSerial.println("connected!");
 
@@ -224,10 +265,19 @@ void callbackSg(byte *payload, unsigned int length)
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
+  mqttSerial.println("TESTTEST");
+  mqttSerial.println(subscribeHeatingTopic);
+  mqttSerial.println(topic);
+  mqttSerial.println(length);
+  for (int i=0;i<length;i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
   mqttSerial.printf("Message arrived [%s] : %s\n", topic, payload);
 
   if (subscribeHeatingTopic == topic)
-  {
+  {mqttSerial.println("TESTTEST2");
     callbackHeating(payload, length);
   }
   else if (subscribeCoolingTopic == topic)

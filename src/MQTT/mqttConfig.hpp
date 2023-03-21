@@ -3,7 +3,7 @@
 
 #include "Config/config.hpp"
 
-#define MAX_MSG_SIZE 4096//max size of the json message sent in mqtt
+#define MAX_MSG_SIZE 4096 // max size of the json message sent in mqtt
 
 extern char jsonbuff[MAX_MSG_SIZE];
 extern bool SG_RELAY_ACTIVE_STATE;

@@ -7,35 +7,6 @@ bool doRestartInStandaloneWifi = false;
 
 uint16_t loopcount = 0;
 
-//Converts to string and add the value to the JSON message
-void updateValues(ParameterDef *labelDef)
-{
-  bool alpha = false;
-  for (size_t j = 0; j < strlen(labelDef->asString); j++)
-  {
-    char c = labelDef->asString[j];
-    if (!isdigit(c) && c!='.')
-    {
-      alpha = true;
-      break;
-    }
-  }
-
-  if(config->MQTT_USE_ONETOPIC)
-  {
-    client.publish((config->MQTT_ONETOPIC_NAME + labelDef->label).c_str(), labelDef->asString);
-  }
-
-  if (alpha)
-  {
-    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":\"%s\",", labelDef->label, labelDef->asString);
-  }
-  else //number, no quotes
-  {
-    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":%s,", labelDef->label, labelDef->asString);
-  }
-}
-
 void extraLoop()
 {
   while(webOTAIsBusy) {}
@@ -90,15 +61,6 @@ void initRegistries()
   }
 
   delete[] tempRegistryIDs;
-
-  if (registryBufferSize == 0)
-  {
-    mqttSerial.printf("ERROR - No parameter definition selected in the config. Stopping.\n");
-    while (true)
-    {
-      extraLoop();
-    }
-  }
 }
 
 void setupScreen(){
@@ -193,9 +155,8 @@ void setup()
   pinMode(config->PIN_ENABLE_CONFIG, INPUT_PULLUP);
   attachInterrupt(config->PIN_ENABLE_CONFIG, restartInStandaloneWifi, FALLING);
 
-  client.setServer(config->MQTT_SERVER.c_str(), config->MQTT_PORT);
-  client.setBufferSize(MAX_MSG_SIZE); //to support large json message
-  client.setCallback(callback);
+  initMQTT();
+
   mqttSerial.print("Connecting to MQTT server...\n");
   mqttSerial.begin(&client, (config->MQTT_TOPIC_NAME + "log").c_str());
   reconnect();
