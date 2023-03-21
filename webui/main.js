@@ -130,7 +130,8 @@ async function resetToDefaults()
     document.getElementById('can_speed_kbps').value = boardDefaults['can_speed_kbps'];
     document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config'];
     document.getElementById('frequency').value = boardDefaults['frequency'];
-    document.getElementById('mqtt_onetopic').value = boardDefaults['mqtt_onetopic'];
+    document.getElementById('mqtt_topic_name').value = boardDefaults['mqtt_topic_name'];
+    document.getElementById('mqtt_onetopic_name').value = boardDefaults['mqtt_onetopic_name'];
     document.getElementById('mqtt_port').value = boardDefaults['mqtt_port'];
 }
 
@@ -168,12 +169,13 @@ async function loadConfig()
         document.getElementById('mqtt_server').value = data['MQTT_SERVER'];
         document.getElementById('mqtt_username').value = data['MQTT_USERNAME'];
         document.getElementById('mqtt_password').value = data['MQTT_PASSWORD'];
+        document.getElementById('mqtt_topic_name').value = data['MQTT_TOPIC_NAME'];
         document.getElementById('mqtt_jsontable').checked = data['MQTT_USE_JSONTABLE'];
         document.getElementById('mqtt_use_onetopic').checked = data['MQTT_USE_ONETOPIC'];
 
         if(data['MQTT_USE_ONETOPIC'])
         {
-            document.getElementById('mqtt_onetopic').value = data['MQTT_ONETOPIC_NAME'];
+            document.getElementById('mqtt_onetopic_name').value = data['MQTT_ONETOPIC_NAME'];
             show('onetopic');
         }
 
@@ -360,11 +362,14 @@ async function sendConfigData(event)
     const mqtt_username = document.getElementById('mqtt_username');
     mqtt_username.setAttribute('aria-invalid', mqtt_username.value == '');
 
+    const mqtt_topic_name = document.getElementById('mqtt_topic_name');
+    mqtt_topic_name.setAttribute('aria-invalid', mqtt_topic_name.value == '' || !ValidateMQTTTopic(mqtt_topic_name.value));
+
     const mqtt_use_onetopic = document.getElementById('mqtt_use_onetopic');
     if(mqtt_use_onetopic.checked)
     {
-        const mqtt_onetopic = document.getElementById('mqtt_onetopic');
-        mqtt_onetopic.setAttribute('aria-invalid', mqtt_onetopic.value == '' || !ValidateMQTTTopic(mqtt_onetopic.value));
+        const mqtt_onetopic_name = document.getElementById('mqtt_onetopic_name');
+        mqtt_onetopic_name.setAttribute('aria-invalid', mqtt_onetopic_name.value == '' || !ValidateMQTTTopic(mqtt_onetopic_name.value));
     }
     else
     {

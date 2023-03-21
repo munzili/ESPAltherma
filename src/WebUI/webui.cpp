@@ -80,7 +80,8 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"can_speed_kbps\": 20,"
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
-        "\"mqtt_onetopic\": \"espaltherma/OneATTR/\","
+        "\"mqtt_topic_name\": \"espaltherma/\","
+        "\"mqtt_onetopic_name\": \"OneATTR/\","
         "\"mqtt_port\": 1883"
       "}"
     "}";
@@ -127,7 +128,8 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"can_speed_kbps\": 20,"
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
-        "\"mqtt_onetopic\": \"espaltherma/OneATTR/\","
+        "\"mqtt_topic_name\": \"espaltherma/\","
+        "\"mqtt_onetopic_name\": \"OneATTR/\","
         "\"mqtt_port\": 1883"
       "}"
     "}";
@@ -485,13 +487,13 @@ void onSaveConfig(AsyncWebServerRequest *request)
     }
   }
 
-  if(!request->hasParam("mqtt_server", true) || !request->hasParam("mqtt_username", true) || !request->hasParam("mqtt_password", true) || !request->hasParam("mqtt_port", true) || !request->hasParam("frequency", true))
+  if(!request->hasParam("mqtt_server", true) || !request->hasParam("mqtt_username", true) || !request->hasParam("mqtt_password", true) || !request->hasParam("mqtt_topic_name", true) || !request->hasParam("mqtt_port", true) || !request->hasParam("frequency", true))
   {
     request->send(422, "text/plain", "Missing parameter(s) for MQTT!");
     return;
   }
 
-  if(request->hasParam("mqtt_use_onetopic", true) && !request->hasParam("mqtt_onetopic", true))
+  if(request->hasParam("mqtt_use_onetopic", true) && !request->hasParam("mqtt_onetopic_name", true))
   {
     request->send(422, "text/plain", "Missing parameter(s) for MQTT onetopic");
     return;
@@ -549,16 +551,17 @@ void onSaveConfig(AsyncWebServerRequest *request)
   config->MQTT_SERVER = (char *)request->getParam("mqtt_server", true)->value().c_str();
   config->MQTT_USERNAME = (char *)request->getParam("mqtt_username", true)->value().c_str();
   config->MQTT_PASSWORD = (char *)request->getParam("mqtt_password", true)->value().c_str();
-  config->FREQUENCY = request->getParam("frequency", true)->value().toInt();
+  config->MQTT_TOPIC_NAME = (char *)request->getParam("mqtt_topic_name", true)->value().c_str();
   config->MQTT_USE_JSONTABLE = request->hasParam("mqtt_jsontable", true);
   config->MQTT_USE_ONETOPIC = request->hasParam("mqtt_use_onetopic", true);
 
   if(config->MQTT_USE_ONETOPIC)
   {
-    config->MQTT_ONETOPIC_NAME = (char *)request->getParam("mqtt_onetopic", true)->value().c_str();
+    config->MQTT_ONETOPIC_NAME = (char *)request->getParam("mqtt_onetopic_name", true)->value().c_str();
   }
 
   config->MQTT_PORT = request->getParam("mqtt_port", true)->value().toInt();
+  config->FREQUENCY = request->getParam("frequency", true)->value().toInt();
   config->PIN_RX = request->getParam("pin_rx", true)->value().toInt();
   config->PIN_TX = request->getParam("pin_tx", true)->value().toInt();
   config->PIN_HEATING = request->getParam("pin_heating", true)->value().toInt();

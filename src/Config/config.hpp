@@ -27,6 +27,7 @@ struct Config
     String MQTT_PASSWORD;
     bool MQTT_USE_JSONTABLE;
     bool MQTT_USE_ONETOPIC;
+    String MQTT_TOPIC_NAME;
     String MQTT_ONETOPIC_NAME;
     uint16_t MQTT_PORT;
     uint32_t FREQUENCY;

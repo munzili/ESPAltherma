@@ -96,6 +96,10 @@
         <label for="mqtt_password">MQTT Password:</label>
         <input type="password" id="mqtt_password" name="mqtt_password"/>
 
+        <label for="mqtt_topic_name">MQTT Topic Name:</label>
+        <input type="text" id="mqtt_topic_name" name="mqtt_topic_name"/>
+        <small>Needs to end with a slash</small>
+
         <label for="mqtt_jsontable" >
           <input type="checkbox" id="mqtt_jsontable" name="mqtt_jsontable" role="switch"/>
           MQTT use JSON Table
@@ -107,8 +111,8 @@
         </label>
 
         <article id="onetopic" class="hidden">
-          <label for="mqtt_onetopic">MQTT one Topic:</label>
-          <input type="text" id="mqtt_onetopic" name="mqtt_onetopic"/>
+          <label for="mqtt_onetopic_name">MQTT one Topic:</label>
+          <input type="text" id="mqtt_onetopic_name" name="mqtt_onetopic_name"/>
           <small>Needs to end with a slash</small>
         </article>
 

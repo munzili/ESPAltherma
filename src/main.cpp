@@ -197,7 +197,7 @@ void setup()
   client.setBufferSize(MAX_MSG_SIZE); //to support large json message
   client.setCallback(callback);
   mqttSerial.print("Connecting to MQTT server...\n");
-  mqttSerial.begin(&client, "espaltherma/log");
+  mqttSerial.begin(&client, (config->MQTT_TOPIC_NAME + "log").c_str());
   reconnect();
   mqttSerial.println("OK!");
 

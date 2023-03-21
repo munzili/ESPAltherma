@@ -60,6 +60,7 @@ void readConfig()
     config->MQTT_SERVER = (char *)configDoc["MQTT_SERVER"].as<const char*>();
     config->MQTT_USERNAME = (char *)configDoc["MQTT_USERNAME"].as<const char*>();
     config->MQTT_PASSWORD = (char *)configDoc["MQTT_PASSWORD"].as<const char*>();
+    config->MQTT_TOPIC_NAME = (char *)configDoc["MQTT_TOPIC_NAME"].as<const char*>();
     config->MQTT_USE_JSONTABLE = configDoc["MQTT_USE_JSONTABLE"].as<const bool>();
     config->MQTT_USE_ONETOPIC = configDoc["MQTT_USE_ONETOPIC"].as<const bool>();
 
@@ -179,6 +180,7 @@ void saveConfig()
     configDoc["MQTT_SERVER"] = config->MQTT_SERVER;
     configDoc["MQTT_USERNAME"] = config->MQTT_USERNAME;
     configDoc["MQTT_PASSWORD"] = config->MQTT_PASSWORD;
+    configDoc["MQTT_TOPIC_NAME"] = config->MQTT_TOPIC_NAME;
     configDoc["MQTT_USE_JSONTABLE"] = config->MQTT_USE_JSONTABLE;
     configDoc["MQTT_USE_ONETOPIC"] = config->MQTT_USE_ONETOPIC;
 

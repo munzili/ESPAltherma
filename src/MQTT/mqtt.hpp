@@ -6,8 +6,17 @@
 #include "mqttConfig.hpp"
 #include "persistence.hpp"
 
-#define MQTT_attr "espaltherma/ATTR"
-#define MQTT_lwt "espaltherma/LWT"
+#define MQTT_TOPIC_SUB_HEATING  "SET/HEATING"
+#define MQTT_TOPIC_SUB_COOLING  "SET/COOLING"
+#define MQTT_TOPIC_SUB_SG       "SET/SG"
+#define MQTT_TOPIC_SUB_POWER    "SET/POWER"
+
+#define MQTT_TOPIC_PUB_HEATING  "STATE/HEATING"
+#define MQTT_TOPIC_PUB_COOLING  "STATE/COOLING"
+#define MQTT_TOPIC_PUB_SG       "STATE/SG"
+#define MQTT_TOPIC_PUB_POWER    "STATE/POWER"
+#define MQTT_TOPIC_PUB_ATTR     "ATTR"
+#define MQTT_TOPIC_PUB_LWT      "LWT"
 
 #define EEPROM_CHK 1
 #define EEPROM_STATE 0

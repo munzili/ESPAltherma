@@ -3,6 +3,18 @@
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+String subscribeHeatingTopic = "";
+String subscribeCoolingTopic = "";
+String subscribeSGTopic = "";
+String subscribePowerTopic = "";
+
+String publishHeatingTopic = "";
+String publishCoolingTopic = "";
+String publishSGTopic = "";
+String publishPowerTopic = "";
+String publishAttrTopic = "";
+String publishLWTTopic = "";
+
 void sendValues()
 {
   mqttSerial.printf("Sending values in MQTT.\n");
@@ -19,7 +31,7 @@ void sendValues()
   if(config->MQTT_USE_JSONTABLE)
     strcat(jsonbuff,"]");
 
-  client.publish(MQTT_attr, jsonbuff);
+  client.publish(publishAttrTopic.c_str(), jsonbuff);
 
   if(config->MQTT_USE_JSONTABLE)
     strcpy(jsonbuff, "[{\0");
@@ -30,11 +42,23 @@ void sendValues()
 void reconnect()
 {
   //in case loopback as server is set, skip connecting (debug purpose)
-  if(config->MQTT_SERVER.compareTo("127.0.0.1") == 0 || config->MQTT_SERVER.compareTo( "localhost") == 0)
+  if(config->MQTT_SERVER.compareTo("127.0.0.1") == 0 || config->MQTT_SERVER.compareTo("localhost") == 0)
   {
     mqttSerial.print("Found loopback MQTT server, skiping connection...\n");
     return;
   }
+
+  subscribeHeatingTopic = config->MQTT_TOPIC_NAME + MQTT_TOPIC_SUB_HEATING;
+  subscribeCoolingTopic = config->MQTT_TOPIC_NAME + MQTT_TOPIC_SUB_COOLING;
+  subscribeSGTopic      = config->MQTT_TOPIC_NAME + MQTT_TOPIC_SUB_SG;
+  subscribePowerTopic   = config->MQTT_TOPIC_NAME + MQTT_TOPIC_SUB_POWER;
+
+  publishHeatingTopic   = config->MQTT_TOPIC_NAME + MQTT_TOPIC_PUB_HEATING;
+  publishCoolingTopic   = config->MQTT_TOPIC_NAME + MQTT_TOPIC_PUB_COOLING;
+  publishSGTopic        = config->MQTT_TOPIC_NAME + MQTT_TOPIC_PUB_SG;
+  publishPowerTopic     = config->MQTT_TOPIC_NAME + MQTT_TOPIC_PUB_POWER;
+  publishAttrTopic      = config->MQTT_TOPIC_NAME + MQTT_TOPIC_PUB_ATTR;
+  publishLWTTopic       = config->MQTT_TOPIC_NAME + MQTT_TOPIC_PUB_LWT;
 
   // Loop until we're reconnected
   int i = 0;
@@ -42,23 +66,34 @@ void reconnect()
   {
     mqttSerial.print("Attempting MQTT connection...\n");
 
-    if (client.connect("ESPAltherma-dev", config->MQTT_USERNAME.c_str(), config->MQTT_PASSWORD.c_str(), MQTT_lwt, 0, true, "Offline"))
+    if (client.connect("ESPAltherma-dev", config->MQTT_USERNAME.c_str(), config->MQTT_PASSWORD.c_str(), publishLWTTopic.c_str(), 0, true, "Offline"))
     {
       mqttSerial.println("connected!");
+
+      // TODO Update homeassistant config to publish correct informations
       client.publish("homeassistant/sensor/espAltherma/config", "{\"name\":\"AlthermaSensors\",\"stat_t\":\"~/STATESENS\",\"avty_t\":\"~/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"espaltherma\",\"device\":{\"identifiers\":[\"ESPAltherma\"]}, \"~\":\"espaltherma\",\"json_attr_t\":\"~/ATTR\"}", true);
-      client.publish(MQTT_lwt, "Online", true);
+      client.publish(publishLWTTopic.c_str(), "Online", true);
       client.publish("homeassistant/switch/espAltherma/config", "{\"name\":\"Altherma Heating\",\"cmd_t\":\"~/STATE/HEATING\",\"stat_t\":\"~/STATE\",\"pl_off\":\"OFF\",\"pl_on\":\"ON\",\"~\":\"espaltherma\"}", true);
       client.publish("homeassistant/switch/espAltherma/config", "{\"name\":\"Altherma Cooling\",\"cmd_t\":\"~/STATE/COOLING\",\"stat_t\":\"~/STATE\",\"pl_off\":\"OFF\",\"pl_on\":\"ON\",\"~\":\"espaltherma\"}", true);
       client.publish("homeassistant/switch/espAltherma/config", "{\"name\":\"Altherma SmartGrid\",\"cmd_t\":\"~/STATE/SG\",\"stat_t\":\"~/STATE\",\"pl_off\":\"OFF\",\"pl_on\":\"ON\",\"~\":\"espaltherma\"}", true);
 
       // Subscribe
-      client.subscribe("espaltherma/SET/HEATING");
-      client.subscribe("espaltherma/SET/COOLING");
+      // TODO Check if this subscribe could only be done once. will PubSubClient keep information after reconnect? Is the subscribtion added twice/multiple in this case?
+      client.subscribe(subscribeHeatingTopic.c_str());
+      client.subscribe(subscribeCoolingTopic.c_str());
+      client.subscribe(subscribePowerTopic.c_str());
+
+      mqttSerial.println("Subscribed to following topics:");
+      mqttSerial.println(subscribeHeatingTopic);
+      mqttSerial.println(subscribeCoolingTopic);
+      mqttSerial.println(subscribePowerTopic);
 
       if(config->SG_ENABLED)
       {
         client.publish("homeassistant/sg/espAltherma/config", "{\"name\":\"AlthermaSmartGrid\",\"cmd_t\":\"~/set\",\"stat_t\":\"~/state\",\"~\":\"espaltherma/sg\"}", true);
-        client.subscribe("espaltherma/SET/SG");
+        client.subscribe(subscribeSGTopic.c_str());
+
+        mqttSerial.println(subscribeSGTopic);
       }
     }
     else
@@ -86,17 +121,27 @@ void callbackHeating(byte *payload, unsigned int length)
   { //turn off
     digitalWrite(config->PIN_HEATING, HIGH);
     savePersistence();
-    client.publish("espaltherma/STATE/HEATING", "OFF");
-    mqttSerial.println("Turned OFF");
+    client.publish(publishHeatingTopic.c_str(), "OFF");
+    mqttSerial.println("Heating turned OFF");
   }
   else if (payload[1] == 'N')
   { //turn on
     digitalWrite(config->PIN_HEATING, LOW);
     savePersistence();
-    client.publish("espaltherma/STATE/HEATING", "ON");
-    mqttSerial.println("Turned ON");
+    client.publish(publishHeatingTopic.c_str(), "ON");
+    mqttSerial.println("Heating turned ON");
   }
-  else if (payload[0] == 'R')//R(eset/eboot)
+  else
+  {
+    mqttSerial.printf("Unknown message: %s\n", payload);
+  }
+}
+
+void callbackPower(byte *payload, unsigned int length)
+{
+  payload[length] = '\0';
+
+  if (payload[0] == 'R')//R(eset/eboot)
   {
     mqttSerial.println("Rebooting");
     delay(100);
@@ -118,21 +163,15 @@ void callbackCooling(byte *payload, unsigned int length)
   { //turn off
     digitalWrite(config->PIN_COOLING, HIGH);
     savePersistence();
-    client.publish("espaltherma/STATE/COOLING", "OFF");
-    mqttSerial.println("Turned OFF");
+    client.publish(publishCoolingTopic.c_str(), "OFF");
+    mqttSerial.println("Cooling turned OFF");
   }
   else if (payload[1] == 'N')
   { //turn on
     digitalWrite(config->PIN_COOLING, LOW);
     savePersistence();
-    client.publish("espaltherma/STATE/COOLING", "ON");
-    mqttSerial.println("Turned ON");
-  }
-  else if (payload[0] == 'R')//R(eset/eboot)
-  {
-    mqttSerial.println("Rebooting");
-    delay(100);
-    esp_restart();
+    client.publish(publishCoolingTopic.c_str(), "ON");
+    mqttSerial.println("Cooling turned ON");
   }
   else
   {
@@ -150,7 +189,7 @@ void callbackSg(byte *payload, unsigned int length)
     // Set SG 0 mode => SG1 = INACTIVE, SG2 = INACTIVE
     digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
-    client.publish("espaltherma/STATE/SG", "0");
+    client.publish(publishSGTopic.c_str(), "0");
     mqttSerial.println("Set SG mode to 0 - Normal operation");
   }
   else if (payload[0] == '1')
@@ -158,7 +197,7 @@ void callbackSg(byte *payload, unsigned int length)
     // Set SG 1 mode => SG1 = INACTIVE, SG2 = ACTIVE
     digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_ACTIVE_STATE);
-    client.publish("espaltherma/STATE/SG", "1");
+    client.publish(publishSGTopic.c_str(), "1");
     mqttSerial.println("Set SG mode to 1 - Forced OFF");
   }
   else if (payload[0] == '2')
@@ -166,7 +205,7 @@ void callbackSg(byte *payload, unsigned int length)
     // Set SG 2 mode => SG1 = ACTIVE, SG2 = INACTIVE
     digitalWrite(config->PIN_SG1, SG_RELAY_ACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
-    client.publish("espaltherma/STATE/SG", "2");
+    client.publish(publishSGTopic.c_str(), "2");
     mqttSerial.println("Set SG mode to 2 - Recommended ON");
   }
   else if (payload[0] == '3')
@@ -174,7 +213,7 @@ void callbackSg(byte *payload, unsigned int length)
     // Set SG 3 mode => SG1 = ACTIVE, SG2 = ACTIVE
     digitalWrite(config->PIN_SG1, SG_RELAY_ACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_ACTIVE_STATE);
-    client.publish("espaltherma/STATE/SG", "3");
+    client.publish(publishSGTopic.c_str(), "3");
     mqttSerial.println("Set SG mode to 3 - Forced ON");
   }
   else
@@ -187,15 +226,19 @@ void callback(char *topic, byte *payload, unsigned int length)
 {
   mqttSerial.printf("Message arrived [%s] : %s\n", topic, payload);
 
-  if (strcmp(topic, "espaltherma/SET/HEATING") == 0)
+  if (subscribeHeatingTopic == topic)
   {
     callbackHeating(payload, length);
   }
-  else if (strcmp(topic, "espaltherma/SET/COOLING") == 0)
+  else if (subscribeCoolingTopic == topic)
   {
     callbackCooling(payload, length);
   }
-  else if (config->SG_ENABLED && strcmp(topic, "espaltherma/SET/SG") == 0)
+  else if (subscribePowerTopic == topic)
+  {
+    callbackPower(payload, length);
+  }
+  else if (config->SG_ENABLED && subscribeSGTopic == topic)
   {
     callbackSg(payload, length);
   }
