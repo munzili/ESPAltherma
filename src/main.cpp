@@ -158,7 +158,6 @@ void setup()
   initMQTT();
 
   mqttSerial.print("Connecting to MQTT server...\n");
-  mqttSerial.begin(&client, (config->MQTT_TOPIC_NAME + "log").c_str());
   reconnect();
   mqttSerial.println("OK!");
 

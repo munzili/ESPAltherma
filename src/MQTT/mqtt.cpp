@@ -265,19 +265,16 @@ void callbackSg(byte *payload, unsigned int length)
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  mqttSerial.println("TESTTEST");
-  mqttSerial.println(subscribeHeatingTopic);
-  mqttSerial.println(topic);
-  mqttSerial.println(length);
+  char payloadText[length+1];
   for (int i=0;i<length;i++) {
-    Serial.print((char)payload[i]);
+    payloadText[i] = (char)payload[i];
   }
-  Serial.println();
+  payloadText[length] = '\0';
 
-  mqttSerial.printf("Message arrived [%s] : %s\n", topic, payload);
+  mqttSerial.printf("Message arrived [%s] : %s\n", topic, payloadText);
 
   if (subscribeHeatingTopic == topic)
-  {mqttSerial.println("TESTTEST2");
+  {
     callbackHeating(payload, length);
   }
   else if (subscribeCoolingTopic == topic)

@@ -9,17 +9,8 @@
 
 class MQTTSerial: public Stream
 {
-private:
-    /* data */
-    PubSubClient* _client = nullptr;
-    char _topic[64];
-
 public:
-    inline void begin(PubSubClient* client, const char* topic)
-    {
-        _client=client;
-        strcpy(_topic,topic);
-    };
+    inline void begin() {};
 
     inline size_t write(uint8_t)
     {
@@ -28,7 +19,7 @@ public:
 
     inline int available(void)
     {
-        return _client->connected();
+        return 0;
     };
 
     inline int availableForWrite(void)
