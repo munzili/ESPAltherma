@@ -48,7 +48,7 @@ struct Config
     ParameterDef** PARAMETERS;
     size_t COMMANDS_LENGTH;
     CommandDef** COMMANDS;
-    char* WEBUI_SELECTION_VALUES;
+    String WEBUI_SELECTION_VALUES;
 
     ~Config();
 };

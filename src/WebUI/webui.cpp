@@ -126,7 +126,7 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"pin_can_rx\": 4,"
         "\"pin_can_tx\": 5,"
         "\"can_speed_kbps\": 20,"
-        "\"pin_enable_config\": 39,"
+        "\"pin_enable_config\": 27,"
         "\"frequency\": 30000,"
         "\"mqtt_topic_name\": \"espaltherma/\","
         "\"mqtt_onetopic_name\": \"OneATTR/\","
