@@ -3,7 +3,6 @@
 
 #include <PubSubClient.h>
 #include "Config/config.hpp"
-#include "mqttConfig.hpp"
 #include "persistence.hpp"
 
 #define MQTT_TOPIC_SUB_HEATING  "SET/HEATING"
@@ -21,9 +20,17 @@
 #define EEPROM_CHK 1
 #define EEPROM_STATE 0
 
+#define MAX_MSG_SIZE 4096 // max size of the json message sent in mqtt
+
+extern char jsonbuff[MAX_MSG_SIZE];
+extern bool SG_RELAY_ACTIVE_STATE;
+extern bool SG_RELAY_INACTIVE_STATE;
+
 extern PubSubClient client;
 
 void initMQTT();
+
+void createEmptyJSONBuffer();
 
 void updateValues(ParameterDef *labelDef);
 

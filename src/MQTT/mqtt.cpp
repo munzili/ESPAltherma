@@ -15,11 +15,28 @@ String publishPowerTopic = "";
 String publishAttrTopic = "";
 String publishLWTTopic = "";
 
+char jsonbuff[MAX_MSG_SIZE];
+bool SG_RELAY_ACTIVE_STATE;
+bool SG_RELAY_INACTIVE_STATE;
+
 void initMQTT()
 {
   client.setServer(config->MQTT_SERVER.c_str(), config->MQTT_PORT);
   client.setBufferSize(MAX_MSG_SIZE); // to support large json message
   client.setCallback(callback);
+
+  createEmptyJSONBuffer();
+
+  SG_RELAY_ACTIVE_STATE = config->SG_RELAY_HIGH_TRIGGER == true;
+  SG_RELAY_INACTIVE_STATE != SG_RELAY_ACTIVE_STATE;
+}
+
+void createEmptyJSONBuffer()
+{
+  if(config->MQTT_USE_JSONTABLE)
+    strcpy(jsonbuff, "[{\0");
+  else
+    strcpy(jsonbuff, "{\0");
 }
 
 //Converts to string and add the value to the JSON message
@@ -38,16 +55,16 @@ void updateValues(ParameterDef *labelDef)
 
   if(config->MQTT_USE_ONETOPIC)
   {
-    client.publish((config->MQTT_ONETOPIC_NAME + labelDef->label).c_str(), labelDef->asString);
+    client.publish((config->MQTT_TOPIC_NAME + config->MQTT_ONETOPIC_NAME + labelDef->label).c_str(), labelDef->asString);
   }
 
   if(alpha)
   {
-    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":\"%s\",", labelDef->label, labelDef->asString);
+    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":\"%s\",", labelDef->label.c_str(), labelDef->asString);
   }
   else //number, no quotes
   {
-    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":%s,", labelDef->label, labelDef->asString);
+    snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":%s,", labelDef->label.c_str(), labelDef->asString);
   }
 }
 
@@ -60,7 +77,9 @@ void sendValues()
   snprintf(jsonbuff + strlen(jsonbuff),MAX_MSG_SIZE - strlen(jsonbuff) , "\"%s\":\"%.3gV\",\"%s\":\"%gmA\",", "M5BatV", M5.Axp.GetBatVoltage(),"M5BatCur", M5.Axp.GetBatCurrent());
   snprintf(jsonbuff + strlen(jsonbuff),MAX_MSG_SIZE - strlen(jsonbuff) , "\"%s\":\"%.3gmW\",", "M5BatPwr", M5.Axp.GetBatPower());
 #endif
+  //String testString = "HAST DU ÖÄ Ü ä __ D " + strlen(jsonbuff);
   snprintf(jsonbuff + strlen(jsonbuff),MAX_MSG_SIZE - strlen(jsonbuff) , "\"%s\":\"%ddBm\",", "WifiRSSI", WiFi.RSSI());
+  //snprintf(jsonbuff + strlen(jsonbuff),MAX_MSG_SIZE - strlen(jsonbuff) , "TEST -- %s --,", testString.c_str());
 
   jsonbuff[strlen(jsonbuff) - 1] = '}';
 
@@ -69,10 +88,7 @@ void sendValues()
 
   client.publish(publishAttrTopic.c_str(), jsonbuff);
 
-  if(config->MQTT_USE_JSONTABLE)
-    strcpy(jsonbuff, "[{\0");
-  else
-    strcpy(jsonbuff, "{\0");
+  createEmptyJSONBuffer();
 }
 
 void reconnect()

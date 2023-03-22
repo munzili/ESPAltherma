@@ -108,7 +108,7 @@ void setup()
     WebUI_Init();
   }
 
-  initMQTTConfig(config);
+  initMQTT();
 
   setupScreen();
 
@@ -154,8 +154,6 @@ void setup()
 
   pinMode(config->PIN_ENABLE_CONFIG, INPUT_PULLUP);
   attachInterrupt(config->PIN_ENABLE_CONFIG, restartInStandaloneWifi, FALLING);
-
-  initMQTT();
 
   mqttSerial.print("Connecting to MQTT server...\n");
   reconnect();
