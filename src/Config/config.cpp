@@ -68,11 +68,16 @@ void readConfig()
     {
         config->MQTT_ONETOPIC_NAME = (char *)configDoc["MQTT_ONETOPIC_NAME"].as<const char*>();
     }
+
     config->MQTT_PORT = configDoc["MQTT_PORT"].as<uint16_t>();
     config->FREQUENCY = configDoc["FREQUENCY"].as<uint32_t>();
+    config->PIN_ENABLE_CONFIG = configDoc["PIN_ENABLE_CONFIG"].as<uint8_t>();
+    config->X10A_ENABLED = configDoc["X10A_ENABLED"].as<const bool>();
     config->PIN_RX = configDoc["PIN_RX"].as<uint8_t>();
     config->PIN_TX = configDoc["PIN_TX"].as<uint8_t>();
+    config->HEATING_ENABLED = configDoc["HEATING_ENABLED"].as<const bool>();
     config->PIN_HEATING = configDoc["PIN_HEATING"].as<uint8_t>();
+    config->COOLING_ENABLED = configDoc["COOLING_ENABLED"].as<const bool>();
     config->PIN_COOLING = configDoc["PIN_COOLING"].as<uint8_t>();
     config->SG_ENABLED = configDoc["SG_ENABLED"].as<const bool>();
     config->PIN_SG1 = configDoc["PIN_SG1"].as<uint8_t>();
@@ -82,7 +87,6 @@ void readConfig()
     config->PIN_CAN_RX = configDoc["PIN_CAN_RX"].as<uint8_t>();
     config->PIN_CAN_TX = configDoc["PIN_CAN_TX"].as<uint8_t>();
     config->CAN_SPEED_KBPS = configDoc["CAN_SPEED_KBPS"].as<uint8_t>();
-    config->PIN_ENABLE_CONFIG = configDoc["PIN_ENABLE_CONFIG"].as<uint8_t>();
 
     JsonArray parameters = configDoc["PARAMETERS"].as<JsonArray>();
     config->PARAMETERS_LENGTH = parameters.size();
@@ -191,9 +195,13 @@ void saveConfig()
 
     configDoc["MQTT_PORT"] = config->MQTT_PORT;
     configDoc["FREQUENCY"] = config->FREQUENCY;
+    configDoc["PIN_ENABLE_CONFIG"] = config->PIN_ENABLE_CONFIG;
+    configDoc["X10A_ENABLED"] = config->X10A_ENABLED;
     configDoc["PIN_RX"] = config->PIN_RX;
     configDoc["PIN_TX"] = config->PIN_TX;
+    configDoc["HEATING_ENABLED"] = config->HEATING_ENABLED;
     configDoc["PIN_HEATING"] = config->PIN_HEATING;
+    configDoc["COOLING_ENABLED"] = config->COOLING_ENABLED;
     configDoc["PIN_COOLING"] = config->PIN_COOLING;
     configDoc["SG_ENABLED"] = config->SG_ENABLED;
     configDoc["PIN_SG1"] = config->PIN_SG1;
@@ -203,7 +211,6 @@ void saveConfig()
     configDoc["PIN_CAN_TX"] = config->PIN_CAN_TX;
     configDoc["CAN_SPEED_KBPS"] = config->CAN_SPEED_KBPS;
     configDoc["SG_RELAY_HIGH_TRIGGER"] = config->SG_RELAY_HIGH_TRIGGER;
-    configDoc["PIN_ENABLE_CONFIG"] = config->PIN_ENABLE_CONFIG;
 
     JsonArray parameters = configDoc.createNestedArray("PARAMETERS");
     for(size_t i = 0; i < config->PARAMETERS_LENGTH; i++)

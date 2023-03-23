@@ -119,7 +119,7 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
       "\"Default\": {"
         "\"pin_rx\": 16,"
         "\"pin_tx\": 17,"
-        "\"pin_hearing\": 13,"
+        "\"pin_heating\": 13,"
         "\"pin_cooling\": 14,"
         "\"pin_sg1\": 32,"
         "\"pin_sg2\": 33,"
@@ -499,21 +499,33 @@ void onSaveConfig(AsyncWebServerRequest *request)
     return;
   }
 
-  if(!request->hasParam("pin_rx", true) || !request->hasParam("pin_tx", true) || !request->hasParam("pin_heating", true))
+  if(!request->hasParam("pin_enable_config", true))
   {
-    request->send(422, "text/plain", "Missing parameter(s) for MQTT onetopic");
+    request->send(422, "text/plain", "Missing parameter pin to enable config");
+    return;
+  }
+
+  if(request->hasParam("x10a_enabled", true) && (!request->hasParam("pin_rx", true) || !request->hasParam("pin_tx", true)))
+  {
+    request->send(422, "text/plain", "Missing parameter(s) for X10A");
+    return;
+  }
+
+  if(request->hasParam("heating_enabled", true) && !request->hasParam("pin_heating", true))
+  {
+    request->send(422, "text/plain", "Missing parameter(s) for heating");
+    return;
+  }
+
+  if(request->hasParam("cooling_enabled", true) && !request->hasParam("pin_cooling", true))
+  {
+    request->send(422, "text/plain", "Missing parameter(s) for cooling");
     return;
   }
 
   if(request->hasParam("sg_enabled", true) && (!request->hasParam("pin_sg1", true) || !request->hasParam("pin_sg2", true)))
   {
     request->send(422, "text/plain", "Missing parameter(s) for SmartGrid");
-    return;
-  }
-
-  if(!request->hasParam("pin_enable_config", true))
-  {
-    request->send(422, "text/plain", "Missing parameter pin to enable config");
     return;
   }
 
@@ -562,28 +574,39 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   config->MQTT_PORT = request->getParam("mqtt_port", true)->value().toInt();
   config->FREQUENCY = request->getParam("frequency", true)->value().toInt();
-  config->PIN_RX = request->getParam("pin_rx", true)->value().toInt();
-  config->PIN_TX = request->getParam("pin_tx", true)->value().toInt();
-  config->PIN_HEATING = request->getParam("pin_heating", true)->value().toInt();
-  config->PIN_COOLING = request->getParam("pin_cooling", true)->value().toInt();
+  config->PIN_ENABLE_CONFIG = request->getParam("pin_enable_config", true)->value().toInt();
+
+  config->X10A_ENABLED = request->hasParam("x10a_enabled", true);
+  config->HEATING_ENABLED = request->hasParam("heating_enabled", true);
+  config->COOLING_ENABLED = request->hasParam("cooling_enabled", true);
   config->SG_ENABLED = request->hasParam("sg_enabled", true);
   config->CAN_ENABLED = request->hasParam("can_enabled", true);
+
+  if(config->X10A_ENABLED)
+  {
+    config->PIN_RX = request->getParam("pin_rx", true)->value().toInt();
+    config->PIN_TX = request->getParam("pin_tx", true)->value().toInt();
+  }
+
+  if(config->HEATING_ENABLED)
+    config->PIN_HEATING = request->getParam("pin_heating", true)->value().toInt();
+
+  if(config->COOLING_ENABLED)
+    config->PIN_COOLING = request->getParam("pin_cooling", true)->value().toInt();
 
   if(config->SG_ENABLED)
   {
     config->PIN_SG1 = request->getParam("pin_sg1", true)->value().toInt();
     config->PIN_SG2 = request->getParam("pin_sg2", true)->value().toInt();
+    config->SG_RELAY_HIGH_TRIGGER = request->hasParam("sg_relay_trigger", true);
   }
 
   if(config->CAN_ENABLED)
   {
     config->PIN_CAN_RX = request->getParam("pin_can_rx", true)->value().toInt();
     config->PIN_CAN_TX = request->getParam("pin_can_tx", true)->value().toInt();
+    config->CAN_SPEED_KBPS = request->getParam("can_speed_kbps", true)->value().toInt();
   }
-
-  config->CAN_SPEED_KBPS = request->getParam("can_speed_kbps", true)->value().toInt();
-  config->SG_RELAY_HIGH_TRIGGER = request->hasParam("sg_relay_trigger", true);
-  config->PIN_ENABLE_CONFIG = request->getParam("pin_enable_config", true)->value().toInt();
 
   if(request->hasParam("definedParameters", true))
   {

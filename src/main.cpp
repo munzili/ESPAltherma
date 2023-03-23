@@ -1,8 +1,5 @@
 #include "main.hpp"
 
-size_t registryBufferSize;
-RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
-
 bool doRestartInStandaloneWifi = false;
 
 uint16_t loopcount = 0;
@@ -35,33 +32,6 @@ void extraLoop()
   esp_restart();
 }
 
-void initRegistries()
-{
-  //getting the list of registries to query from the selected values
-  registryBufferSize = 0;
-  uint8_t* tempRegistryIDs = new uint8_t[config->PARAMETERS_LENGTH];
-
-  size_t i;
-  for (i = 0; i < config->PARAMETERS_LENGTH; i++)
-  {
-    auto &&label = *config->PARAMETERS[i];
-
-    if (!contains(tempRegistryIDs, config->PARAMETERS_LENGTH, label.registryID))
-    {
-      mqttSerial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
-      tempRegistryIDs[registryBufferSize++] = label.registryID;
-    }
-  }
-
-  registryBuffers = new RegistryBuffer[registryBufferSize];
-
-  for(i = 0; i < registryBufferSize; i++)
-  {
-    registryBuffers[i].RegistryID = tempRegistryIDs[i];
-  }
-
-  delete[] tempRegistryIDs;
-}
 
 void setupScreen(){
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
@@ -118,19 +88,31 @@ void setup()
     return;
   }
 
-  X10AInit(config->PIN_RX, config->PIN_TX);
-  pinMode(config->PIN_HEATING, OUTPUT);
-  digitalWrite(config->PIN_HEATING, HIGH);
-  pinMode(config->PIN_COOLING, OUTPUT);
-  digitalWrite(config->PIN_COOLING, HIGH);
+  if(config->X10A_ENABLED)
+  {
+    X10AInit(config->PIN_RX, config->PIN_TX);
+    initRegistries();
+  }
+
+  if(config->HEATING_ENABLED)
+  {
+    pinMode(config->PIN_HEATING, OUTPUT);
+    digitalWrite(config->PIN_HEATING, HIGH);
+  }
+
+  if(config->COOLING_ENABLED)
+  {
+    pinMode(config->PIN_COOLING, OUTPUT);
+    digitalWrite(config->PIN_COOLING, HIGH);
+  }
 
   if(config->SG_ENABLED)
   {
-    //Smartgrid pins - Set first to the inactive state, before configuring as outputs (avoid false triggering when initializing)    
+    //Smartgrid pins - Set first to the inactive state, before configuring as outputs (avoid false triggering when initializing)
     digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
     pinMode(config->PIN_SG1, OUTPUT);
-    pinMode(config->PIN_SG2, OUTPUT);    
+    pinMode(config->PIN_SG2, OUTPUT);
 
     mqttSerial.printf("Configured SG Pins %u %u - State: %u\n", config->PIN_SG1, config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
   }
@@ -161,7 +143,6 @@ void setup()
   reconnect();
   mqttSerial.println("OK!");
 
-  initRegistries();
   mqttSerial.print("ESPAltherma started!\n");
 }
 
@@ -191,38 +172,11 @@ void loop()
     reconnect();
   }
 
-  //Querying all registries and store results
-  for (size_t i = 0; i < registryBufferSize; i++)
+  if(config->X10A_ENABLED)
   {
-    uint8_t tries = 0;
-    while (tries++ < 3 && !queryRegistry(&registryBuffers[i]))
-    {
-      mqttSerial.println("Retrying...");
-      waitLoop(1000);
-    }
+    handleX10A();
   }
 
-  for (size_t i = 0; i < config->PARAMETERS_LENGTH; i++)
-  {
-    auto &&label = *config->PARAMETERS[i];
-
-    for (size_t j = 0; j < registryBufferSize; j++)
-    {
-      if(registryBuffers[j].Success && label.registryID == registryBuffers[j].RegistryID)
-      {
-        char *input = registryBuffers[j].Buffer;
-        input += label.offset + 3;
-
-        converter.convert(&label, input); // convert buffer result of label offset to correct/usabel value
-
-        updateValues(&label);       //send them in mqtt
-        waitLoop(500);//wait .5sec between registries
-        break;
-      }
-    }
-  }
-
-  sendValues();//Send the full json message
   mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);
   waitLoop(config->FREQUENCY);
 }

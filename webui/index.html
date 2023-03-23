@@ -22,8 +22,8 @@
       <ul id="nav-main" style="overflow-x: auto">
         <li><a href="#" data-link="form-network" role="button" >Network</a></li>
         <li><a href="#" data-link="form-pins">Pins</a></li>
-        <li><a href="#" data-link="form-x10a">X10A-Bus</a></li>
-        <li><a href="#" data-link="form-can">CAN-Bus</a></li>
+        <li id="nav-x10a" class="hidden"><a href="#" data-link="form-x10a">X10A-Bus</a></li>
+        <li id="nav-can" class="hidden"><a href="#" data-link="form-can">CAN-Bus</a></li>
         <li><a href="#" data-link="form-export-import">Export/Import</a></li>
         <li><a href="#" data-link="form-update">Update</a></li>
       </ul>
@@ -132,29 +132,57 @@
         </label>
       </article>
       <article id="form-pins" role="tab" style="display: none;">
-        <div class="grid">
-          <label for="pin_rx">
-            PIN RX
-            <select id="pin_rx" name="pin_rx" data-pins></select>
-          </label>
 
-          <label for="pin_tx">
-            PIN TX
-            <select id="pin_tx" name="pin_tx" data-pins></select>
-          </label>
-        </div>
-
-        <label for="pin_heating">
-          PIN HEATING
-          <select id="pin_heating" name="pin_heating" data-pins>
-          </select>
+        <label for="pin_enable_config">
+          PIN CONFIG PAGE:
+          <select id="pin_enable_config" name="pin_enable_config" data-pins></select>
+          <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the standalone wifi mode.</small>
         </label>
 
-        <label for="pin_cooling">
-          PIN COOLING
-          <select id="pin_cooling" name="pin_cooling" data-pins>
-          </select>
+        <label for="x10a_enabled" >
+          <input type="checkbox" id="x10a_enabled" name="x10a_enabled" role="switch" onclick="show('x10a');show('nav-x10a');"/>
+          X10A enabled
         </label>
+
+        <article id="x10a" class="hidden">
+          <div class="grid">
+            <label for="pin_rx">
+              PIN RX
+              <select id="pin_rx" name="pin_rx" data-pins></select>
+            </label>
+
+            <label for="pin_tx">
+              PIN TX
+              <select id="pin_tx" name="pin_tx" data-pins></select>
+            </label>
+          </div>
+        </article>
+
+        <label for="heating_enabled" >
+          <input type="checkbox" id="heating_enabled" name="heating_enabled" role="switch" onclick="show('heating');"/>
+          Heating enabled
+        </label>
+
+        <article id="heating" class="hidden">
+          <label for="pin_heating">
+            PIN HEATING
+            <select id="pin_heating" name="pin_heating" data-pins>
+            </select>
+          </label>
+        </article>
+
+        <label for="cooling_enabled" >
+          <input type="checkbox" id="cooling_enabled" name="cooling_enabled" role="switch" onclick="show('cooling');"/>
+          Cooling enabled
+        </label>
+
+        <article id="cooling" class="hidden">
+          <label for="pin_cooling">
+            PIN COOLING
+            <select id="pin_cooling" name="pin_cooling" data-pins>
+            </select>
+          </label>
+        </article>
 
         <label for="sg_enabled" >
           <input type="checkbox" id="sg_enabled" name="sg_enabled" role="switch" onclick="show('smartgrid');"/>
@@ -181,14 +209,8 @@
           <small>Enable if the relay gets enabled when output is high on SG Pins</small>
         </article>
 
-        <label for="pin_enable_config">
-          PIN CONFIG PAGE:
-          <select id="pin_enable_config" name="pin_enable_config" data-pins></select>
-          <small>If the given pinnumber gets connected to ground, ESPAltherma will reboot again in the standalone wifi mode.</small>
-        </label>
-
         <label for="can_enabled" >
-          <input type="checkbox" id="can_enabled" name="can_enabled" role="switch" onclick="show('can_pins');"/>
+          <input type="checkbox" id="can_enabled" name="can_enabled" role="switch" onclick="show('can_pins');show('nav-can');"/>
           CAN-Bus enabled
         </label>
 

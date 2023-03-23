@@ -287,11 +287,11 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   mqttSerial.printf("Message arrived [%s] : %s\n", topic, payloadText);
 
-  if (subscribeHeatingTopic == topic)
+  if (config->HEATING_ENABLED && subscribeHeatingTopic == topic)
   {
     callbackHeating(payload, length);
   }
-  else if (subscribeCoolingTopic == topic)
+  else if (config->COOLING_ENABLED && subscribeCoolingTopic == topic)
   {
     callbackCooling(payload, length);
   }

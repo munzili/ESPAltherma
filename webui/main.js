@@ -181,12 +181,33 @@ async function loadConfig()
 
         document.getElementById('mqtt_port').value = data['MQTT_PORT'];
         document.getElementById('frequency').value = data['FREQUENCY'];
-        document.getElementById('pin_rx').value = data['PIN_RX'];
-        document.getElementById('pin_tx').value = data['PIN_TX'];
-        document.getElementById('pin_heating').value = data['PIN_HEATING'];
-        document.getElementById('pin_cooling').value = data['PIN_COOLING'];
+        document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];
+
+        document.getElementById('x10a_enabled').checked = data['X10A_ENABLED'];
+        document.getElementById('heating_enabled').checked = data['HEATING_ENABLED'];
+        document.getElementById('cooling_enabled').checked = data['COOLING_ENABLED'];
         document.getElementById('sg_enabled').checked = data['SG_ENABLED'];
         document.getElementById('can_enabled').checked = data['CAN_ENABLED'];
+
+        if(data['X10A_ENABLED'])
+        {
+            document.getElementById('pin_rx').value = data['PIN_RX'];
+            document.getElementById('pin_tx').value = data['PIN_TX'];
+            show('x10a');
+            show('nav-x10a');
+        }
+
+        if(data['HEATING_ENABLED'])
+        {
+            document.getElementById('pin_heating').value = data['PIN_HEATING'];
+            show('heating');
+        }
+
+        if(data['COOLING_ENABLED'])
+        {
+            document.getElementById('pin_cooling').value = data['PIN_COOLING'];
+            show('cooling');
+        }
 
         if(data['SG_ENABLED'])
         {
@@ -200,11 +221,10 @@ async function loadConfig()
         {
             document.getElementById('pin_can_rx').value = data['PIN_CAN_RX'];
             document.getElementById('pin_can_tx').value = data['PIN_CAN_TX'];
+            document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];
             show('can_pins');
+            show('nav-can');
         }
-
-        document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];
-        document.getElementById('pin_enable_config').value = data['PIN_ENABLE_CONFIG'];
 
         let webuiSelectionValues = JSON.parse(data['WEBUI_SELECTION_VALUES']);
 
@@ -382,17 +402,44 @@ async function sendConfigData(event)
     const frequency = document.getElementById('frequency');
     frequency.setAttribute('aria-invalid', frequency.value == '');
 
-    const pin_rx = document.getElementById('pin_rx');
-    pin_rx.setAttribute('aria-invalid', pin_rx.value == '');
+    const pin_enable_config = document.getElementById('pin_enable_config');
+    pin_enable_config.setAttribute('aria-invalid', pin_enable_config.value == '');
 
-    const pin_tx = document.getElementById('pin_tx');
-    pin_tx.setAttribute('aria-invalid', pin_tx.value == '');
+    const x10a_enabled = document.getElementById('x10a_enabled');
+    if(x10a_enabled.checked)
+    {
+        const pin_rx = document.getElementById('pin_rx');
+        pin_rx.setAttribute('aria-invalid', pin_rx.value == '');
 
-    const pin_heating = document.getElementById('pin_heating');
-    pin_heating.setAttribute('aria-invalid', pin_heating.value == '');
+        const pin_tx = document.getElementById('pin_tx');
+        pin_tx.setAttribute('aria-invalid', pin_tx.value == '');
+    }
+    else
+    {
+        clearHiddenValidationResult("x10a");
+    }
 
-    const pin_cooling = document.getElementById('pin_cooling');
-    pin_cooling.setAttribute('aria-invalid', pin_cooling.value == '');
+    const heating_enabled = document.getElementById('heating_enabled');
+    if(heating_enabled.checked)
+    {
+        const pin_heating = document.getElementById('pin_heating');
+        pin_heating.setAttribute('aria-invalid', pin_heating.value == '');
+    }
+    else
+    {
+        clearHiddenValidationResult("heating");
+    }
+
+    const cooling_enabled = document.getElementById('cooling_enabled');
+    if(cooling_enabled.checked)
+    {
+        const pin_cooling = document.getElementById('pin_cooling');
+        pin_cooling.setAttribute('aria-invalid', pin_cooling.value == '');
+    }
+    else
+    {
+        clearHiddenValidationResult("cooling");
+    }
 
     const sg_enabled = document.getElementById('sg_enabled');
     if(sg_enabled.checked)
@@ -416,17 +463,14 @@ async function sendConfigData(event)
 
         const pin_can_tx = document.getElementById('pin_can_tx');
         pin_can_tx.setAttribute('aria-invalid', pin_can_tx.value == '');
+
+        const can_speed_kbps = document.getElementById('can_speed_kbps');
+        can_speed_kbps.setAttribute('aria-invalid', can_speed_kbps.value == '');
     }
     else
     {
         clearHiddenValidationResult("can_pins");
     }
-
-    const can_speed_kbps = document.getElementById('can_speed_kbps');
-    can_speed_kbps.setAttribute('aria-invalid', can_speed_kbps.value == '');
-
-    const pin_enable_config = document.getElementById('pin_enable_config');
-    pin_enable_config.setAttribute('aria-invalid', pin_enable_config.value == '');
 
     const validationErrorField = document.querySelector('[aria-invalid="true"]');
     if(validationErrorField)

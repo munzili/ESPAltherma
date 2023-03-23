@@ -31,9 +31,13 @@ struct Config
     String MQTT_ONETOPIC_NAME;
     uint16_t MQTT_PORT;
     uint32_t FREQUENCY;
+    uint8_t PIN_ENABLE_CONFIG;
+    bool X10A_ENABLED;
     uint8_t PIN_RX;
     uint8_t PIN_TX;
+    bool HEATING_ENABLED;
     uint8_t PIN_HEATING;
+    bool COOLING_ENABLED;
     uint8_t PIN_COOLING;
     bool SG_ENABLED;
     uint8_t PIN_SG1;
@@ -43,7 +47,6 @@ struct Config
     uint8_t PIN_CAN_RX;
     uint8_t PIN_CAN_TX;
     uint8_t CAN_SPEED_KBPS;
-    uint8_t PIN_ENABLE_CONFIG;
     size_t PARAMETERS_LENGTH;
     ParameterDef** PARAMETERS;
     size_t COMMANDS_LENGTH;
