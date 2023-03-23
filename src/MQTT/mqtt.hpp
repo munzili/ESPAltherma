@@ -23,8 +23,8 @@
 #define MAX_MSG_SIZE 4096 // max size of the json message sent in mqtt
 
 extern char jsonbuff[MAX_MSG_SIZE];
-extern bool SG_RELAY_ACTIVE_STATE;
-extern bool SG_RELAY_INACTIVE_STATE;
+extern uint8_t SG_RELAY_ACTIVE_STATE;
+extern uint8_t SG_RELAY_INACTIVE_STATE;
 
 extern PubSubClient client;
 

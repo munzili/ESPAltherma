@@ -126,11 +126,13 @@ void setup()
 
   if(config->SG_ENABLED)
   {
-    //Smartgrid pins - Set first to the inactive state, before configuring as outputs (avoid false triggering when initializing)
+    //Smartgrid pins - Set first to the inactive state, before configuring as outputs (avoid false triggering when initializing)    
     digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
     pinMode(config->PIN_SG1, OUTPUT);
-    pinMode(config->PIN_SG2, OUTPUT);
+    pinMode(config->PIN_SG2, OUTPUT);    
+
+    mqttSerial.printf("Configured SG Pins %u %u - State: %u\n", config->PIN_SG1, config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
   }
 
   if(config->CAN_ENABLED)

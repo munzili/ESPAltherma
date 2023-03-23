@@ -16,8 +16,8 @@ String publishAttrTopic = "";
 String publishLWTTopic = "";
 
 char jsonbuff[MAX_MSG_SIZE];
-bool SG_RELAY_ACTIVE_STATE;
-bool SG_RELAY_INACTIVE_STATE;
+uint8_t SG_RELAY_ACTIVE_STATE;
+uint8_t SG_RELAY_INACTIVE_STATE;
 
 void initMQTT()
 {
@@ -27,8 +27,8 @@ void initMQTT()
 
   createEmptyJSONBuffer();
 
-  SG_RELAY_ACTIVE_STATE = config->SG_RELAY_HIGH_TRIGGER == true;
-  SG_RELAY_INACTIVE_STATE != SG_RELAY_ACTIVE_STATE;
+  SG_RELAY_ACTIVE_STATE = (config->SG_RELAY_HIGH_TRIGGER == true) ? HIGH : LOW;
+  SG_RELAY_INACTIVE_STATE = SG_RELAY_ACTIVE_STATE == HIGH ? LOW : HIGH;
 }
 
 void createEmptyJSONBuffer()
