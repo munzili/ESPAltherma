@@ -29,6 +29,9 @@ void initMQTT()
 
   SG_RELAY_ACTIVE_STATE = (config->SG_RELAY_HIGH_TRIGGER == true) ? HIGH : LOW;
   SG_RELAY_INACTIVE_STATE = SG_RELAY_ACTIVE_STATE == HIGH ? LOW : HIGH;
+
+  mqttSerial.printf("SG Active State: %u\n", SG_RELAY_ACTIVE_STATE);
+  mqttSerial.printf("SG Inactive State: %u\n", SG_RELAY_INACTIVE_STATE);
 }
 
 void createEmptyJSONBuffer()
