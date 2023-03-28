@@ -1,7 +1,7 @@
 #ifndef HPSU_H
 #define HPSU_H
 
-#include <CAN.h>
+//#include <CAN.h>
 #include "Config/config.hpp"
 #include "Config/commandDef.hpp"
 

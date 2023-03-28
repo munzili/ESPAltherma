@@ -4,7 +4,7 @@ bool DriverSJA1000::initInterface(CANPort* port, int baudrate)
 {
     canPort = port;
 
-    CAN.begin(baudrate * 1000);
+    //CAN.begin(baudrate * 1000);
 
     return true;
 }

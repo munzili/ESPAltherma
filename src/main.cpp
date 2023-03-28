@@ -67,6 +67,13 @@ void setup()
       return;
   }
 
+  esp_chip_info_t chip;
+  esp_chip_info(&chip);
+
+  mqttSerial.printf("ESP32 Model: %i\n", chip.model);
+  mqttSerial.printf("ESP32 Revision: %i\n", chip.revision);
+  mqttSerial.printf("ESP32 Cores: %i\n", chip.cores);
+
   initPersistence();
 
   readConfig();

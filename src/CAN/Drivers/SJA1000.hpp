@@ -1,7 +1,7 @@
 #ifndef DRIVER_SJA1000_H
 #define DRIVER_SJA1000_H
 
-#include <CAN.h>
+//#include <CAN.h>
 #include "CAN/CANDriver.hpp"
 #include "CAN/CANPort.hpp"
 

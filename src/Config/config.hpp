@@ -46,7 +46,7 @@ struct Config
     bool CAN_ENABLED;
     uint8_t PIN_CAN_RX;
     uint8_t PIN_CAN_TX;
-    uint8_t CAN_SPEED_KBPS;
+    uint16_t CAN_SPEED_KBPS;
     size_t PARAMETERS_LENGTH;
     ParameterDef** PARAMETERS;
     size_t COMMANDS_LENGTH;

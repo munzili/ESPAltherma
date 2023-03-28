@@ -88,7 +88,7 @@ void readConfig()
     config->CAN_ENABLED = configDoc["CAN_ENABLED"].as<const bool>();
     config->PIN_CAN_RX = configDoc["PIN_CAN_RX"].as<uint8_t>();
     config->PIN_CAN_TX = configDoc["PIN_CAN_TX"].as<uint8_t>();
-    config->CAN_SPEED_KBPS = configDoc["CAN_SPEED_KBPS"].as<uint8_t>();
+    config->CAN_SPEED_KBPS = configDoc["CAN_SPEED_KBPS"].as<uint16_t>();
 
     JsonArray parameters = configDoc["PARAMETERS"].as<JsonArray>();
     config->PARAMETERS_LENGTH = parameters.size();

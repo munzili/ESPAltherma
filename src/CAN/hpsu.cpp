@@ -34,9 +34,10 @@ bool HPSU::sendCommand(CommandDef cmd, bool setValue)
 {
     uint16_t id = setValue ? CANID_SET_VALUE : cmd.id;
 
-    CAN.beginPacket(id, COMMAND_BYTE_LENGTH);
-    CAN.write(cmd.command, COMMAND_BYTE_LENGTH);
-    return CAN.endPacket();
+    //CAN.beginPacket(id, COMMAND_BYTE_LENGTH);
+    //CAN.write(cmd.command, COMMAND_BYTE_LENGTH);
+    //return CAN.endPacket();
+    return 0;
 }
 
 /*

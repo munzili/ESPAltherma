@@ -1,7 +1,7 @@
 #ifndef PORT_SJA1000_H
 #define PORT_SJA1000_H
 
-#include <CAN.h>
+//#include <CAN.h>
 #include "ArduinoC.hpp"
 #include "CAN/CANPort.hpp"
 #include "Config/commandDef.hpp"
