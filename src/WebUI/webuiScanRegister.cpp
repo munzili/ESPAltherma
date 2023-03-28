@@ -38,30 +38,10 @@ void webuiScanRegister()
     counter++;
   }
 
-  //getting the list of registries to query from the selected values
-  uint8_t loadRegistryBufferSize = 0;
-  uint8_t* tempRegistryIDs = new uint8_t[labelsSize]();
+  size_t loadRegistryBufferSize;
+  RegistryBuffer *loadRegistryBuffers;
 
-  size_t i;
-  for (i = 0; i < labelsSize; i++)
-  {
-    auto &&label = *labelsToLoad[i];
-
-    if (!contains(tempRegistryIDs, labelsSize, label.registryID))
-    {
-      mqttSerial.printf("Adding registry 0x%02x to be queried.\n", label.registryID);
-      tempRegistryIDs[loadRegistryBufferSize++] = label.registryID;
-    }
-  }
-
-  RegistryBuffer loadRegistryBuffers[loadRegistryBufferSize];
-
-  for(i = 0; i < loadRegistryBufferSize; i++)
-  {
-    loadRegistryBuffers[i].RegistryID = tempRegistryIDs[i];
-  }
-
-  delete[] tempRegistryIDs;
+  initRegistries(&loadRegistryBuffers, loadRegistryBufferSize, labelsToLoad, labelsSize);
 
   if (loadRegistryBufferSize == 0)
   {
@@ -72,33 +52,7 @@ void webuiScanRegister()
 
   mqttSerial.println("Fetching Values");
 
-  //Querying all registries and store results
-  for (size_t i = 0; i < loadRegistryBufferSize; i++)
-  {
-    uint8_t tries = 0;
-    while (tries++ < 3 && !queryRegistry(&loadRegistryBuffers[i]))
-    {
-      mqttSerial.println("Retrying...");
-      delay(1000);
-    }
-  }
-
-  for (size_t i = 0; i < labelsSize; i++)
-  {
-    auto &&label = *labelsToLoad[i];
-
-    for (size_t j = 0; j < loadRegistryBufferSize; j++)
-    {
-      if(loadRegistryBuffers[j].Success && label.registryID == loadRegistryBuffers[j].RegistryID)
-      {
-        char *input = loadRegistryBuffers[j].Buffer;
-        input += label.offset + 3;
-
-        converter.convert(&label, input); // convert buffer result of label offset to correct/usabel value
-        break;
-      }
-    }
-  }
+  handleX10A(loadRegistryBuffers, loadRegistryBufferSize, labelsToLoad, labelsSize, false);
 
   mqttSerial.println("Returning Values");
 

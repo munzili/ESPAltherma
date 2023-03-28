@@ -91,7 +91,7 @@ void setup()
   if(config->X10A_ENABLED)
   {
     X10AInit(config->PIN_RX, config->PIN_TX);
-    initRegistries();
+    initRegistries(&registryBuffers, registryBufferSize, config->PARAMETERS, config->PARAMETERS_LENGTH);
   }
 
   if(config->HEATING_ENABLED)
@@ -174,7 +174,7 @@ void loop()
 
   if(config->X10A_ENABLED)
   {
-    handleX10A();
+    handleX10A(registryBuffers, registryBufferSize, config->PARAMETERS, config->PARAMETERS_LENGTH, true);
   }
 
   mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);

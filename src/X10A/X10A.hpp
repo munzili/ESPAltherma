@@ -16,9 +16,9 @@ extern RegistryBuffer *registryBuffers;
 
 void X10AEnd();
 
-void initRegistries();
+void initRegistries(RegistryBuffer** buffer, size_t& bufferSize, ParameterDef** parameters, size_t parametersLength);
 
-void handleX10A();
+void handleX10A(RegistryBuffer* buffer, size_t& bufferSize, ParameterDef** parameters, size_t parametersLength, bool sendValuesViaMQTT);
 
 void X10AInit(int8_t rxPin, int8_t txPin);
 

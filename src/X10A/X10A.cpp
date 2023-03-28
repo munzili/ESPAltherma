@@ -13,68 +13,75 @@ void X10AEnd()
   }
 }
 
-void initRegistries()
+void initRegistries(RegistryBuffer** buffer, size_t& bufferSize, ParameterDef** parameters, size_t parametersLength)
 {
   //getting the list of registries to query from the selected values
-  registryBufferSize = 0;
-  uint8_t* tempRegistryIDs = new uint8_t[config->PARAMETERS_LENGTH]();
+  bufferSize = 0;
+  uint8_t* tempRegistryIDs = new uint8_t[parametersLength]();
 
   size_t i;
-  for (i = 0; i < config->PARAMETERS_LENGTH; i++)
+  for (i = 0; i < parametersLength; i++)
   {
-    auto &&label = *config->PARAMETERS[i];
+    auto &&label = *parameters[i];
 
-    if (!contains(tempRegistryIDs, config->PARAMETERS_LENGTH, label.registryID))
+    if (!contains(tempRegistryIDs, parametersLength, label.registryID))
     {
       mqttSerial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
-      tempRegistryIDs[registryBufferSize++] = label.registryID;
+      tempRegistryIDs[bufferSize++] = label.registryID;
     }
   }
 
-  registryBuffers = new RegistryBuffer[registryBufferSize];
+  *buffer = new RegistryBuffer[bufferSize];
 
-  for(i = 0; i < registryBufferSize; i++)
+  for(i = 0; i < bufferSize; i++)
   {
-    registryBuffers[i].RegistryID = tempRegistryIDs[i];
+    (*buffer)[i].RegistryID = tempRegistryIDs[i];
   }
 
   delete[] tempRegistryIDs;
 }
 
-void handleX10A()
+void handleX10A(RegistryBuffer* buffer, size_t& bufferSize, ParameterDef** parameters, size_t parametersLength, bool sendValuesViaMQTT)
 {
   //Querying all registries and store results
-  for (size_t i = 0; i < registryBufferSize; i++)
+  for (size_t i = 0; i < bufferSize; i++)
   {
     uint8_t tries = 0;
-    while (tries++ < 3 && !queryRegistry(&registryBuffers[i]))
+    while (tries++ < 3 && !queryRegistry(&buffer[i]))
     {
       mqttSerial.println("Retrying...");
       waitLoop(1000);
     }
   }
 
-  for (size_t i = 0; i < config->PARAMETERS_LENGTH; i++)
+  for (size_t i = 0; i < parametersLength; i++)
   {
-    auto &&label = *config->PARAMETERS[i];
+    auto &&label = *parameters[i];
 
-    for (size_t j = 0; j < registryBufferSize; j++)
+    for (size_t j = 0; j < bufferSize; j++)
     {
-      if(registryBuffers[j].Success && label.registryID == registryBuffers[j].RegistryID)
+      if(buffer[j].Success && label.registryID == buffer[j].RegistryID)
       {
-        char *input = registryBuffers[j].Buffer;
+        char *input = buffer[j].Buffer;
         input += label.offset + 3;
 
         converter.convert(&label, input); // convert buffer result of label offset to correct/usabel value
 
-        updateValues(&label);       //send them in mqtt
-        waitLoop(500);//wait .5sec between registries
+        if(sendValuesViaMQTT)
+        {
+          updateValues(&label);       //send them in mqtt
+          waitLoop(500);//wait .5sec between registries
+        }
+
         break;
       }
     }
   }
 
-  sendValues();//Send the full json message
+  if(sendValuesViaMQTT)
+  {
+    sendValues();//Send the full json message
+  }
 }
 
 void X10AInit(int8_t rxPin, int8_t txPin)
