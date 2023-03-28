@@ -17,7 +17,7 @@ void initRegistries()
 {
   //getting the list of registries to query from the selected values
   registryBufferSize = 0;
-  uint8_t* tempRegistryIDs = new uint8_t[config->PARAMETERS_LENGTH];
+  uint8_t* tempRegistryIDs = new uint8_t[config->PARAMETERS_LENGTH]();
 
   size_t i;
   for (i = 0; i < config->PARAMETERS_LENGTH; i++)

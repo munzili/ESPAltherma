@@ -40,7 +40,7 @@ void webuiScanRegister()
 
   //getting the list of registries to query from the selected values
   uint8_t loadRegistryBufferSize = 0;
-  uint8_t* tempRegistryIDs = new uint8_t[labelsSize];
+  uint8_t* tempRegistryIDs = new uint8_t[labelsSize]();
 
   size_t i;
   for (i = 0; i < labelsSize; i++)
