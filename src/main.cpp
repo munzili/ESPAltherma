@@ -131,7 +131,7 @@ void setup()
 
   if(!config->STANDALONE_WIFI)
   {
-    mqttSerial.print("Setting up wifi...");
+    mqttSerial.println("Setting up wifi...");
     setup_wifi();
     WebUI_Init();
   }

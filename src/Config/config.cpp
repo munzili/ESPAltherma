@@ -36,8 +36,10 @@ void readConfig()
     File configFile = LittleFS.open(CONFIG_FILE, FILE_READ);
     DynamicJsonDocument configDoc(MODELS_CONFIG_SIZE);
     deserializeJson(configDoc, configFile);
-    serializeJsonPretty(configDoc, Serial);
     configFile.close();
+
+    serializeJsonPretty(configDoc, Serial);
+    Serial.println();
 
     config->configStored = true;
     config->STANDALONE_WIFI = configDoc["STANDALONE_WIFI"].as<const bool>();

@@ -117,7 +117,7 @@ void reconnect()
   int i = 0;
   while (!client.connected())
   {
-    mqttSerial.print("Attempting MQTT connection...\n");
+    mqttSerial.print("Attempting MQTT connection with ID: ");
 
     String id = "ESPAltherma-";
     id += WiFi.macAddress().substring(6);

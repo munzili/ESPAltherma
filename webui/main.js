@@ -752,12 +752,15 @@ async function uploadX10AFile() {
 async function uploadConfig() {
 
     const parametersFile = document.getElementById('configFile');
+    const importStatusDisplay = document.getElementById('importStatusDisplay');
     const file = parametersFile.files[0];
 
     parametersFile.setAttribute('aria-invalid', !file);
 
     if(!file)
         return;
+
+    importStatusDisplay.innerText = "Uploading...";
 
     const formData = new FormData();
     formData.append("file", parametersFile.files[0]);
@@ -769,11 +772,15 @@ async function uploadConfig() {
         if (response.status == 200) {
             parametersFile.removeAttribute('aria-invalid');
             parametersFile.value = null;
-            location.reload();
+            importStatusDisplay.innerText = "Config successfully imported! ESP32 will restart now with new config. Reloading page in 3 Seconds";
+
+            setTimeout(() => {
+                document.location.reload();
+            }, 3000);
         }
     })
     .catch(function(err) {
-        alert('Config upload failed! Message: ' + err);
+        importStatusDisplay.innerText = 'Config upload failed! Message: ' + err;
     });
 }
 
