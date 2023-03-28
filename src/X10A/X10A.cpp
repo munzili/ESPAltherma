@@ -13,7 +13,7 @@ void X10AEnd()
   }
 }
 
-void initRegistries(RegistryBuffer** buffer, size_t& bufferSize, ParameterDef** parameters, size_t parametersLength)
+void initRegistries(RegistryBuffer** buffer, size_t& bufferSize, ParameterDef** parameters, const size_t parametersLength)
 {
   //getting the list of registries to query from the selected values
   bufferSize = 0;
@@ -41,7 +41,7 @@ void initRegistries(RegistryBuffer** buffer, size_t& bufferSize, ParameterDef** 
   delete[] tempRegistryIDs;
 }
 
-void handleX10A(RegistryBuffer* buffer, size_t& bufferSize, ParameterDef** parameters, size_t parametersLength, bool sendValuesViaMQTT)
+void handleX10A(RegistryBuffer* buffer, const size_t& bufferSize, ParameterDef** parameters, const size_t parametersLength, const bool sendValuesViaMQTT)
 {
   //Querying all registries and store results
   for (size_t i = 0; i < bufferSize; i++)
