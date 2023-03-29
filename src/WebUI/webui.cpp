@@ -892,6 +892,16 @@ void onWebSerialCallback(const uint8_t *data, const size_t len)
   }
 }
 
+void onReset(AsyncWebServerRequest *request)
+{
+  request->onDisconnect([]()
+  {
+    esp_restart();
+  });
+
+  request->send(200, "text/javascript", "OK");
+}
+
 void WebUI_Init()
 {
   if(!LittleFS.exists(MODELS_FILE))
@@ -920,6 +930,7 @@ void WebUI_Init()
   server.on("/loadConfig", HTTP_GET, onLoadConfig);
   server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
   server.on("/format", HTTP_GET, onFormat);
+  server.on("/reset", HTTP_GET, onReset);
   server.on("/update", HTTP_POST, onUpdate, handleUpdate);
   server.on("/upload/config", HTTP_POST, onUploadConfigFile, handleFileUpload);
   server.on("/upload/X10A", HTTP_POST, onUploadX10AFile, handleFileUpload);
