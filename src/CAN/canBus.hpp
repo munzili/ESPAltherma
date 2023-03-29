@@ -1,9 +1,13 @@
 #ifndef CAN_BUS_H
 #define CAN_BUS_H
 
-#include "driver/twai.h"
+//#include "driver/twai.h"
+//#include <CAN.h>
+#include <SPI.h>
+#include <107-Arduino-MCP2515.h>
 #include "MQTT/mqttSerial.hpp"
 #include "hpsu.hpp"
+
 
 #define TWAI_TIMING_CONFIG_1KBITS()     {.brp = 4000, .tseg_1 = 15, .tseg_2 = 4, .sjw = 3, .triple_sampling = false}
 #define TWAI_TIMING_CONFIG_5KBITS()     {.brp = 800, .tseg_1 = 15, .tseg_2 = 4, .sjw = 3, .triple_sampling = false}
