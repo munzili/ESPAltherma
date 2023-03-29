@@ -2,8 +2,17 @@
 
 MQTTSerial mqttSerial;
 
+String* webSerialBuffer = nullptr;
+bool webSerialConnection = false;
+
+#define WEB_SERIAL_BUFFER_MAX_SIZE 2000
+
 MQTTSerial::MQTTSerial()
 {
+    WebSerial.onConnect([](AsyncWebSocketClient *client)
+    {
+        webSerialConnection = true;
+    });
 }
 
 size_t MQTTSerial::write(const uint8_t *buffer, size_t size)
@@ -16,8 +25,34 @@ size_t MQTTSerial::write(const uint8_t *buffer, size_t size)
     M5.Lcd.print((const char*) buffer);
 #endif
 
-    WebSerial.write(buffer,size);
-    Serial.write(buffer,size);
+    if(!webSerialConnection)
+    {
+        if(webSerialBuffer == nullptr)
+        {
+            webSerialBuffer = new String();
+        }
+
+        webSerialBuffer->concat(buffer, size);
+
+        if(webSerialBuffer->length() > WEB_SERIAL_BUFFER_MAX_SIZE)
+        {
+            *webSerialBuffer = webSerialBuffer->substring(webSerialBuffer->length() - WEB_SERIAL_BUFFER_MAX_SIZE);
+        }
+    }
+    else if(webSerialConnection && webSerialBuffer != nullptr)
+    {
+        webSerialBuffer->concat(buffer, size);
+        WebSerial.print(*webSerialBuffer);
+        *webSerialBuffer = "";
+        delete webSerialBuffer;
+        webSerialBuffer = nullptr;
+    }
+    else
+    {
+        WebSerial.write(buffer, size);
+    }
+
+    Serial.write(buffer, size);
 
     return size;
 }
