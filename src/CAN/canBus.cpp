@@ -3,7 +3,7 @@
 bool canInited = false;
 
 static int         const MKRCAN_MCP2515_CS_PIN  = SS;
-static int         const MKRCAN_MCP2515_INT_PIN = 2;
+static int         const MKRCAN_MCP2515_INT_PIN = 4;
 static SPISettings const MCP2515x_SPI_SETTING{1000000, MSBFIRST, SPI_MODE0};
 
 void onReceiveBufferFull(uint32_t const, uint32_t const, uint8_t const *, uint8_t const);
@@ -49,6 +49,14 @@ static std::array<sCanTestFrame, 7> const CAN_TEST_FRAME_ARRAY =
   test_frame_7
 };
 
+void IRAM_ATTR handleCANInterrupt()
+{
+  if(!canInited)
+      return;
+
+  mcp2515.onExternalEventHandler();
+}
+
 void canBus_setup(int8_t rxPin, int8_t txPin, uint16_t speed)
 {
   /* Setup SPI access */
@@ -59,11 +67,19 @@ void canBus_setup(int8_t rxPin, int8_t txPin, uint16_t speed)
 
   /* Attach interrupt handler to register MCP2515 signaled by taking INT low */
   pinMode(MKRCAN_MCP2515_INT_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(MKRCAN_MCP2515_INT_PIN), [](){ mcp2515.onExternalEventHandler(); }, FALLING);
+  attachInterrupt(digitalPinToInterrupt(MKRCAN_MCP2515_INT_PIN), handleCANInterrupt, FALLING);
 
   mcp2515.begin();
+
+  if(!mcp2515.setLoopbackMode()) // test if we can write something to the MCP2515 (is a device connected?)
+  {
+    mqttSerial.println("CAN-Bus init failed!");
+    return;
+  }
+
+  canInited = true;
+
   mcp2515.setBitRate(CanBitRate::BR_20kBPS_12MHZ); // CAN bit rate and MCP2515 clock speed
-  mcp2515.setLoopbackMode();
 
   std::for_each(CAN_TEST_FRAME_ARRAY.cbegin(),
                 CAN_TEST_FRAME_ARRAY.cend(),
@@ -75,7 +91,9 @@ void canBus_setup(int8_t rxPin, int8_t txPin, uint16_t speed)
                   delay(10);
                 });
 
-    mcp2515.setListenOnlyMode();
+  mcp2515.setListenOnlyMode();
+
+  mqttSerial.println("CAN-Bus inited");
 
   /*
   CAN.setPins(rxPin, txPin);
@@ -172,14 +190,15 @@ void canBus_setup(int8_t rxPin, int8_t txPin, uint16_t speed)
   }
 
   */
-  canInited = true;
-  mqttSerial.println("CAN-Bus inited");
 }
 
 ulong lastCANReading;
 
 void onReceiveBufferFull(uint32_t const timestamp_us, uint32_t const id, uint8_t const * data, uint8_t const len)
 {
+  if(!canInited)
+    return;
+
   Serial.print("CAN [ ");
   Serial.print(timestamp_us);
   Serial.print("] ");
