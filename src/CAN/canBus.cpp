@@ -73,6 +73,7 @@ void canBus_setup(int8_t rxPin, int8_t txPin, uint16_t speed)
 
   if(!mcp2515.setLoopbackMode()) // test if we can write something to the MCP2515 (is a device connected?)
   {
+    SPI.end();
     mqttSerial.println("CAN-Bus init failed!");
     return;
   }
