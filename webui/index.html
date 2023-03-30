@@ -215,16 +215,77 @@
         </label>
 
         <article id="can_pins" class="hidden">
-          <div class="grid">
-            <label for="pin_can_rx">
-              PIN CAN RX
-              <select id="pin_can_rx" name="pin_can_rx" data-pins></select>
-            </label>
+          <p>Please select a CAN Communication Chip.</p>
+          <p>
+            Please be aware that the <b>ESP32 internal SJA1000 Chip has some restrictions.</b>
+            The CAN-Controller only supports bitrates under 25kbps if the ESP32 has Revision 2 or above.
+            If you want to use this CAN Controller with lower Bitrates, please use a precompilled ESP-IDF for Revision 2 or above with this firmware.
+            By default, the ESP-IDF is precompilled for Revision 1.
+          </p>
 
-            <label for="pin_can_tx">
-              PIN CAN TX
-              <select id="pin_can_tx" name="pin_can_tx" data-pins></select>
-            </label>
+          <label for="can_ic_type">CAN communication done with:</label>
+          <select id="can_ic_type" name="can_ic_type" onchange="updateCANConfigDisplay()">
+            <option value="">Please select</option>
+            <option value="spi_mcp2515">External MCP2515 via SPI</option>
+            <option value="uart_elm327">External ELM327 via UART</option>
+            <option value="uart_sja1000">SJA1000 with external transciever</option>
+          </select>
+
+          <div id="can_spi_config" class="hidden">
+            SPI Config:
+            <div class="grid">
+              <label for="pin_can_spi_mosi">
+                PIN MOSI:
+                <select id="pin_can_spi_mosi" name="pin_can_spi_mosi" data-pins></select>
+              </label>
+
+              <label for="pin_can_spi_miso">
+                PIN MISO
+                <select id="pin_can_spi_miso" name="pin_can_spi_miso" data-pins></select>
+              </label>
+            </div>
+            <div class="grid">
+              <label for="pin_can_spi_cs">
+                PIN Chip select
+                <select id="pin_can_spi_cs" name="pin_can_spi_cs" data-pins></select>
+              </label>
+
+              <label for="pin_can_spi_sck">
+                PIN SCK
+                <select id="pin_can_spi_sck" name="pin_can_spi_sck" data-pins></select>
+              </label>
+            </div>
+            <div class="grid">
+              <label for="pin_can_spi_int">
+                PIN Interrupt
+                <select id="pin_can_spi_int" name="pin_can_spi_int" data-pins></select>
+              </label>
+
+              <label for="pin_can_spi_mhz">
+                IC MHZ
+                <select id="pin_can_spi_mhz" name="pin_can_spi_mhz">
+                  <option value="8">8 mhz</option>
+                  <option value="10">10 mhz</option>
+                  <option value="12">12 mhz</option>
+                  <option value="16">16 mhz</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div id="can_uart_config" class="hidden">
+            UART Config:
+            <div class="grid">
+              <label for="pin_can_uart_rx">
+                PIN CAN RX
+                <select id="pin_can_uart_rx" name="pin_can_uart_rx" data-pins></select>
+              </label>
+
+              <label for="pin_can_uart_tx">
+                PIN CAN TX
+                <select id="pin_can_uart_tx" name="pin_can_uart_tx" data-pins></select>
+              </label>
+            </div>
           </div>
         </article>
       </article>
@@ -392,13 +453,8 @@
       <article id="form-can" role="tab" style="display: none;">
         <label for="can_speed_kbps">CAN-Bus Speed in kbps:</label>
         <select id="can_speed_kbps" name="can_speed_kbps">
-          <option value="1">1</option>
-          <option value="5">5</option>
           <option value="10">10</option>
-          <option value="12">12.5</option>
-          <option value="16">16</option>
           <option value="20">20</option>
-          <option value="25">25</option>
           <option value="50">50</option>
           <option value="100">100</option>
           <option value="125">125</option>

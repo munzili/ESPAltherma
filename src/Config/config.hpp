@@ -10,6 +10,17 @@
 #define CONFIG_FILE "/config.json"
 #define MODELS_CONFIG_SIZE 1024*10
 
+enum class CanICTypes : uint8_t {
+    MCP2515,
+    ELM327,
+    SJA1000
+};
+
+enum class CANICBus : uint8_t {
+    SPI,
+    UART
+};
+
 struct Config
 {
     bool configStored;
@@ -44,8 +55,19 @@ struct Config
     uint8_t PIN_SG2;
     bool SG_RELAY_HIGH_TRIGGER;
     bool CAN_ENABLED;
+    CanICTypes CAN_IC;
+    CANICBus CAN_BUS;
     uint8_t PIN_CAN_RX;
     uint8_t PIN_CAN_TX;
+    struct
+    {
+        uint8_t PIN_MOSI;
+        uint8_t PIN_MISO;
+        uint8_t PIN_SCK;
+        uint8_t PIN_CS;
+        uint8_t PIN_INT;
+        uint8_t IC_MHZ;
+    } CAN_SPI;
     uint16_t CAN_SPEED_KBPS;
     size_t PARAMETERS_LENGTH;
     ParameterDef** PARAMETERS;

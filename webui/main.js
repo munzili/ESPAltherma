@@ -125,8 +125,14 @@ async function resetToDefaults()
     document.getElementById('pin_cooling').value = boardDefaults['pin_cooling'];
     document.getElementById('pin_sg1').value = boardDefaults['pin_sg1'];
     document.getElementById('pin_sg2').value = boardDefaults['pin_sg2'];
-    document.getElementById('pin_can_rx').value = boardDefaults['pin_can_rx'];
-    document.getElementById('pin_can_tx').value = boardDefaults['pin_can_tx'];
+    document.getElementById('pin_can_uart_rx').value = boardDefaults['pin_can_rx'];
+    document.getElementById('pin_can_uart_tx').value = boardDefaults['pin_can_tx'];
+    document.getElementById('pin_can_spi_mosi').value = boardDefaults['spi']['mosi'];
+    document.getElementById('pin_can_spi_miso').value = boardDefaults['spi']['miso'];
+    document.getElementById('pin_can_spi_sck').value = boardDefaults['spi']['sck'];
+    document.getElementById('pin_can_spi_cs').value = boardDefaults['spi']['cs'];
+    document.getElementById('pin_can_spi_int').value = boardDefaults['spi']['int'];
+    document.getElementById('pin_can_spi_mhz').value = boardDefaults['spi']['mhz'];
     document.getElementById('can_speed_kbps').value = boardDefaults['can_speed_kbps'];
     document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config'];
     document.getElementById('frequency').value = boardDefaults['frequency'];
@@ -219,8 +225,24 @@ async function loadConfig()
 
         if(data['CAN_ENABLED'])
         {
-            document.getElementById('pin_can_rx').value = data['PIN_CAN_RX'];
-            document.getElementById('pin_can_tx').value = data['PIN_CAN_TX'];
+            if(data['CAN_BUS'] == 1)
+            {
+                document.getElementById('pin_can_uart_rx').value = data['PIN_CAN_RX'];
+                document.getElementById('pin_can_uart_tx').value = data['PIN_CAN_TX'];
+            }
+            else if(data['CAN_BUS'] == 0)
+            {
+                document.getElementById('pin_can_spi_mosi').value = data['SPI']['MOSI'];
+                document.getElementById('pin_can_spi_miso').value = data['SPI']['MISO'];
+                document.getElementById('pin_can_spi_sck').value = data['SPI']['SCK'];
+                document.getElementById('pin_can_spi_cs').value = data['SPI']['CS'];
+                document.getElementById('pin_can_spi_int').value = data['SPI']['INT'];
+                document.getElementById('pin_can_spi_mhz').value = data['SPI']['MHZ'];
+            }
+
+            document.getElementById("can_ic_type").selectedIndex = data['CAN_IC'] + 1;
+            updateCANConfigDisplay();
+
             document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];
             show('can_pins');
             show('nav-can');
@@ -458,11 +480,32 @@ async function sendConfigData(event)
     const can_enabled = document.getElementById('can_enabled');
     if(can_enabled.checked)
     {
-        const pin_can_rx = document.getElementById('pin_can_rx');
+        const can_ic_type = document.getElementById('can_ic_type');
+        can_ic_type.setAttribute('aria-invalid', can_ic_type.value == '');
+
+        const pin_can_rx = document.getElementById('pin_can_uart_rx');
         pin_can_rx.setAttribute('aria-invalid', pin_can_rx.value == '');
 
-        const pin_can_tx = document.getElementById('pin_can_tx');
+        const pin_can_tx = document.getElementById('pin_can_uart_tx');
         pin_can_tx.setAttribute('aria-invalid', pin_can_tx.value == '');
+
+        const pin_can_spi_mosi = document.getElementById('pin_can_spi_mosi');
+        pin_can_spi_mosi.setAttribute('aria-invalid', pin_can_spi_mosi.value == '');
+
+        const pin_can_spi_miso = document.getElementById('pin_can_spi_miso');
+        pin_can_spi_miso.setAttribute('aria-invalid', pin_can_spi_miso.value == '');
+
+        const pin_can_spi_sck = document.getElementById('pin_can_spi_sck');
+        pin_can_spi_sck.setAttribute('aria-invalid', pin_can_spi_sck.value == '');
+
+        const pin_can_spi_cs = document.getElementById('pin_can_spi_cs');
+        pin_can_spi_cs.setAttribute('aria-invalid', pin_can_spi_cs.value == '');
+
+        const pin_can_spi_int = document.getElementById('pin_can_spi_int');
+        pin_can_spi_int.setAttribute('aria-invalid', pin_can_spi_int.value == '');
+
+        const pin_can_spi_mhz = document.getElementById('pin_can_spi_mhz');
+        pin_can_spi_mhz.setAttribute('aria-invalid', pin_can_spi_mhz.value == '');
 
         const can_speed_kbps = document.getElementById('can_speed_kbps');
         can_speed_kbps.setAttribute('aria-invalid', can_speed_kbps.value == '');
@@ -1484,4 +1527,12 @@ function updateCommandsTable(tableId, commands)
             valueCell.appendChild(document.createTextNode(data["value"]));
         }
     }
+}
+
+function updateCANConfigDisplay()
+{
+    const icType = document.getElementById('can_ic_type').value;
+
+    show('can_spi_config', !icType.startsWith('spi_'));
+    show('can_uart_config', !icType.startsWith('uart_'));
 }

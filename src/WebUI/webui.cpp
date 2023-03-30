@@ -77,6 +77,14 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"pin_sg2\": 33,"
         "\"pin_can_rx\": 32,"
         "\"pin_can_tx\": 33,"
+        "\"spi\": {"
+          "\"mosi\": 26,"
+          "\"miso\": 0,"
+          "\"sck\": 36,"
+          "\"cs\": 32,"
+          "\"int\": 33,"
+          "\"mhz\": 12"
+        "},"
         "\"can_speed_kbps\": 20,"
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
@@ -125,6 +133,14 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
         "\"pin_sg2\": 33,"
         "\"pin_can_rx\": 4,"
         "\"pin_can_tx\": 5,"
+        "\"spi\": {"
+          "\"mosi\": 23,"
+          "\"miso\": 19,"
+          "\"sck\": 18,"
+          "\"cs\": 5,"
+          "\"int\": 4,"
+          "\"mhz\": 12"
+        "},"
         "\"can_speed_kbps\": 20,"
         "\"pin_enable_config\": 27,"
         "\"frequency\": 30000,"
@@ -529,9 +545,50 @@ void onSaveConfig(AsyncWebServerRequest *request)
     return;
   }
 
-  if(request->hasParam("can_enabled", true) && (!request->hasParam("pin_can_rx", true) || !request->hasParam("pin_can_tx", true) || !request->hasParam("can_speed_kbps", true)))
+  if(request->hasParam("can_enabled", true) && (!request->hasParam("can_ic_type", true) ||!request->hasParam("can_speed_kbps", true)))
   {
-    request->send(422, "text/plain", "Missing parameter(s) for CAN-Bus");
+    request->send(422, "text/plain", "Missing parameter(s) for CAN-Bus IC Type or CAN-Speed");
+    return;
+  }
+
+  String ICType = request->getParam("can_ic_type", true)->value();
+  CANICBus canICBus;
+  CanICTypes canICTypes;
+
+  if(ICType.startsWith("uart_"))
+  {
+    canICBus = CANICBus::UART;
+  }
+  else if(ICType.startsWith("spi_"))
+  {
+    canICBus = CANICBus::SPI;
+  }
+
+  ICType = ICType.substring(ICType.indexOf('_') + 1);
+
+  if(ICType == "mcp2515")
+    canICTypes = CanICTypes::MCP2515;
+  else if(ICType == "elm327")
+    canICTypes = CanICTypes::ELM327;
+  else if(ICType == "sja1000")
+    canICTypes = CanICTypes::SJA1000;
+
+  if(request->hasParam("can_enabled", true) && canICBus == CANICBus::UART &&
+     (!request->hasParam("pin_can_uart_rx", true) || !request->hasParam("pin_can_uart_tx", true)))
+  {
+    request->send(422, "text/plain", "Missing parameter(s) for CAN-Bus UART");
+    return;
+  }
+
+  if(request->hasParam("can_enabled", true) && canICBus == CANICBus::SPI &&
+     (!request->hasParam("pin_can_spi_mosi", true) ||
+      !request->hasParam("pin_can_spi_miso", true) ||
+      !request->hasParam("pin_can_spi_cs", true) ||
+      !request->hasParam("pin_can_spi_sck", true) ||
+      !request->hasParam("pin_can_spi_int", true) ||
+      !request->hasParam("pin_can_spi_mhz", true)))
+  {
+    request->send(422, "text/plain", "Missing parameter(s) for CAN-Bus SPI");
     return;
   }
 
@@ -603,8 +660,25 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   if(config->CAN_ENABLED)
   {
-    config->PIN_CAN_RX = request->getParam("pin_can_rx", true)->value().toInt();
-    config->PIN_CAN_TX = request->getParam("pin_can_tx", true)->value().toInt();
+    config->CAN_IC = canICTypes;
+    config->CAN_BUS = canICBus;
+
+    if(config->CAN_BUS == CANICBus::UART)
+    {
+      config->PIN_CAN_RX = request->getParam("pin_can_uart_rx", true)->value().toInt();
+      config->PIN_CAN_TX = request->getParam("pin_can_uart_tx", true)->value().toInt();
+    }
+
+    if(config->CAN_BUS == CANICBus::SPI)
+    {
+      config->CAN_SPI.PIN_MISO = request->getParam("pin_can_spi_miso", true)->value().toInt();
+      config->CAN_SPI.PIN_MOSI = request->getParam("pin_can_spi_mosi", true)->value().toInt();
+      config->CAN_SPI.PIN_SCK = request->getParam("pin_can_spi_sck", true)->value().toInt();
+      config->CAN_SPI.PIN_CS = request->getParam("pin_can_spi_cs", true)->value().toInt();
+      config->CAN_SPI.PIN_INT = request->getParam("pin_can_spi_int", true)->value().toInt();
+      config->CAN_SPI.IC_MHZ = request->getParam("pin_can_spi_mhz", true)->value().toInt();
+    }
+
     config->CAN_SPEED_KBPS = request->getParam("can_speed_kbps", true)->value().toInt();
   }
 

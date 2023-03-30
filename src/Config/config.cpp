@@ -86,8 +86,17 @@ void readConfig()
     config->PIN_SG2 = configDoc["PIN_SG2"].as<uint8_t>();
     config->SG_RELAY_HIGH_TRIGGER = configDoc["SG_RELAY_HIGH_TRIGGER"].as<const bool>();
     config->CAN_ENABLED = configDoc["CAN_ENABLED"].as<const bool>();
+    config->CAN_IC = (CanICTypes)configDoc["CAN_IC"].as<uint8_t>();
+    config->CAN_BUS = (CANICBus)configDoc["CAN_BUS"].as<uint8_t>();
     config->PIN_CAN_RX = configDoc["PIN_CAN_RX"].as<uint8_t>();
     config->PIN_CAN_TX = configDoc["PIN_CAN_TX"].as<uint8_t>();
+    config->CAN_SPI.PIN_MISO = configDoc["SPI"]["MISO"].as<uint8_t>();
+    config->CAN_SPI.PIN_MOSI = configDoc["SPI"]["MOSI"].as<uint8_t>();
+    config->CAN_SPI.PIN_SCK = configDoc["SPI"]["SCK"].as<uint8_t>();
+    config->CAN_SPI.PIN_CS = configDoc["SPI"]["CS"].as<uint8_t>();
+    config->CAN_SPI.PIN_INT = configDoc["SPI"]["INT"].as<uint8_t>();
+    config->CAN_SPI.IC_MHZ = configDoc["SPI"]["MHZ"].as<uint8_t>();
+
     config->CAN_SPEED_KBPS = configDoc["CAN_SPEED_KBPS"].as<uint16_t>();
 
     JsonArray parameters = configDoc["PARAMETERS"].as<JsonArray>();
@@ -124,7 +133,6 @@ void readConfig()
             commandBytes[5],
             commandBytes[6]
         };
-
 
         CommandDefValueCode** valueCodes;
         uint8_t valueCodeSize = 0;
@@ -209,8 +217,19 @@ void saveConfig()
     configDoc["PIN_SG1"] = config->PIN_SG1;
     configDoc["PIN_SG2"] = config->PIN_SG2;
     configDoc["CAN_ENABLED"] = config->CAN_ENABLED;
+    configDoc["CAN_IC"] = (uint8_t)config->CAN_IC;
+    configDoc["CAN_BUS"] = (uint8_t)config->CAN_BUS;
     configDoc["PIN_CAN_RX"] = config->PIN_CAN_RX;
     configDoc["PIN_CAN_TX"] = config->PIN_CAN_TX;
+
+    JsonObject canSPI = configDoc.createNestedObject("SPI");
+    canSPI["MISO"] = config->CAN_SPI.PIN_MISO;
+    canSPI["MOSI"] = config->CAN_SPI.PIN_MOSI;
+    canSPI["SCK"] = config->CAN_SPI.PIN_SCK;
+    canSPI["CS"] = config->CAN_SPI.PIN_CS;
+    canSPI["INT"] = config->CAN_SPI.PIN_INT;
+    canSPI["MHZ"] = config->CAN_SPI.IC_MHZ;
+
     configDoc["CAN_SPEED_KBPS"] = config->CAN_SPEED_KBPS;
     configDoc["SG_RELAY_HIGH_TRIGGER"] = config->SG_RELAY_HIGH_TRIGGER;
 
