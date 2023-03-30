@@ -1,16 +1,12 @@
 #ifndef CAN_DRIVER_H
 #define CAN_DRIVER_H
 
-#include "CANPort.hpp"
 #include "Config/commandDef.hpp"
 
 class CANDriver
 {
-protected:
-    CANPort* canPort;
-
 public:
-    virtual bool initInterface(CANPort* port, int baudrate);
+    virtual bool initInterface();
     virtual const char* sendCommandWithID(CommandDef cmd, bool setValue = false, int value = 0);
 };
 

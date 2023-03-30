@@ -1,45 +1,89 @@
 #include "ELM327.hpp"
 
-// code converted from the pyHPSU project and the fhemHPSU project
+HardwareSerial* selectedSerial;
 
-bool DriverELM327::initInterface(CANPort* port, int baudrate)
+const char* DriverELM327::read()
 {
-    canPort = port;
+    int packetSize = selectedSerial->available();
 
-    canPort->write("AT Z", 4);  // just reset ELM327
-    if(canPort->read() != "OK");
+    if (packetSize)
+    {
+        char result[packetSize] = "";
+
+        selectedSerial->read(result, packetSize);
+
+        return result;
+    }
+
+    return nullptr;
+}
+
+void DriverELM327::writePart(const char *bytes, size_t size)
+{
+    selectedSerial->write(bytes, size);
+}
+
+void DriverELM327::write(const char *bytes, size_t size)
+{
+    selectedSerial->write(bytes, size);
+    selectedSerial->write("\r");
+}
+
+bool DriverELM327::initInterface()
+{
+    char uartNr = 0; // use config
+
+    switch (uartNr)
+    {
+    case 1:
+        selectedSerial = &Serial1;
+        break;
+
+    case 2:
+        selectedSerial = &Serial2;
+        break;
+
+    default:
+        selectedSerial = &Serial;
+        break;
+    }
+
+    selectedSerial->begin(38400);
+
+    write("AT Z", 4);  // just reset ELM327
+    if(read() != "OK");
     {
         // error
         return false;
     }
 
-    canPort->write("AT E0", 5); // disable echo
-    if(canPort->read() != "OK");
+    write("AT E0", 5); // disable echo
+    if(read() != "OK");
     {
         // error
         return false;
     }
 
-    uint8_t dividor = 500 / baudrate;
+    uint8_t dividor = 500 / config->CAN_SPEED_KBPS;
     char baudrateCmd[15];
     sprintf(baudrateCmd, "AT PP 2F SV %02x", dividor);
 
-    canPort->write(baudrateCmd, 14); // set given CAN-Bus baudrate
-    if(canPort->read() != "OK");
+    write(baudrateCmd, 14); // set given CAN-Bus baudrate
+    if(read() != "OK");
     {
         // error
         return false;
     }
 
-    canPort->write("AT PP 2F ON", 11); // Activate/save baud parameter
-    if(canPort->read() != "OK");
+    write("AT PP 2F ON", 11); // Activate/save baud parameter
+    if(read() != "OK");
     {
         // error
         return false;
     }
 
-    canPort->write("AT SP C", 7);
-    if(canPort->read() != "OK");
+    write("AT SP C", 7);
+    if(read() != "OK");
     {
         // error
         return false;
@@ -48,18 +92,25 @@ bool DriverELM327::initInterface(CANPort* port, int baudrate)
     return true;
 }
 
+void DriverELM327::setID(const uint16_t id)
+{
+    char message[9];
+    sprintf (message, "ATSH%d", id);
+    write(message, 9);
+}
+
 const char *DriverELM327::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
 {
     if(setValue)
     {
-        canPort->setID(680);
+        setID(680);
     }
     else
     {
-        canPort->setID(cmd->id);
+        setID(cmd->id);
     }
 
-    if(canPort->read() != "OK");
+    if(read() != "OK");
     {
         // error
         return nullptr;
@@ -128,7 +179,7 @@ const char *DriverELM327::sendCommandWithID(CommandDef* cmd, bool setValue, int 
     }
 
     // TODO ERROR! -> modifiedCommand needs to be converted to HEX String and afterwarts given to write
-    canPort->write(modifiedCommand, COMMAND_BYTE_LENGTH);
+    //write(modifiedCommand, COMMAND_BYTE_LENGTH);
 
-    return canPort->read();
+    return read();
 }

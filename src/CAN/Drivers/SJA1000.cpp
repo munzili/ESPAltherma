@@ -1,10 +1,75 @@
 #include "SJA1000.hpp"
 
-bool DriverSJA1000::initInterface(CANPort* port, int baudrate)
+bool DriverSJA1000::initInterface()
 {
-    canPort = port;
+    // Konfiguration des CAN-Controllers
+    twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)config->PIN_CAN_TX, (gpio_num_t)config->PIN_CAN_RX, TWAI_MODE_NORMAL);
+    twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
+    twai_timing_config_t t_config;
 
-    //CAN.begin(baudrate * 1000);
+    switch (config->CAN_SPEED_KBPS)
+    {
+#if (SOC_TWAI_BRP_MAX > 256)
+    case 10:
+        t_config = TWAI_TIMING_CONFIG_10KBITS();
+        break;
+#endif
+#if (SOC_TWAI_BRP_MAX > 128) || (CONFIG_ESP32_REV_MIN >= 2)
+    case 20:
+        t_config = TWAI_TIMING_CONFIG_20KBITS();
+        break;
+#endif
+
+    case 50:
+        t_config = TWAI_TIMING_CONFIG_50KBITS();
+        break;
+
+    case 100:
+        t_config = TWAI_TIMING_CONFIG_100KBITS();
+        break;
+
+    case 125:
+        t_config = TWAI_TIMING_CONFIG_125KBITS();
+        break;
+
+    case 250:
+        t_config = TWAI_TIMING_CONFIG_250KBITS();
+        break;
+
+    case 500:
+        t_config = TWAI_TIMING_CONFIG_500KBITS();
+        break;
+
+    case 800:
+        t_config = TWAI_TIMING_CONFIG_800KBITS();
+        break;
+
+    case 1000:
+        t_config = TWAI_TIMING_CONFIG_1MBITS();
+        break;
+
+    default:
+        mqttSerial.println("CAN-Bus init failed! E1");
+        return false; // error - wrong speed
+        break;
+    }
+
+    int result;
+
+    // Initialisierung des CAN-Controllers
+    if ((result = twai_driver_install(&g_config, &t_config, &f_config)) != ESP_OK)
+    {
+        mqttSerial.print("CAN-Bus init failed! E2 - ");
+        mqttSerial.println(result);
+        return false;
+    }
+
+    if ((result = twai_start()) != ESP_OK)
+    {
+        mqttSerial.print("CAN-Bus init failed! E3 - ");
+        mqttSerial.println(result);
+        return false;
+    }
 
     return true;
 }
@@ -13,11 +78,11 @@ const char* DriverSJA1000::sendCommandWithID(CommandDef* cmd, bool setValue, int
 {
     if(setValue)
     {
-        canPort->setID(680);
+        //canPort->setID(680);
     }
     else
     {
-        canPort->setID(cmd->id);
+        //canPort->setID(cmd->id);
     }
 
     byte modifiedCommand[COMMAND_BYTE_LENGTH];
@@ -82,12 +147,36 @@ const char* DriverSJA1000::sendCommandWithID(CommandDef* cmd, bool setValue, int
         }
     }
 
-    canPort->write(modifiedCommand, COMMAND_BYTE_LENGTH);
+    /*canPort->write(modifiedCommand, COMMAND_BYTE_LENGTH);
     if(canPort->read() != "OK");
     {
         // error
         return nullptr;
-    }
+    }*/
 
     return nullptr;
+}
+
+void readAllMessages()
+{
+    twai_message_t message;
+
+    if (twai_receive(&message, 0) != ESP_OK) {
+        return; // no messages
+    }
+
+    if (!message.rtr)
+    {
+        mqttSerial.printf("Message from %i recieved:\n", message.identifier);
+
+        for (uint8_t i = 0; i < message.data_length_code; i++)
+        {
+            mqttSerial.print(message.data[i], HEX);
+            mqttSerial.print(" ");
+        }
+
+        mqttSerial.println();
+    }
+
+    return; // OK
 }

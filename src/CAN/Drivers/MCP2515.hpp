@@ -1,13 +1,13 @@
-#ifndef DRIVER_SJA1000_H
-#define DRIVER_SJA1000_H
+#ifndef DRIVER_MCP2515_H
+#define DRIVER_MCP2515_H
 
-//#include <CAN.h>
-#include "driver/twai.h"
+#include <SPI.h>
+#include <107-Arduino-MCP2515.h>
 #include "CAN/CANDriver.hpp"
-#include "Config/config.hpp"
 #include "MQTT/mqttSerial.hpp"
+#include "Config/config.hpp"
 
-class DriverSJA1000 : CANDriver
+class DriverMCP2515 : CANDriver
 {
 public:
     bool initInterface();
