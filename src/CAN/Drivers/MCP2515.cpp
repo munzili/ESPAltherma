@@ -1,129 +1,634 @@
 #include "MCP2515.hpp"
 
+// tranlate from fhemHPSU
+
+using namespace MCP2515;
+
 bool canInited = false;
+bool sniffMode = false;
+uint16_t currentFrameId;
 
-static int         const MKRCAN_MCP2515_CS_PIN  = SS;
-static int         const MKRCAN_MCP2515_INT_PIN = 4;
-static SPISettings const MCP2515x_SPI_SETTING{1000000, MSBFIRST, SPI_MODE0};
+static const SPISettings MCP2515x_SPI_SETTING{1000000, MSBFIRST, SPI_MODE0};
 
-void onReceiveBufferFull(uint32_t const, uint32_t const, uint8_t const *, uint8_t const);
-
-typedef struct
-{
-  uint32_t id;
-  uint8_t  data[8];
-  uint8_t  len;
-} sCanTestFrame;
+Mode currentMode;
 
 ArduinoMCP2515 mcp2515([]()
                        {
                          SPI.beginTransaction(MCP2515x_SPI_SETTING);
-                         digitalWrite(MKRCAN_MCP2515_CS_PIN, LOW);
+                         digitalWrite(config->CAN_SPI.PIN_CS, LOW);
                        },
                        []()
                        {
-                         digitalWrite(MKRCAN_MCP2515_CS_PIN, HIGH);
+                         digitalWrite(config->CAN_SPI.PIN_CS, HIGH);
                          SPI.endTransaction();
                        },
-                       [](uint8_t const d) { return SPI.transfer(d); },
+                       [](uint8_t const dataByte) { return SPI.transfer(dataByte); },
                        micros,
                        onReceiveBufferFull,
                        nullptr);
 
-static sCanTestFrame const test_frame_1 = { 0x00000001, {0}, 0 };                                              /* Minimum (no) payload */
-static sCanTestFrame const test_frame_2 = { 0x00000002, {0xCA, 0xFE, 0xCA, 0xFE, 0, 0, 0, 0}, 4 };             /* Between minimum and maximum payload */
-static sCanTestFrame const test_frame_3 = { 0x00000003, {0xCA, 0xFE, 0xCA, 0xFE, 0xCA, 0xFE, 0xCA, 0xFE}, 8 }; /* Maximum payload */
-static sCanTestFrame const test_frame_4 = { 0x40000004, {0}, 0 };                                              /* RTR frame */
-static sCanTestFrame const test_frame_5 = { 0x000007FF, {0}, 0 };                                              /* Highest standard 11 bit CAN address */
-static sCanTestFrame const test_frame_6 = { 0x80000000, {0}, 0 };                                              /* Lowest extended 29 bit CAN address */
-static sCanTestFrame const test_frame_7 = { 0x9FFFFFFF, {0}, 0 };                                              /* Highest extended 29 bit CAN address */
-
-static std::array<sCanTestFrame, 7> const CAN_TEST_FRAME_ARRAY =
+void sniffCAN(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
 {
-  test_frame_1,
-  test_frame_2,
-  test_frame_3,
-  test_frame_4,
-  test_frame_5,
-  test_frame_6,
-  test_frame_7
-};
+  char resultText[128] = "";
+  sprintf(resultText, "CAN [ %i ] ID", timestamp_us);
 
+  if(id & MCP2515::CAN_EFF_BITMASK) strcat(resultText, "(EXT)");
+  if(id & MCP2515::CAN_RTR_BITMASK) strcat(resultText, "(RTR)");
 
-ulong lastCANReading;
+  sprintf(resultText + strlen(resultText), " %02X DATA[%i] ", id, len);
 
-void onReceiveBufferFull(uint32_t const timestamp_us, uint32_t const id, uint8_t const * data, uint8_t const len)
+  std::for_each(data,
+                  data+len,
+                  [resultText](uint8_t const elem) mutable {
+                      sprintf(resultText + strlen(resultText), "%02X ", elem);
+                  });
+
+  mqttSerial.println(resultText);
+}
+
+bool setMode(Mode mode)
 {
-    if(!canInited)
-        return;
+  bool success = false;
 
-    char resultText[128] = "";
-    sprintf(resultText, "CAN [ %i ] ID", timestamp_us);
+  switch (mode)
+  {
+  case Mode::Normal:
+    success = mcp2515.setNormalMode();
+    break;
 
-    if(id & MCP2515::CAN_EFF_BITMASK) strcat(resultText, "(EXT)");
-    if(id & MCP2515::CAN_RTR_BITMASK) strcat(resultText, "(RTR)");
+  case Mode::Sleep:
+    success = mcp2515.setSleepMode();
+    break;
 
-    sprintf(resultText + strlen(resultText), " %02X DATA[%i] ", id, len);
+  case Mode::Loopback:
+    success = mcp2515.setLoopbackMode();
+    break;
 
-    std::for_each(data,
-                    data+len,
-                    [resultText](uint8_t const elem) mutable {
-                        sprintf(resultText + strlen(resultText), "%02X ", elem);
-                    });
+  case Mode::ListenOnly:
+    success = mcp2515.setListenOnlyMode();
+    break;
 
-    mqttSerial.println(resultText);
+  case Mode::Config:
+    success = mcp2515.setConfigMode();
+    break;
+  }
+
+  if(success)
+    currentMode = mode;
+
+  return success;
+}
+
+void writeLoopbackTest()
+{
+  Mode modeBeforeTest = currentMode;
+  setMode(Mode::Loopback);
+
+  CanFrame const test_frame_1 = { 0x00000001, {0}, 0 };                                              /* Minimum (no) payload */
+  CanFrame const test_frame_2 = { 0x00000002, {0xCA, 0xFE, 0xCA, 0xFE, 0, 0, 0, 0}, 4 };             /* Between minimum and maximum payload */
+  CanFrame const test_frame_3 = { 0x00000003, {0xCA, 0xFE, 0xCA, 0xFE, 0xCA, 0xFE, 0xCA, 0xFE}, 8 }; /* Maximum payload */
+  CanFrame const test_frame_4 = { 0x40000004, {0}, 0 };                                              /* RTR frame */
+  CanFrame const test_frame_5 = { 0x000007FF, {0}, 0 };                                              /* Highest standard 11 bit CAN address */
+  CanFrame const test_frame_6 = { 0x80000000, {0}, 0 };                                              /* Lowest extended 29 bit CAN address */
+  CanFrame const test_frame_7 = { 0x9FFFFFFF, {0}, 0 };                                              /* Highest extended 29 bit CAN address */
+
+  std::array<CanFrame, 7> const CAN_TEST_FRAME_ARRAY =
+  {
+    test_frame_1,
+    test_frame_2,
+    test_frame_3,
+    test_frame_4,
+    test_frame_5,
+    test_frame_6,
+    test_frame_7
+  };
+
+  std::for_each(CAN_TEST_FRAME_ARRAY.cbegin(),
+                CAN_TEST_FRAME_ARRAY.cend(),
+                [](CanFrame const frame)
+                {
+                if(!mcp2515.transmit(frame.id, frame.data, frame.len)) {
+                    mqttSerial.println("ERROR TX");
+                }
+                delay(10);
+                });
+
+  setMode(modeBeforeTest);
+}
+
+int HPSU_toSigned(uint16_t value, char* unit)
+{
+  if(unit == "deg" || unit == "value_code_signed")
+  {
+    int newValue = value & 0xFFFF;
+    return (newValue ^ 0x8000) - 0x8000;
+  }
+  else
+  {
+    return value;
+  }
+}
+
+void onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
+{
+  if(!canInited)
+      return;
+
+  if(sniffMode || currentMode == Mode::Loopback)
+  {
+    sniffCAN(timestamp_us, id, data, len);
+
+    if(currentMode == Mode::Loopback)
+      return;
+  }
+
+  if(len < 2)
+    return;
+
+  bool extended = data[2] == 0xFA;
+
+  bool valid = false;
+  CommandDef* recievedCommand = nullptr;
+
+  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+  {
+    //Byte 3 == FA
+    //31 00 FA 0B D1 00 00   <- $CANMsg
+    //      |------| -> len: 3 byte
+    //      ^pos: 2
+    if(extended &&
+       config->COMMANDS[i]->command[2] == data[2] &&
+       config->COMMANDS[i]->command[3] == data[3] &&
+       config->COMMANDS[i]->command[4] == data[4])
+    {
+      recievedCommand = config->COMMANDS[i];
+      break;
+    }
+    //Byte 3 != FA
+    //31 00 05 00 00 00 00   <- $CANMsg
+    //      || -> len: 1 byte
+    //      ^pos: 2
+    else if(!extended && config->COMMANDS[i]->command[2] == data[2])
+    {
+      recievedCommand = config->COMMANDS[i];
+      break;
+    }
+  }
+
+  // if we got a message that we shouldnt handle, skip it
+  if(recievedCommand == nullptr)
+    return;
+
+
+  byte valByte1 = 0;
+  byte valByte2 = 0;
+
+  if (extended)  // -> Byte3 eq FA
+  {
+    //20 0A FA 01 D6 00 D9   <- $CANMsg
+    //               |  ^pos: 6
+    //               ^pos: 5
+    //   t_hs - 21,7
+
+    valByte1 = data[5];
+    valByte2 = data[6];
+  }
+  else
+  {
+    //20 0A 0E 01 E8 00 00   <- $CANMsg
+    //         |  ^pos: 4
+    //         ^pos: 3
+    //   t_dhw - 48,8Â°
+    valByte1 = data[3];
+    valByte2 = data[4];
+  }
+
+  int value;
+
+  if(recievedCommand->type == "int")
+  {
+    value = HPSU_toSigned(valByte1, recievedCommand->unit);
+  }
+  else if(recievedCommand->type == "value")
+  {
+    value = valByte1;
+    //example: mode_01 val 4       -> 31 00 FA 01 12 04 00
+  }
+  else if(recievedCommand->type == "longint")
+  {
+    value = HPSU_toSigned(valByte2 + valByte1 * 0x0100, recievedCommand->unit);
+    //example: one_hot_water val 1 -> 31 00 FA 01 44 00 01
+    //                                                   ^
+  }
+  else if(recievedCommand->type == "float")
+  {
+    value = HPSU_toSigned(valByte2 + valByte1 * 0x0100, recievedCommand->unit);
+  }
+  else
+  {
+    return;
+  }
+
+  value /= recievedCommand->divisor;
+
+  String valueCodeKey = "";
+  if(recievedCommand->valueCodeSize > 0)
+  {
+    for (byte counter = 0; counter < recievedCommand->valueCodeSize; counter++)
+    {
+      if(recievedCommand->valueCode[counter]->value.toInt() == value)
+      {
+        valueCodeKey = recievedCommand->valueCode[counter]->key;
+        break;
+      }
+    }
+  }
+
+  if(strlen(recievedCommand->unit) > 0)
+  {
+      if(strcmp(recievedCommand->unit, "deg") == 0)
+      {
+        valueCodeKey += " °C";
+      }
+      else if(strcmp(recievedCommand->unit, "percent") == 0)
+      {
+        valueCodeKey += " %";
+      }
+      else if(strcmp(recievedCommand->unit, "bar") == 0)
+      {
+        valueCodeKey += " bar";
+      }
+      else if(strcmp(recievedCommand->unit, "kwh") == 0)
+      {
+        valueCodeKey += " kWh";
+      }
+      else if(strcmp(recievedCommand->unit, "kw") == 0)
+      {
+        valueCodeKey += " kW";
+      }
+      else if(strcmp(recievedCommand->unit, "w") == 0)
+      {
+        valueCodeKey += " W";
+      }
+      else if(strcmp(recievedCommand->unit, "sec") == 0)
+      {
+        valueCodeKey += " sec";
+      }
+      else if(strcmp(recievedCommand->unit, "min") == 0)
+      {
+        valueCodeKey += " min";
+      }
+      else if(strcmp(recievedCommand->unit, "hour") == 0)
+      {
+        valueCodeKey += " h";
+      }
+      else if(strcmp(recievedCommand->unit, "lh") == 0)
+      {
+        valueCodeKey += " lh";
+      }
+  }
+
+  if(valueCodeKey == "")
+  {
+    valueCodeKey = String(value);
+  }
+
+  if(config->MQTT_USE_ONETOPIC)
+  {
+    client.publish((config->MQTT_TOPIC_NAME + config->MQTT_ONETOPIC_NAME + "CAN/" + recievedCommand->label).c_str(), valueCodeKey.c_str());
+  }
+  else
+  {
+    client.publish((config->MQTT_TOPIC_NAME + "CAN/" + recievedCommand->label).c_str(), valueCodeKey.c_str());
+  }
 }
 
 void IRAM_ATTR handleCANInterrupt()
 {
   if(!canInited)
-      return;
+    return;
 
   mcp2515.onExternalEventHandler();
 }
 
+bool getRate(const uint8_t mhz, const uint16_t speed, CanBitRate &rate)
+{
+  bool found = true;
+
+  if(mhz == 8)
+  {
+    switch (config->CAN_SPEED_KBPS)
+    {
+    case 10:
+      rate = CanBitRate::BR_10kBPS_8MHZ;
+      break;
+
+    case 20:
+      rate = CanBitRate::BR_20kBPS_8MHZ;
+      break;
+
+    case 50:
+      rate = CanBitRate::BR_50kBPS_8MHZ;
+      break;
+
+    case 100:
+      rate = CanBitRate::BR_100kBPS_8MHZ;
+      break;
+
+    case 125:
+      rate = CanBitRate::BR_125kBPS_8MHZ;
+      break;
+
+    case 250:
+      rate = CanBitRate::BR_250kBPS_8MHZ;
+      break;
+
+    case 500:
+      rate = CanBitRate::BR_500kBPS_8MHZ;
+      break;
+
+    case 800:
+      rate = CanBitRate::BR_800kBPS_8MHZ;
+      break;
+
+    case 1000:
+      rate = CanBitRate::BR_1000kBPS_8MHZ;
+      break;
+
+    default:
+      found = false;
+      break;
+    }
+  }
+  else if(mhz == 10)
+  {
+    switch (config->CAN_SPEED_KBPS)
+    {
+    case 10:
+      rate = CanBitRate::BR_10kBPS_10MHZ;
+      break;
+
+    case 20:
+      rate = CanBitRate::BR_20kBPS_10MHZ;
+      break;
+
+    case 50:
+      rate = CanBitRate::BR_50kBPS_10MHZ;
+      break;
+
+    case 100:
+      rate = CanBitRate::BR_100kBPS_10MHZ;
+      break;
+
+    case 125:
+      rate = CanBitRate::BR_125kBPS_10MHZ;
+      break;
+
+    case 250:
+      rate = CanBitRate::BR_250kBPS_10MHZ;
+      break;
+
+    case 500:
+      rate = CanBitRate::BR_500kBPS_10MHZ;
+      break;
+
+    case 1000:
+      rate = CanBitRate::BR_1000kBPS_10MHZ;
+      break;
+
+    default:
+      found = false;
+      break;
+    }
+  }
+  else if(mhz == 12)
+  {
+    switch (config->CAN_SPEED_KBPS)
+    {
+    case 10:
+      rate = CanBitRate::BR_10kBPS_12MHZ;
+      break;
+
+    case 20:
+      rate = CanBitRate::BR_20kBPS_12MHZ;
+      break;
+
+    case 50:
+      rate = CanBitRate::BR_50kBPS_12MHZ;
+      break;
+
+    case 100:
+      rate = CanBitRate::BR_100kBPS_12MHZ;
+      break;
+
+    case 125:
+      rate = CanBitRate::BR_125kBPS_12MHZ;
+      break;
+
+    case 250:
+      rate = CanBitRate::BR_250kBPS_12MHZ;
+      break;
+
+    case 500:
+      rate = CanBitRate::BR_500kBPS_12MHZ;
+      break;
+
+    case 1000:
+      rate = CanBitRate::BR_1000kBPS_12MHZ;
+      break;
+
+    default:
+      found = false;
+      break;
+    }
+  }
+  else if(mhz == 16)
+  {
+    switch (config->CAN_SPEED_KBPS)
+    {
+    case 10:
+      rate = CanBitRate::BR_10kBPS_16MHZ;
+      break;
+
+    case 20:
+      rate = CanBitRate::BR_20kBPS_16MHZ;
+      break;
+
+    case 50:
+      rate = CanBitRate::BR_50kBPS_16MHZ;
+      break;
+
+    case 100:
+      rate = CanBitRate::BR_100kBPS_16MHZ;
+      break;
+
+    case 125:
+      rate = CanBitRate::BR_125kBPS_16MHZ;
+      break;
+
+    case 250:
+      rate = CanBitRate::BR_250kBPS_16MHZ;
+      break;
+
+    case 500:
+      rate = CanBitRate::BR_500kBPS_16MHZ;
+      break;
+
+    case 800:
+      rate = CanBitRate::BR_800kBPS_16MHZ;
+      break;
+
+    case 1000:
+      rate = CanBitRate::BR_1000kBPS_16MHZ;
+      break;
+
+    default:
+      found = false;
+      break;
+    }
+  }
+  else
+  {
+    found = false;
+  }
+
+  return found;
+}
+
 bool DriverMCP2515::initInterface()
 {
-    /* Setup SPI access */
-    SPI.begin();
+  CanBitRate rate;
 
-    pinMode(MKRCAN_MCP2515_CS_PIN, OUTPUT);
-    digitalWrite(MKRCAN_MCP2515_CS_PIN, HIGH);
+  bool ratePossible = getRate(config->CAN_SPI.IC_MHZ, config->CAN_SPEED_KBPS, rate);
 
-    /* Attach interrupt handler to register MCP2515 signaled by taking INT low */
-    pinMode(MKRCAN_MCP2515_INT_PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(MKRCAN_MCP2515_INT_PIN), handleCANInterrupt, FALLING);
+  if(!ratePossible) // test if we can write something to the MCP2515 (is a device connected?)
+  {
+      mqttSerial.println("CAN-Bus init failed! E1");
+      return false;
+  }
 
-    mcp2515.begin();
+  /* Setup SPI access */
+  SPI.begin(config->CAN_SPI.PIN_SCK,
+            config->CAN_SPI.PIN_MISO,
+            config->CAN_SPI.PIN_MOSI,
+            config->CAN_SPI.PIN_CS);
 
-    if(!mcp2515.setLoopbackMode()) // test if we can write something to the MCP2515 (is a device connected?)
-    {
-        SPI.end();
-        mqttSerial.println("CAN-Bus init failed!");
-        return false;
-    }
+  pinMode(config->CAN_SPI.PIN_CS, OUTPUT);
+  digitalWrite(config->CAN_SPI.PIN_CS, HIGH);
 
-    canInited = true;
+  /* Attach interrupt handler to register MCP2515 signaled by taking INT low */
+  pinMode(config->CAN_SPI.PIN_INT, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(config->CAN_SPI.PIN_INT), handleCANInterrupt, FALLING);
 
-    mcp2515.setBitRate(CanBitRate::BR_20kBPS_12MHZ); // CAN bit rate and MCP2515 clock speed
+  mcp2515.begin();
 
-    std::for_each(CAN_TEST_FRAME_ARRAY.cbegin(),
-                    CAN_TEST_FRAME_ARRAY.cend(),
-                    [](sCanTestFrame const frame)
-                    {
-                    if(!mcp2515.transmit(frame.id, frame.data, frame.len)) {
-                        mqttSerial.println("ERROR TX");
-                    }
-                    delay(10);
-                    });
+  if(!setMode(Mode::Loopback)) // test if we can write something to the MCP2515 (is a device connected?)
+  {
+      SPI.end();
+      mqttSerial.println("CAN-Bus init failed! E2");
+      return false;
+  }
 
-    mcp2515.setListenOnlyMode();
+  canInited = true;
 
-    mqttSerial.println("CAN-Bus inited");
+  mcp2515.setBitRate(rate); // CAN bit rate and MCP2515 clock speed
 
-    return true;
+  setMode(Mode::Normal);
+
+  mqttSerial.println("CAN-Bus inited");
+
+  return true;
+}
+
+void listenOnly(bool value = true)
+{
+  if(value)
+    setMode(Mode::ListenOnly);
+  else
+    setMode(Mode::Normal);
+}
+
+void DriverMCP2515::setID(const uint16_t id)
+{
+  currentFrameId = id;
 }
 
 const char *DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
 {
+  CanFrame frame;
+
+  if(setValue)
+  {
+      frame.id = 680;
+  }
+  else
+  {
+      frame.id = cmd->id;
+  }
+
+  frame.len = sizeof(cmd->command);
+  memcpy(frame.data, cmd->command, frame.len);
+
+  if(cmd->writable && setValue)
+  {
+      // set first byte in command array to have HEX Value "0" on second position
+      // character No 2: 0=write 1=read 2=answer
+      frame.data[0] = (frame.data[0] & 0xF0) | 0x00;
+
+      byte valByte1 = 0;
+      byte valByte2 = 0;
+
+      if(value < 0 && cmd->type != "float")
+      {
+          // error
+          // set negative values if type not float not possible !!!
+          return nullptr;
+      }
+
+      const double calculatedValue = value * cmd->divisor;
+
+      if(cmd->type == "int")
+      {
+          valByte1 = calculatedValue;
+      }
+      else if(cmd->type == "value")
+      {
+          valByte1 = calculatedValue;
+      }
+      else if(cmd->type == "longint")
+      {
+          valByte1 = (int)calculatedValue >> 8;
+          valByte2 = (int)calculatedValue & 0xFF;
+      }
+      else if(cmd->type == "float")
+      {
+          const int intCalcValue = (int)calculatedValue & 0xFFFF;
+          valByte1 = intCalcValue >> 8;
+          valByte2 = intCalcValue & 0xFF;
+      }
+
+      if (frame.data[2] == 0xFA)  // 2=pos address
+      {
+          // Byte 3 == FA
+          // 30 0A FA 01 D6 00 D9   <- $CANMsg
+          //                |  ^pos: 6
+          //                ^pos: 5
+          frame.data[5] = valByte1;
+          frame.data[6] = valByte2;
+      }
+      else
+      {
+          // Byte 3 != FA
+          // 30 0A 0E 01 E8 00 00   <- $CANMsg
+          //          |  ^pos: 4
+          //          ^pos: 3
+          //    t_dhw - 48,8Â°
+          frame.data[3] = valByte1;
+          frame.data[4] = valByte2;
+      }
+  }
+
+  if(!mcp2515.transmit(frame.id, frame.data, frame.len)) {
+    mqttSerial.println("ERROR TX");
+  }
 }
