@@ -24,7 +24,7 @@ public:
     void write(const char *bytes, size_t size);
     void writePart(const char *bytes, size_t size);
     void setID(const uint16_t id);
-    const char* sendCommandWithID(CommandDef* cmd, bool setValue = false, int value = 0);
+    void sendCommandWithID(CommandDef* cmd, bool setValue = false, int value = 0);
 };
 
 #endif

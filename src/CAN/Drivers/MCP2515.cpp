@@ -553,7 +553,7 @@ void DriverMCP2515::setID(const uint16_t id)
   currentFrameId = id;
 }
 
-const char *DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
+void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
 {
   CanFrame frame;
 
