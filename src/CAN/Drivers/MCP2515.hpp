@@ -16,13 +16,10 @@ struct CanFrame
 
 void onReceiveBufferFull(uint32_t const, uint32_t const, uint8_t const *, uint8_t const);
 
-class DriverMCP2515 : CANDriver
+class DriverMCP2515 : public CANDriver
 {
 public:
     bool initInterface();
-    const char* read();
-    void write(const char *bytes, size_t size);
-    void writePart(const char *bytes, size_t size);
     void setID(const uint16_t id);
     void sendCommandWithID(CommandDef* cmd, bool setValue = false, int value = 0);
 };

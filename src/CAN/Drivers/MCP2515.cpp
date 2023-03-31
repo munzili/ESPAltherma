@@ -81,6 +81,8 @@ bool setMode(Mode mode)
 
 void writeLoopbackTest()
 {
+  mqttSerial.println("CAN running loopback test");
+
   Mode modeBeforeTest = currentMode;
   setMode(Mode::Loopback);
 
@@ -231,7 +233,8 @@ void onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const u
 
   value /= recievedCommand->divisor;
 
-  String valueCodeKey = "";
+  String valueCodeKey = String(value);
+
   if(recievedCommand->valueCodeSize > 0)
   {
     for (byte counter = 0; counter < recievedCommand->valueCodeSize; counter++)
@@ -288,11 +291,6 @@ void onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const u
       }
   }
 
-  if(valueCodeKey == "")
-  {
-    valueCodeKey = String(value);
-  }
-
   if(config->MQTT_USE_ONETOPIC)
   {
     client.publish((config->MQTT_TOPIC_NAME + config->MQTT_ONETOPIC_NAME + "CAN/" + recievedCommand->label).c_str(), valueCodeKey.c_str());
@@ -301,6 +299,8 @@ void onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const u
   {
     client.publish((config->MQTT_TOPIC_NAME + "CAN/" + recievedCommand->label).c_str(), valueCodeKey.c_str());
   }
+
+  mqttSerial.printf("CAN Data recieved %s: %s\n",  recievedCommand->label, valueCodeKey.c_str());
 }
 
 void IRAM_ATTR handleCANInterrupt()
@@ -582,7 +582,7 @@ void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
       {
           // error
           // set negative values if type not float not possible !!!
-          return nullptr;
+          return;
       }
 
       const double calculatedValue = value * cmd->divisor;

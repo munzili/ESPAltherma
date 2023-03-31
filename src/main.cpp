@@ -126,7 +126,7 @@ void setup()
 
   if(config->CAN_ENABLED)
   {
-    canBus_setup(config->PIN_CAN_RX, config->PIN_CAN_TX, config->CAN_SPEED_KBPS);
+    canBus_setup();
   }
 
 #ifdef ARDUINO_M5Stick_C_Plus

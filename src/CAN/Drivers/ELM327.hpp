@@ -14,7 +14,7 @@ private:
 
 public:
     bool initInterface();
-    const char* sendCommandWithID(CommandDef* cmd, bool setValue = false, int value = 0);
+    void sendCommandWithID(CommandDef* cmd, bool setValue = false, int value = 0);
 };
 
 #endif

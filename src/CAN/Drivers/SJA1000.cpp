@@ -74,7 +74,7 @@ bool DriverSJA1000::initInterface()
     return true;
 }
 
-const char* DriverSJA1000::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
+void DriverSJA1000::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
 {
     if(setValue)
     {
@@ -101,7 +101,7 @@ const char* DriverSJA1000::sendCommandWithID(CommandDef* cmd, bool setValue, int
         {
             // error
             // set negative values if type not float not possible !!!
-            return nullptr;
+            return;
         }
 
         const double calculatedValue = value * cmd->divisor;
@@ -153,8 +153,6 @@ const char* DriverSJA1000::sendCommandWithID(CommandDef* cmd, bool setValue, int
         // error
         return nullptr;
     }*/
-
-    return nullptr;
 }
 
 void readAllMessages()
