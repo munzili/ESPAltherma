@@ -69,6 +69,9 @@ struct Config
         uint8_t IC_MHZ;
     } CAN_SPI;
     uint16_t CAN_SPEED_KBPS;
+    String CAN_MQTT_TOPIC_NAME;
+    bool CAN_AUTOPOLL_ENABLED;
+    uint16_t CAN_AUTOPOLL_TIME;
     size_t PARAMETERS_LENGTH;
     ParameterDef** PARAMETERS;
     size_t COMMANDS_LENGTH;

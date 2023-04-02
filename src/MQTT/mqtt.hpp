@@ -25,6 +25,7 @@
 extern char jsonbuff[MAX_MSG_SIZE];
 extern uint8_t SG_RELAY_ACTIVE_STATE;
 extern uint8_t SG_RELAY_INACTIVE_STATE;
+extern std::function<void(String label, byte *payload, unsigned int length)> callbackCAN;
 
 extern PubSubClient client;
 

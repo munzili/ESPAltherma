@@ -1,6 +1,6 @@
 #include "canBus.hpp"
 
-CANDriver *driver;
+CANDriver *driver = nullptr;
 
 void canBus_setup()
 {
@@ -25,16 +25,6 @@ void canBus_setup()
 
 void canBus_loop()
 {
-    switch (config->CAN_IC)
-    {
-    case CanICTypes::MCP2515:
-
-        break;
-
-    case CanICTypes::ELM327:
-        break;
-
-    case CanICTypes::SJA1000:
-        break;
-    }
+    if(driver != nullptr)
+        driver->handleLoop();
 }

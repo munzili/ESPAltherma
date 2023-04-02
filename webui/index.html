@@ -464,6 +464,22 @@
           <option value="1000">1000</option>
         </select>
 
+        <label for="can_mqtt_topic_name">CAN Topic Name:</label>
+        <input type="text" id="can_mqtt_topic_name" name="can_mqtt_topic_name"/>
+        <small>Needs to end with a slash. CAN Values can be recieved and setted over MQTT with this topic name + the label of the command. For Setting a value, "SET/" is added before the topic name</small>
+
+        <label for="can_autopoll_enabled" >
+          <input type="checkbox" id="can_autopoll_enabled" name="can_autopoll_enabled" role="switch" onclick="show('can_autopoll');"/>
+          CAN Autopoll enabled
+        </label>
+
+        <article id="can_autopoll" class="hidden">
+          <label for="can_autopoll_time">
+            Poll Time
+            <input type="number" id="can_autopoll_time" name="can_autopoll_time" min="0" max="65535"/>
+          </label>
+        </article>
+
         <div class="grid">
           <div>
             <label for="canModel">Model:</label>

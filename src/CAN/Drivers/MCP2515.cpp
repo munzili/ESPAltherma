@@ -6,11 +6,6 @@ using namespace MCP2515;
 
 DriverMCP2515* self;
 
-void IRAM_ATTR handleCANInterrupt()
-{
-  self->handleInterrupt();
-}
-
 void DriverMCP2515::sniffCAN(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
 {
   char resultText[128] = "";
@@ -115,25 +110,9 @@ int DriverMCP2515::HPSU_toSigned(uint16_t value, char* unit)
   }
 }
 
-void DriverMCP2515::onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
+CommandDef* DriverMCP2515::getCommandFromData(const uint8_t *data)
 {
-  if(!canInited)
-      return;
-
-  if(sniffMode || currentMode == Mode::Loopback)
-  {
-    sniffCAN(timestamp_us, id, data, len);
-
-    if(currentMode == Mode::Loopback)
-      return;
-  }
-
-  if(len < 2)
-    return;
-
   bool extended = data[2] == 0xFA;
-
-  bool valid = false;
   CommandDef* recievedCommand = nullptr;
 
   for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
@@ -161,10 +140,48 @@ void DriverMCP2515::onReceiveBufferFull(const uint32_t timestamp_us, const uint3
     }
   }
 
+  return recievedCommand;
+}
+
+void DriverMCP2515::onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
+{
+  if(!canInited)
+      return;
+
+  if(sniffMode || currentMode == Mode::Loopback)
+  {
+    sniffCAN(timestamp_us, id, data, len);
+
+    if(currentMode == Mode::Loopback)
+      return;
+  }
+
+  if(len < 2)
+    return;
+
+  bool extended = data[2] == 0xFA;
+
+  bool valid = false;
+  CommandDef* recievedCommand = getCommandFromData(data);
+
   // if we got a message that we shouldnt handle, skip it
   if(recievedCommand == nullptr)
     return;
 
+  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+  {
+    if(cmdSendInfos[i]->cmd == recievedCommand)
+    {
+      // if we didnt fetch the infos, ignore it
+      if(!cmdSendInfos[i]->pending)
+      {
+        return;
+      }
+
+      cmdSendInfos[i]->pending = false;
+      break;
+    }
+  }
 
   byte valByte1 = 0;
   byte valByte2 = 0;
@@ -277,11 +294,11 @@ void DriverMCP2515::onReceiveBufferFull(const uint32_t timestamp_us, const uint3
 
   if(config->MQTT_USE_ONETOPIC)
   {
-    client.publish((config->MQTT_TOPIC_NAME + config->MQTT_ONETOPIC_NAME + "CAN/" + recievedCommand->label).c_str(), valueCodeKey.c_str());
+    client.publish((config->MQTT_TOPIC_NAME + config->MQTT_ONETOPIC_NAME + config->CAN_MQTT_TOPIC_NAME + recievedCommand->label).c_str(), valueCodeKey.c_str());
   }
   else
   {
-    client.publish((config->MQTT_TOPIC_NAME + "CAN/" + recievedCommand->label).c_str(), valueCodeKey.c_str());
+    client.publish((config->MQTT_TOPIC_NAME + config->CAN_MQTT_TOPIC_NAME + recievedCommand->label).c_str(), valueCodeKey.c_str());
   }
 
   mqttSerial.printf("CAN Data recieved %s: %s\n",  recievedCommand->label, valueCodeKey.c_str());
@@ -480,6 +497,11 @@ bool DriverMCP2515::getRate(const uint8_t mhz, const uint16_t speed, CanBitRate 
   return found;
 }
 
+void DriverMCP2515::handleMQTTSetRequest(String label, byte *payload, unsigned int length)
+{
+  mqttSerial.printf("CAN: Got MQTT SET request for %s, %s\n", label, String(payload, length));
+}
+
 DriverMCP2515::DriverMCP2515()
 {
   self = this;
@@ -515,6 +537,13 @@ bool DriverMCP2515::initInterface()
       return false;
   }
 
+  cmdSendInfos = new CMDSendInfo*[config->COMMANDS_LENGTH];
+  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+  {
+    cmdSendInfos[i] = new CMDSendInfo();
+    cmdSendInfos[i]->cmd = config->COMMANDS[i];
+  }
+
   /* Setup SPI access */
   SPI.begin(config->CAN_SPI.PIN_SCK,
             config->CAN_SPI.PIN_MISO,
@@ -527,7 +556,10 @@ bool DriverMCP2515::initInterface()
   /* Attach interrupt handler to register MCP2515 signaled by taking INT low */
   pinMode(config->CAN_SPI.PIN_INT, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(config->CAN_SPI.PIN_INT),
-                  handleCANInterrupt,
+                  []() IRAM_ATTR
+                  {
+                    self->handleInterrupt();
+                  },
                   FALLING);
 
   mcp2515->begin();
@@ -538,6 +570,8 @@ bool DriverMCP2515::initInterface()
       mqttSerial.println("CAN-Bus init failed! E2");
       return false;
   }
+
+  callbackCAN = [this](String label, byte *payload, unsigned int length) { handleMQTTSetRequest(label, payload, length); };
 
   canInited = true;
 
@@ -561,6 +595,20 @@ void DriverMCP2515::listenOnly(bool value)
 void DriverMCP2515::setID(const uint16_t id)
 {
   currentFrameId = id;
+}
+
+void DriverMCP2515::handleLoop()
+{
+  uint64_t currentMillis = millis();
+
+  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+  {
+    if(cmdSendInfos[i]->pending == true && currentMillis - cmdSendInfos[i]->timeMessageSend >= CAN_MESSAGE_TIMEOUT * 1000)
+    {
+      cmdSendInfos[i]->pending = false;
+      mqttSerial.printf("CAN Timeout for message: %s\n", cmdSendInfos[i]->cmd->label);
+    }
+  }
 }
 
 void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
@@ -636,6 +684,18 @@ void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
           frame.data[3] = valByte1;
           frame.data[4] = valByte2;
       }
+  }
+  else
+  {
+    for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+    {
+      if(cmdSendInfos[i]->cmd == cmd)
+      {
+        cmdSendInfos[i]->pending = true;
+        cmdSendInfos[i]->timeMessageSend = millis();
+        break;
+      }
+    }
   }
 
   if(!mcp2515->transmit(frame.id, frame.data, frame.len)) {

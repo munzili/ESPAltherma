@@ -8,6 +8,7 @@ class CANDriver
 {
 public:
     virtual bool initInterface();
+    virtual void handleLoop();
     virtual void sendCommandWithID(CommandDef *cmd, bool setValue = false, int value = 0);
 };
 

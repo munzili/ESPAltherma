@@ -6,6 +6,7 @@ PubSubClient client(espClient);
 String subscribeHeatingTopic = "";
 String subscribeCoolingTopic = "";
 String subscribeSGTopic = "";
+String subscribeCANTopic = "";
 String subscribePowerTopic = "";
 
 String publishHeatingTopic = "";
@@ -18,6 +19,8 @@ String publishLWTTopic = "";
 char jsonbuff[MAX_MSG_SIZE];
 uint8_t SG_RELAY_ACTIVE_STATE;
 uint8_t SG_RELAY_INACTIVE_STATE;
+
+std::function<void(String label, byte *payload, unsigned int length)> callbackCAN;
 
 void initMQTT()
 {
@@ -104,6 +107,7 @@ void reconnect()
   subscribeHeatingTopic = config->MQTT_TOPIC_NAME + MQTT_TOPIC_SUB_HEATING;
   subscribeCoolingTopic = config->MQTT_TOPIC_NAME + MQTT_TOPIC_SUB_COOLING;
   subscribeSGTopic      = config->MQTT_TOPIC_NAME + MQTT_TOPIC_SUB_SG;
+  subscribeCANTopic     = config->MQTT_TOPIC_NAME + "SET/" + config->CAN_MQTT_TOPIC_NAME;
   subscribePowerTopic   = config->MQTT_TOPIC_NAME + MQTT_TOPIC_SUB_POWER;
 
   publishHeatingTopic   = config->MQTT_TOPIC_NAME + MQTT_TOPIC_PUB_HEATING;
@@ -136,7 +140,6 @@ void reconnect()
       client.publish("homeassistant/switch/espAltherma/config", "{\"name\":\"Altherma SmartGrid\",\"cmd_t\":\"~/STATE/SG\",\"stat_t\":\"~/STATE\",\"pl_off\":\"OFF\",\"pl_on\":\"ON\",\"~\":\"espaltherma\"}", true);
 
       // Subscribe
-      // TODO Check if this subscribe could only be done once. will PubSubClient keep information after reconnect? Is the subscribtion added twice/multiple in this case?
       client.subscribe(subscribeHeatingTopic.c_str());
       client.subscribe(subscribeCoolingTopic.c_str());
       client.subscribe(subscribePowerTopic.c_str());
@@ -152,6 +155,12 @@ void reconnect()
         client.subscribe(subscribeSGTopic.c_str());
 
         mqttSerial.println(subscribeSGTopic);
+      }
+
+      if(config->CAN_ENABLED)
+      {
+        client.subscribe((subscribeCANTopic + "#").c_str());
+        mqttSerial.println(subscribeCANTopic);
       }
     }
     else
@@ -305,6 +314,11 @@ void callback(char *topic, byte *payload, unsigned int length)
   else if (config->SG_ENABLED && subscribeSGTopic == topic)
   {
     callbackSg(payload, length);
+  }
+  else if (config->CAN_ENABLED && String(topic).startsWith(subscribeCANTopic))
+  {
+    if(callbackCAN != nullptr)
+      callbackCAN(String(topic).substring(subscribeCANTopic.length()), payload, length);
   }
   else
   {

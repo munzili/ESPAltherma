@@ -134,6 +134,8 @@ async function resetToDefaults()
     document.getElementById('pin_can_spi_int').value = boardDefaults['spi']['int'];
     document.getElementById('pin_can_spi_mhz').value = boardDefaults['spi']['mhz'];
     document.getElementById('can_speed_kbps').value = boardDefaults['can_speed_kbps'];
+    document.getElementById('can_mqtt_topic_name').value = boardDefaults['can_mqtt_topic_name'];
+    document.getElementById('can_autopoll_time').value = boardDefaults['can_autopoll_time'];
     document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config'];
     document.getElementById('frequency').value = boardDefaults['frequency'];
     document.getElementById('mqtt_topic_name').value = boardDefaults['mqtt_topic_name'];
@@ -244,6 +246,15 @@ async function loadConfig()
             updateCANConfigDisplay();
 
             document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];
+            document.getElementById('can_mqtt_topic_name').value = data['CAN_MQTT_TOPIC_NAME'];
+            document.getElementById('can_autopoll_enabled').checked = data['CAN_AUTOPOLL_ENABLED'];
+
+            if(data['CAN_AUTOPOLL_ENABLED'])
+            {
+                document.getElementById('can_autopoll_time').value = data['CAN_AUTOPOLL_TIME'];
+                show('can_autopoll');
+            }
+
             show('can_pins');
             show('nav-can');
         }
@@ -509,6 +520,21 @@ async function sendConfigData(event)
 
         const can_speed_kbps = document.getElementById('can_speed_kbps');
         can_speed_kbps.setAttribute('aria-invalid', can_speed_kbps.value == '');
+
+        const can_mqtt_topic_name = document.getElementById('can_mqtt_topic_name');
+        can_mqtt_topic_name.setAttribute('aria-invalid', can_mqtt_topic_name.value == '' || !ValidateMQTTTopic(can_mqtt_topic_name.value));
+
+        const can_autopoll_enabled = document.getElementById('can_autopoll_enabled');
+        if(can_autopoll_enabled.checked)
+        {
+            const can_autopoll_time = document.getElementById('can_autopoll_time');
+            can_autopoll_time.setAttribute('aria-invalid', can_autopoll_time.value == '');
+        }
+        else
+        {
+            clearHiddenValidationResult("can_autopoll");
+        }
+
     }
     else
     {

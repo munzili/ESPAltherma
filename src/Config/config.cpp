@@ -98,6 +98,12 @@ void readConfig()
     config->CAN_SPI.IC_MHZ = configDoc["SPI"]["MHZ"].as<uint8_t>();
 
     config->CAN_SPEED_KBPS = configDoc["CAN_SPEED_KBPS"].as<uint16_t>();
+    config->CAN_MQTT_TOPIC_NAME = (char *)configDoc["CAN_MQTT_TOPIC_NAME"].as<const char*>();
+    config->CAN_AUTOPOLL_ENABLED = configDoc["CAN_AUTOPOLL_ENABLED"].as<const bool>();
+    if(config->CAN_AUTOPOLL_ENABLED)
+    {
+        config->CAN_AUTOPOLL_TIME = configDoc["CAN_AUTOPOLL_TIME"].as<uint16_t>();
+    }
 
     JsonArray parameters = configDoc["PARAMETERS"].as<JsonArray>();
     config->PARAMETERS_LENGTH = parameters.size();
@@ -231,6 +237,13 @@ void saveConfig()
     canSPI["MHZ"] = config->CAN_SPI.IC_MHZ;
 
     configDoc["CAN_SPEED_KBPS"] = config->CAN_SPEED_KBPS;
+    configDoc["CAN_MQTT_TOPIC_NAME"] = config->CAN_MQTT_TOPIC_NAME;
+    configDoc["CAN_AUTOPOLL_ENABLED"] = config->CAN_AUTOPOLL_ENABLED;
+    if(config->CAN_AUTOPOLL_ENABLED)
+    {
+        configDoc["CAN_AUTOPOLL_TIME"] = config->CAN_AUTOPOLL_TIME;
+    }
+
     configDoc["SG_RELAY_HIGH_TRIGGER"] = config->SG_RELAY_HIGH_TRIGGER;
 
     JsonArray parameters = configDoc.createNestedArray("PARAMETERS");
