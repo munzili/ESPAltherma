@@ -4,30 +4,14 @@
 
 using namespace MCP2515;
 
-bool canInited = false;
-bool sniffMode = false;
-uint16_t currentFrameId;
+DriverMCP2515* self;
 
-static const SPISettings MCP2515x_SPI_SETTING{1000000, MSBFIRST, SPI_MODE0};
+void IRAM_ATTR handleCANInterrupt()
+{
+  self->handleInterrupt();
+}
 
-Mode currentMode;
-
-ArduinoMCP2515 mcp2515([]()
-                       {
-                         SPI.beginTransaction(MCP2515x_SPI_SETTING);
-                         digitalWrite(config->CAN_SPI.PIN_CS, LOW);
-                       },
-                       []()
-                       {
-                         digitalWrite(config->CAN_SPI.PIN_CS, HIGH);
-                         SPI.endTransaction();
-                       },
-                       [](uint8_t const dataByte) { return SPI.transfer(dataByte); },
-                       micros,
-                       onReceiveBufferFull,
-                       nullptr);
-
-void sniffCAN(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
+void DriverMCP2515::sniffCAN(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
 {
   char resultText[128] = "";
   sprintf(resultText, "CAN [ %i ] ID", timestamp_us);
@@ -46,30 +30,30 @@ void sniffCAN(const uint32_t timestamp_us, const uint32_t id, const uint8_t *dat
   mqttSerial.println(resultText);
 }
 
-bool setMode(Mode mode)
+bool DriverMCP2515::setMode(Mode mode)
 {
   bool success = false;
 
   switch (mode)
   {
   case Mode::Normal:
-    success = mcp2515.setNormalMode();
+    success = mcp2515->setNormalMode();
     break;
 
   case Mode::Sleep:
-    success = mcp2515.setSleepMode();
+    success = mcp2515->setSleepMode();
     break;
 
   case Mode::Loopback:
-    success = mcp2515.setLoopbackMode();
+    success = mcp2515->setLoopbackMode();
     break;
 
   case Mode::ListenOnly:
-    success = mcp2515.setListenOnlyMode();
+    success = mcp2515->setListenOnlyMode();
     break;
 
   case Mode::Config:
-    success = mcp2515.setConfigMode();
+    success = mcp2515->setConfigMode();
     break;
   }
 
@@ -79,7 +63,7 @@ bool setMode(Mode mode)
   return success;
 }
 
-void writeLoopbackTest()
+void DriverMCP2515::writeLoopbackTest()
 {
   mqttSerial.println("CAN running loopback test");
 
@@ -107,9 +91,9 @@ void writeLoopbackTest()
 
   std::for_each(CAN_TEST_FRAME_ARRAY.cbegin(),
                 CAN_TEST_FRAME_ARRAY.cend(),
-                [](CanFrame const frame)
+                [this](CanFrame const frame)
                 {
-                if(!mcp2515.transmit(frame.id, frame.data, frame.len)) {
+                if(!mcp2515->transmit(frame.id, frame.data, frame.len)) {
                     mqttSerial.println("ERROR TX");
                 }
                 delay(10);
@@ -118,7 +102,7 @@ void writeLoopbackTest()
   setMode(modeBeforeTest);
 }
 
-int HPSU_toSigned(uint16_t value, char* unit)
+int DriverMCP2515::HPSU_toSigned(uint16_t value, char* unit)
 {
   if(unit == "deg" || unit == "value_code_signed")
   {
@@ -131,7 +115,7 @@ int HPSU_toSigned(uint16_t value, char* unit)
   }
 }
 
-void onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
+void DriverMCP2515::onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
 {
   if(!canInited)
       return;
@@ -303,15 +287,16 @@ void onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const u
   mqttSerial.printf("CAN Data recieved %s: %s\n",  recievedCommand->label, valueCodeKey.c_str());
 }
 
-void IRAM_ATTR handleCANInterrupt()
+
+void DriverMCP2515::handleInterrupt()
 {
   if(!canInited)
     return;
 
-  mcp2515.onExternalEventHandler();
+  mcp2515->onExternalEventHandler();
 }
 
-bool getRate(const uint8_t mhz, const uint16_t speed, CanBitRate &rate)
+bool DriverMCP2515::getRate(const uint8_t mhz, const uint16_t speed, CanBitRate &rate)
 {
   bool found = true;
 
@@ -495,6 +480,29 @@ bool getRate(const uint8_t mhz, const uint16_t speed, CanBitRate &rate)
   return found;
 }
 
+DriverMCP2515::DriverMCP2515()
+{
+  self = this;
+
+  mcp2515 = new ArduinoMCP2515([this]()
+                              {
+                                SPI.beginTransaction(MCP2515x_SPI_SETTING);
+                                digitalWrite(config->CAN_SPI.PIN_CS, LOW);
+                              },
+                              [this]()
+                              {
+                                digitalWrite(config->CAN_SPI.PIN_CS, HIGH);
+                                SPI.endTransaction();
+                              },
+                              [this](uint8_t const dataByte) { return SPI.transfer(dataByte); },
+                              micros,
+                              [this](const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
+                              {
+                                onReceiveBufferFull(timestamp_us, id, data, len);
+                              },
+                              nullptr);
+}
+
 bool DriverMCP2515::initInterface()
 {
   CanBitRate rate;
@@ -518,9 +526,11 @@ bool DriverMCP2515::initInterface()
 
   /* Attach interrupt handler to register MCP2515 signaled by taking INT low */
   pinMode(config->CAN_SPI.PIN_INT, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(config->CAN_SPI.PIN_INT), handleCANInterrupt, FALLING);
+  attachInterrupt(digitalPinToInterrupt(config->CAN_SPI.PIN_INT),
+                  handleCANInterrupt,
+                  FALLING);
 
-  mcp2515.begin();
+  mcp2515->begin();
 
   if(!setMode(Mode::Loopback)) // test if we can write something to the MCP2515 (is a device connected?)
   {
@@ -531,7 +541,7 @@ bool DriverMCP2515::initInterface()
 
   canInited = true;
 
-  mcp2515.setBitRate(rate); // CAN bit rate and MCP2515 clock speed
+  mcp2515->setBitRate(rate); // CAN bit rate and MCP2515 clock speed
 
   setMode(Mode::Normal);
 
@@ -540,7 +550,7 @@ bool DriverMCP2515::initInterface()
   return true;
 }
 
-void listenOnly(bool value = true)
+void DriverMCP2515::listenOnly(bool value)
 {
   if(value)
     setMode(Mode::ListenOnly);
@@ -628,7 +638,7 @@ void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
       }
   }
 
-  if(!mcp2515.transmit(frame.id, frame.data, frame.len)) {
+  if(!mcp2515->transmit(frame.id, frame.data, frame.len)) {
     mqttSerial.println("ERROR TX");
   }
 }
