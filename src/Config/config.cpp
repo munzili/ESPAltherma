@@ -162,6 +162,7 @@ void readConfig()
         }
 
         config->COMMANDS[i] = new CommandDef(
+            command[COMMANDDEF_INDEX_NAME],
             command[COMMANDDEF_INDEX_LABEL],
             commandArray,
             command[COMMANDDEF_INDEX_ID].as<const uint16_t>(),
@@ -262,6 +263,7 @@ void saveConfig()
     for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
     {
         JsonArray command = commands.createNestedArray();
+        command.add(config->COMMANDS[i]->name);
         command.add(config->COMMANDS[i]->label);
 
         JsonArray commandBytes = command.createNestedArray();

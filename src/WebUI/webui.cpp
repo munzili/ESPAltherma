@@ -765,6 +765,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
       }
 
       config->COMMANDS[counter] = new CommandDef(
+        value[COMMANDDEF_INDEX_NAME],
         value[COMMANDDEF_INDEX_LABEL],
         commandArray,
         value[COMMANDDEF_INDEX_ID].as<const uint16_t>(),

@@ -280,21 +280,22 @@ async function loadConfig()
         let convertedCommandsList = [];
         data['COMMANDS'].forEach(command => {
             let hexBytes = [];
-            command[1].forEach(intByte => {
+            command[2].forEach(intByte => {
                 hexBytes.push(('0'+intByte.toString(16)).substr(-2).toUpperCase());
             });
 
             const dataArray = {
-                "label":    command[0],
+                "name":    command[0],
+                "label":    command[1],
                 "command":  hexBytes.join(' '),
-                "id":       command[2].toString(),
-                "divisor":  command[3].toString(),
-                "writable": command[4].toString(),
-                "unit":     command[5],
-                "type":     command[6]
+                "id":       command[3].toString(),
+                "divisor":  command[4].toString(),
+                "writable": command[5].toString(),
+                "unit":     command[6],
+                "type":     command[7]
             };
 
-            if(command[7] != null)
+            if(command[8] != null)
             {
                 dataArray["value_code"] = command[7];
             }
@@ -555,6 +556,7 @@ async function sendConfigData(event)
     let convertedCommandsList = [];
     customCommandsList.forEach(command => {
         const dataArray = [
+            command["name"],
             command["label"],
             [],
             parseInt(command["id"]),
@@ -566,7 +568,7 @@ async function sendConfigData(event)
 
         let hexBytes = command["command"].split(' ');
         hexBytes.forEach(byte => {
-            dataArray[1].push(parseInt(byte, 16));
+            dataArray[2].push(parseInt(byte, 16));
         });
 
         if(command["value_code"] != null)
@@ -1372,7 +1374,7 @@ function addSelectedCanCommands()
         const id = parseInt(e.getAttribute('data-row-index'));
         const paramToAdd = modelCommands[id];
 
-        AddCanCommand(paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? null);
+        AddCanCommand(paramToAdd["name"], paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? null);
         e.classList.remove('row-selected');
     });
 
@@ -1388,14 +1390,14 @@ function addCanCommands()
         const id = parseInt(e.getAttribute('data-row-index'));
         const paramToAdd = modelCommands[id];
 
-        AddCanCommand(paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? null);
+        AddCanCommand(paramToAdd["name"], paramToAdd["label"], paramToAdd["command"], paramToAdd["id"], paramToAdd["divisor"], paramToAdd["writable"], paramToAdd["unit"], paramToAdd["type"], (paramToAdd["value_code"]) ?? null);
         e.classList.remove('row-selected');
     });
 
     updateCommandsTable('selectedCommandsTable', customCommandsList);
 }
 
-function AddCanCommand(label, command, id, divisor, writable, unit, type, valueCode)
+function AddCanCommand(name, label, command, id, divisor, writable, unit, type, valueCode)
 {
     for (let i in customCommandsList) {
         if(customCommandsList[i]["command"] == command)
@@ -1406,6 +1408,7 @@ function AddCanCommand(label, command, id, divisor, writable, unit, type, valueC
     }
 
     const dataArray = {
+        "name": name,
         "label": label,
         "command": command,
         "id": id,
@@ -1422,6 +1425,7 @@ function AddCanCommand(label, command, id, divisor, writable, unit, type, valueC
 
 function addCustomCanCommand(event)
 {
+    const name = document.getElementById('canDataName');
     const label = document.getElementById('canDataLabel');
     const command = document.getElementById('canDataCommand');
     const id = document.getElementById('canDataID');
@@ -1430,10 +1434,39 @@ function addCustomCanCommand(event)
     const unit = document.getElementById('canDataUnit');
     const type = document.getElementById('canDataType');
 
-    if( label.value == '' || isNaN(regid.value) ||
-        command.value == '' || isNaN(offset.value))
+    if( name.value == '' ||
+        name.value.indexOf(' ') >= 0 ||
+        label.value == '' ||
+        command.value == '' ||
+        isNaN(regid.value) ||
+        isNaN(offset.value))
     {
         alert("Please fill in all fields correctly!");
+        return false;
+    }
+
+    let commandValid = true;
+    var hexReg =/^[0-9a-f]{2}$/i;
+
+    const commandHexBytes = command.value.trim().split(' ');
+
+    if(commandHexBytes.length != 7)
+    {
+        commandValid = false;
+    }
+
+    for(let i = 0; i < 7; i++)
+    {
+        if(!hexReg.test(commandHexBytes[i]))
+        {
+            commandValid = false;
+            break;
+        }
+    }
+
+    if(!commandValid)
+    {
+        alert("Given command is invalid. Please enter command with 7 bytes in HEX-Format with leading zeros with spaces between bytes! Ex: 00 01 02 AB 0c AF f3");
         return false;
     }
 
@@ -1455,11 +1488,12 @@ function addCustomCanCommand(event)
         valueCodes[valueCodeName] = valueCodeContent;
     }
 
-    const result = AddCanCommand(command.value, command.value, id.value, divisor.value, writable.checked, unit.value, type.value, Object.keys(valueCodes).length == 0 ? null : valueCodes);
+    const result = AddCanCommand(name.value, label.value, command.value, id.value, divisor.value, writable.checked, unit.value, type.value, Object.keys(valueCodes).length == 0 ? null : valueCodes);
 
     if(!result)
         return;
 
+    name.value = '';
     label.value = '';
     command.value = '';
 

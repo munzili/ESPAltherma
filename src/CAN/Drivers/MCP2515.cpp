@@ -499,6 +499,9 @@ bool DriverMCP2515::getRate(const uint8_t mhz, const uint16_t speed, CanBitRate 
 
 void DriverMCP2515::handleMQTTSetRequest(const String &label, const byte *payload, const uint32_t length)
 {
+  if(!canInited)
+      return;
+
   for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
   {
     if(config->COMMANDS[i]->writable && strcmp(config->COMMANDS[i]->label, label.c_str()) == 0)
@@ -616,6 +619,9 @@ void DriverMCP2515::setID(const uint16_t id)
 
 void DriverMCP2515::handleLoop()
 {
+  if(!canInited)
+      return;
+
   uint64_t currentMillis = millis();
 
   for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
