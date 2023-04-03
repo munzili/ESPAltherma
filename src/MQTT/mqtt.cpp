@@ -20,7 +20,7 @@ char jsonbuff[MAX_MSG_SIZE];
 uint8_t SG_RELAY_ACTIVE_STATE;
 uint8_t SG_RELAY_INACTIVE_STATE;
 
-std::function<void(String label, byte *payload, unsigned int length)> callbackCAN;
+std::function<void(const String &label, const byte *payload, const uint32_t length)> callbackCAN;
 
 void initMQTT()
 {

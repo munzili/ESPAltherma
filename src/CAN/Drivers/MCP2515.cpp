@@ -497,9 +497,26 @@ bool DriverMCP2515::getRate(const uint8_t mhz, const uint16_t speed, CanBitRate 
   return found;
 }
 
-void DriverMCP2515::handleMQTTSetRequest(String label, byte *payload, unsigned int length)
+void DriverMCP2515::handleMQTTSetRequest(const String &label, const byte *payload, const uint32_t length)
 {
-  mqttSerial.printf("CAN: Got MQTT SET request for %s, %s\n", label, String(payload, length));
+  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+  {
+    if(config->COMMANDS[i]->writable && strcmp(config->COMMANDS[i]->label, label.c_str()) == 0)
+    {
+      byte byte4 = (length > 3) ? payload[3] : 0;
+      byte byte3 = (length > 2) ? payload[2] : 0;
+      byte byte2 = (length > 1) ? payload[1] : 0;
+      byte byte1 = (length > 0) ? payload[0] : 0;
+
+      int value = (byte4 << 24) | (byte3 << 16) | (byte2 << 8) | byte1;
+
+      mqttSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label, value);
+      sendCommandWithID(config->COMMANDS[i], true, value);
+      return;
+    }
+  }
+
+  mqttSerial.printf("CAN: Got invalid MQTT SET request for %s\n", label);
 }
 
 DriverMCP2515::DriverMCP2515()
@@ -571,7 +588,7 @@ bool DriverMCP2515::initInterface()
       return false;
   }
 
-  callbackCAN = [this](String label, byte *payload, unsigned int length) { handleMQTTSetRequest(label, payload, length); };
+  callbackCAN = [this](const String label, const byte *payload, const uint32_t length) { handleMQTTSetRequest(label, payload, length); };
 
   canInited = true;
 
@@ -607,6 +624,24 @@ void DriverMCP2515::handleLoop()
     {
       cmdSendInfos[i]->pending = false;
       mqttSerial.printf("CAN Timeout for message: %s\n", cmdSendInfos[i]->cmd->label);
+    }
+  }
+
+  if(config->CAN_AUTOPOLL_ENABLED)
+  {
+    ulong currentTime = millis();
+
+    if(currentTime - lastTimeRunned >= config->CAN_AUTOPOLL_TIME * 1000)
+    {
+      for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+      {
+        if(cmdSendInfos[i]->pending == false)
+        {
+          sendCommandWithID(config->COMMANDS[i], false);
+        }
+      }
+
+      lastTimeRunned = currentTime;
     }
   }
 }

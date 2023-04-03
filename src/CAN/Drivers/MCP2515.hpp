@@ -36,6 +36,7 @@ private:
   bool sniffMode = false;
   Mode currentMode;
   bool canInited = false;
+  ulong lastTimeRunned = 0;
 
   bool setMode(Mode mode);
   static int HPSU_toSigned(uint16_t value, char* unit);
@@ -50,7 +51,7 @@ public:
   void handleLoop();
   void writeLoopbackTest();
   void sendCommandWithID(CommandDef* cmd, bool setValue = false, int value = 0);
-  void handleMQTTSetRequest(String label, byte *payload, unsigned int length);
+  void handleMQTTSetRequest(const String &label, const byte *payload, const uint32_t length);
   void listenOnly(bool value = true);
   void onReceiveBufferFull(uint32_t const, uint32_t const, uint8_t const *, uint8_t const);
   void handleInterrupt();
