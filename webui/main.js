@@ -1488,7 +1488,7 @@ function addCustomCanCommand(event)
         valueCodes[valueCodeName] = valueCodeContent;
     }
 
-    const result = AddCanCommand(name.value, label.value, command.value, id.value, divisor.value, writable.checked, unit.value, type.value, Object.keys(valueCodes).length == 0 ? null : valueCodes);
+    const result = AddCanCommand(name.value, label.value, command.value, id.value, divisor.value, writable.checked ? "true" : "false", unit.value, type.value, Object.keys(valueCodes).length == 0 ? null : valueCodes);
 
     if(!result)
         return;
