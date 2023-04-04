@@ -567,6 +567,11 @@ void onSaveConfig(AsyncWebServerRequest *request)
   {
     canICBus = CANICBus::SPI;
   }
+  else
+  {
+    request->send(422, "text/plain", "Invalid CAN IC/Chip communication type given");
+    return;
+  }
 
   ICType = ICType.substring(ICType.indexOf('_') + 1);
 
@@ -576,6 +581,11 @@ void onSaveConfig(AsyncWebServerRequest *request)
     canICTypes = CanICTypes::ELM327;
   else if(ICType == "sja1000")
     canICTypes = CanICTypes::SJA1000;
+  else
+  {
+    request->send(422, "text/plain", "Invalid CAN IC/Chip type given");
+    return;
+  }
 
   if(request->hasParam("can_enabled", true) && canICBus == CANICBus::UART &&
      (!request->hasParam("pin_can_uart_rx", true) || !request->hasParam("pin_can_uart_tx", true)))

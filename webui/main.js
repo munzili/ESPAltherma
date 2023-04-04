@@ -1557,7 +1557,8 @@ function updateCommandsTable(tableId, commands)
         const writableCell = row.insertCell(5);
         const unitCell = row.insertCell(6);
         const typeCell = row.insertCell(7);
-        const valueCodeCell = row.insertCell(8);
+        const nameCell = row.insertCell(8);
+        const valueCodeCell = row.insertCell(9);
 
         labelCell.appendChild(document.createTextNode(data["label"]));
 
@@ -1575,6 +1576,7 @@ function updateCommandsTable(tableId, commands)
         writableCell.appendChild(document.createTextNode(data["writable"]));
         unitCell.appendChild(document.createTextNode(data["unit"]));
         typeCell.appendChild(document.createTextNode(data["type"]));
+        nameCell.appendChild(document.createTextNode(data["name"]));
 
         if(data["value_code"] == null)
             valueCodeCell.appendChild(document.createTextNode(""));
