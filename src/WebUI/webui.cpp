@@ -811,6 +811,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
     esp_restart();
   });
 
+  mqttSerial.println("Saving successfull. Restarting...");
   request->send(200, "text/plain", "OK");
 }
 

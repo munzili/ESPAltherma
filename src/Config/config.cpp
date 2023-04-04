@@ -293,6 +293,7 @@ void saveConfig()
 
     File configFile = LittleFS.open(CONFIG_FILE, FILE_WRITE);
     serializeJsonPretty(configDoc, Serial);
+    Serial.println();
     serializeJson(configDoc, configFile);
     configFile.close();
 }
