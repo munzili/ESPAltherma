@@ -497,24 +497,19 @@ bool DriverMCP2515::getRate(const uint8_t mhz, const uint16_t speed, CanBitRate 
   return found;
 }
 
-void DriverMCP2515::handleMQTTSetRequest(const String &label, const byte *payload, const uint32_t length)
+void DriverMCP2515::handleMQTTSetRequest(const String &label, const char *payload, const uint32_t length)
 {
   if(!canInited)
       return;
 
+  const int payloadAsInt = atoi(payload);
+
   for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
   {
-    if(config->COMMANDS[i]->writable && strcmp(config->COMMANDS[i]->label, label.c_str()) == 0)
+    if(config->COMMANDS[i]->writable && strcmp(config->COMMANDS[i]->name, label.c_str()) == 0)
     {
-      byte byte4 = (length > 3) ? payload[3] : 0;
-      byte byte3 = (length > 2) ? payload[2] : 0;
-      byte byte2 = (length > 1) ? payload[1] : 0;
-      byte byte1 = (length > 0) ? payload[0] : 0;
-
-      int value = (byte4 << 24) | (byte3 << 16) | (byte2 << 8) | byte1;
-
-      mqttSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label, value);
-      sendCommandWithID(config->COMMANDS[i], true, value);
+      mqttSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label, payloadAsInt);
+      sendCommandWithID(config->COMMANDS[i], true, payloadAsInt);
       return;
     }
   }
@@ -591,7 +586,7 @@ bool DriverMCP2515::initInterface()
       return false;
   }
 
-  callbackCAN = [this](const String label, const byte *payload, const uint32_t length) { handleMQTTSetRequest(label, payload, length); };
+  callbackCAN = [this](const String label, const char *payload, const uint32_t length) { handleMQTTSetRequest(label, payload, length); };
 
   canInited = true;
 
@@ -677,7 +672,7 @@ void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
       byte valByte1 = 0;
       byte valByte2 = 0;
 
-      if(value < 0 && cmd->type != "float")
+      if(value < 0 && strcmp(cmd->type, "float") != 0)
       {
           // error
           // set negative values if type not float not possible !!!
@@ -686,20 +681,20 @@ void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
 
       const double calculatedValue = value * cmd->divisor;
 
-      if(cmd->type == "int")
+      if(strcmp(cmd->type, "int") == 0)
       {
           valByte1 = calculatedValue;
       }
-      else if(cmd->type == "value")
+      else if(strcmp(cmd->type, "value") == 0)
       {
           valByte1 = calculatedValue;
       }
-      else if(cmd->type == "longint")
+      else if(strcmp(cmd->type, "longint") == 0)
       {
           valByte1 = (int)calculatedValue >> 8;
           valByte2 = (int)calculatedValue & 0xFF;
       }
-      else if(cmd->type == "float")
+      else if(strcmp(cmd->type, "float") == 0)
       {
           const int intCalcValue = (int)calculatedValue & 0xFFFF;
           valByte1 = intCalcValue >> 8;
@@ -738,6 +733,13 @@ void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
       }
     }
   }
+
+  mqttSerial.printf("CAN: Transmiting ID(%i) ", frame.id);
+  for(uint8_t i = 0; i < frame.len; i++)
+  {
+    mqttSerial.printf("%02x ", frame.data[i]);
+  }
+  mqttSerial.println();
 
   if(!mcp2515->transmit(frame.id, frame.data, frame.len)) {
     mqttSerial.println("ERROR TX");

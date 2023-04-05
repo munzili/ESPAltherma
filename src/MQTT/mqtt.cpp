@@ -20,7 +20,7 @@ char jsonbuff[MAX_MSG_SIZE];
 uint8_t SG_RELAY_ACTIVE_STATE;
 uint8_t SG_RELAY_INACTIVE_STATE;
 
-std::function<void(const String &label, const byte *payload, const uint32_t length)> callbackCAN;
+std::function<void(const String &label, const char *payload, const uint32_t length)> callbackCAN;
 
 void initMQTT()
 {
@@ -318,7 +318,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   else if (config->CAN_ENABLED && String(topic).startsWith(subscribeCANTopic))
   {
     if(callbackCAN != nullptr)
-      callbackCAN(String(topic).substring(subscribeCANTopic.length()), payload, length);
+      callbackCAN(String(topic).substring(subscribeCANTopic.length()), payloadText, length);
   }
   else
   {
