@@ -99,7 +99,7 @@ void DriverMCP2515::writeLoopbackTest()
 
 int DriverMCP2515::HPSU_toSigned(uint16_t value, char* unit)
 {
-  if(unit == "deg" || unit == "value_code_signed")
+  if(strcmp(unit, "deg") == 0 || strcmp(unit, "value_code_signed") == 0)
   {
     int newValue = value & 0xFFFF;
     return (newValue ^ 0x8000) - 0x8000;
@@ -208,22 +208,22 @@ void DriverMCP2515::onReceiveBufferFull(const uint32_t timestamp_us, const uint3
 
   int value;
 
-  if(recievedCommand->type == "int")
+  if(strcmp(recievedCommand->type, "int") == 0)
   {
     value = HPSU_toSigned(valByte1, recievedCommand->unit);
   }
-  else if(recievedCommand->type == "value")
+  else if(strcmp(recievedCommand->type, "value") == 0)
   {
     value = valByte1;
     //example: mode_01 val 4       -> 31 00 FA 01 12 04 00
   }
-  else if(recievedCommand->type == "longint")
+  else if(strcmp(recievedCommand->type, "longint") == 0)
   {
     value = HPSU_toSigned(valByte2 + valByte1 * 0x0100, recievedCommand->unit);
     //example: one_hot_water val 1 -> 31 00 FA 01 44 00 01
     //                                                   ^
   }
-  else if(recievedCommand->type == "float")
+  else if(strcmp(recievedCommand->type, "float") == 0)
   {
     value = HPSU_toSigned(valByte2 + valByte1 * 0x0100, recievedCommand->unit);
   }

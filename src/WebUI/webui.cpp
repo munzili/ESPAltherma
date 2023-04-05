@@ -771,7 +771,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
       }
       else
       {
-        valueCodes = new CommandDefValueCode*[0];
+        valueCodes = nullptr;
       }
 
       config->COMMANDS[counter] = new CommandDef(
