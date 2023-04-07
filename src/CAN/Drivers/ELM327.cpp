@@ -99,6 +99,6 @@ void DriverELM327::setID(const uint16_t id)
     write(message, 9);
 }
 
-void DriverELM327::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
+void DriverELM327::sendCommand(CommandDef* cmd, bool setValue, int value)
 {
 }

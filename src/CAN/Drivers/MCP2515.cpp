@@ -110,6 +110,11 @@ int DriverMCP2515::HPSU_toSigned(uint16_t value, char* unit)
   }
 }
 
+void DriverMCP2515::enableSniffing(bool value)
+{
+  sniffingEnabled = value;
+}
+
 CommandDef* DriverMCP2515::getCommandFromData(const uint8_t *data)
 {
   bool extended = data[2] == 0xFA;
@@ -148,7 +153,7 @@ void DriverMCP2515::onReceiveBufferFull(const uint32_t timestamp_us, const uint3
   if(!canInited)
       return;
 
-  if(sniffMode || currentMode == Mode::Loopback)
+  if(sniffingEnabled || currentMode == Mode::Loopback)
   {
     sniffCAN(timestamp_us, id, data, len);
 
@@ -509,7 +514,7 @@ void DriverMCP2515::handleMQTTSetRequest(const String &label, const char *payloa
     if(config->COMMANDS[i]->writable && strcmp(config->COMMANDS[i]->name, label.c_str()) == 0)
     {
       mqttSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label, payloadAsInt);
-      sendCommandWithID(config->COMMANDS[i], true, payloadAsInt);
+      sendCommand(config->COMMANDS[i], true, payloadAsInt);
       return;
     }
   }
@@ -628,17 +633,19 @@ void DriverMCP2515::handleLoop()
     }
   }
 
-  if(config->CAN_AUTOPOLL_ENABLED)
+  if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
   {
     ulong currentTime = millis();
 
     if(currentTime - lastTimeRunned >= config->CAN_AUTOPOLL_TIME * 1000)
     {
+      mqttSerial.printf("CAN Poll Mode Auto Reading: %lu\n", currentTime);
+
       for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
       {
         if(cmdSendInfos[i]->pending == false)
         {
-          sendCommandWithID(config->COMMANDS[i], false);
+          sendCommand(config->COMMANDS[i], false);
         }
       }
 
@@ -647,7 +654,7 @@ void DriverMCP2515::handleLoop()
   }
 }
 
-void DriverMCP2515::sendCommandWithID(CommandDef* cmd, bool setValue, int value)
+void DriverMCP2515::sendCommand(CommandDef* cmd, bool setValue, int value)
 {
   CanFrame frame;
 

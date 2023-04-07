@@ -86,7 +86,7 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
           "\"mhz\": 12"
         "},"
         "\"can_speed_kbps\": 20,"
-        "\"mqtt_can_topic_name\": \"CAN/\","
+        "\"can_mqtt_topic_name\": \"CAN/\","
         "\"can_autopoll_time\": 30,"
         "\"pin_enable_config\": 39,"
         "\"frequency\": 30000,"
@@ -144,7 +144,7 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
           "\"mhz\": 12"
         "},"
         "\"can_speed_kbps\": 20,"
-        "\"mqtt_can_topic_name\": \"CAN/\","
+        "\"can_mqtt_topic_name\": \"CAN/\","
         "\"can_autopoll_time\": 30,"
         "\"pin_enable_config\": 27,"
         "\"frequency\": 30000,"
@@ -652,7 +652,6 @@ void onSaveConfig(AsyncWebServerRequest *request)
   config->COOLING_ENABLED = request->hasParam("cooling_enabled", true);
   config->SG_ENABLED = request->hasParam("sg_enabled", true);
   config->CAN_ENABLED = request->hasParam("can_enabled", true);
-  config->CAN_AUTOPOLL_ENABLED = request->hasParam("can_autopoll_enabled", true);
 
   if(config->X10A_ENABLED)
   {
@@ -696,7 +695,10 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
     config->CAN_SPEED_KBPS = request->getParam("can_speed_kbps", true)->value().toInt();
     config->CAN_MQTT_TOPIC_NAME = (char *)request->getParam("can_mqtt_topic_name", true)->value().c_str();
-    if(config->CAN_AUTOPOLL_ENABLED)
+    config->CAN_SNIFFING_ENABLED = request->hasParam("can_sniffing_enabled", true);
+    config->CAN_AUTOPOLL_MODE = (CANPollMode)request->getParam("can_autopoll_mode", true)->value().toInt();
+
+    if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
     {
       config->CAN_AUTOPOLL_TIME = request->getParam("can_autopoll_time", true)->value().toInt();
     }

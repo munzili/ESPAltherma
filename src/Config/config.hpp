@@ -21,6 +21,13 @@ enum class CANICBus : uint8_t {
     UART
 };
 
+
+enum class CANPollMode : uint8_t {
+    Disabled,
+    Passiv,
+    Auto
+};
+
 struct Config
 {
     bool configStored;
@@ -70,7 +77,8 @@ struct Config
     } CAN_SPI;
     uint16_t CAN_SPEED_KBPS;
     String CAN_MQTT_TOPIC_NAME;
-    bool CAN_AUTOPOLL_ENABLED;
+    bool CAN_SNIFFING_ENABLED;
+    CANPollMode CAN_AUTOPOLL_MODE;
     uint16_t CAN_AUTOPOLL_TIME;
     size_t PARAMETERS_LENGTH;
     ParameterDef** PARAMETERS;

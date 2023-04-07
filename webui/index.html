@@ -468,14 +468,42 @@
         <input type="text" id="can_mqtt_topic_name" name="can_mqtt_topic_name"/>
         <small>Needs to end with a slash. CAN Values can be recieved and setted over MQTT with this topic name + the label of the command. For Setting a value, "SET/" is added before the topic name</small>
 
-        <label for="can_autopoll_enabled" >
-          <input type="checkbox" id="can_autopoll_enabled" name="can_autopoll_enabled" role="switch" onclick="show('can_autopoll');"/>
-          CAN Autopoll enabled
+        <label for="can_sniffing_enabled" >
+          <input type="checkbox" id="can_sniffing_enabled" name="can_sniffing_enabled" role="switch"/>
+          CAN Sniffing enabled
         </label>
+        <small>Output all CAN-Bus data on Serial/WebSerial</small>
+
+        <!-- Radios -->
+        <fieldset id="fieldset_autopoll">
+          <legend>Poll mode</legend>
+          <div class="grid">
+            <div>
+              <label for="can_autopoll_mode_disabled">
+              <input type="radio" id="can_autopoll_mode_disabled" name="can_autopoll_mode" value="0" onchange="show('can_autopoll', !document.getElementById('can_autopoll_mode_auto').checked)">
+              Disabled
+            </label>
+            </div>
+            <div>
+              <label for="can_autopoll_mode_passiv">
+                <input type="radio" id="can_autopoll_mode_passiv" name="can_autopoll_mode" value="1" onchange="show('can_autopoll', !document.getElementById('can_autopoll_mode_auto').checked)">
+                Passiv
+              </label>
+              <small>Get values when other devices request it</small>
+            </div>
+            <div>
+              <label for="can_autopoll_mode_auto">
+                <input type="radio" id="can_autopoll_mode_auto" name="can_autopoll_mode" value="2" onchange="show('can_autopoll', !document.getElementById('can_autopoll_mode_auto').checked)">
+                Auto
+              </label>
+              <small>Request values each X seconds</small>
+            </div>
+          </div>
+        </fieldset>
 
         <article id="can_autopoll" class="hidden">
           <label for="can_autopoll_time">
-            Poll Time
+            Poll time in seconds
             <input type="number" id="can_autopoll_time" name="can_autopoll_time" min="0" max="65535"/>
           </label>
         </article>

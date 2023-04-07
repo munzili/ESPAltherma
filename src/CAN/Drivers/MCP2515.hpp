@@ -33,7 +33,7 @@ private:
   CMDSendInfo** cmdSendInfos;
   const SPISettings MCP2515x_SPI_SETTING{1000000, MSBFIRST, SPI_MODE0};
   uint16_t currentFrameId;
-  bool sniffMode = false;
+  bool sniffingEnabled = false;
   Mode currentMode;
   bool canInited = false;
   ulong lastTimeRunned = 0;
@@ -49,8 +49,9 @@ public:
   bool initInterface();
   void setID(const uint16_t id);
   void handleLoop();
+  void enableSniffing(bool value);
   void writeLoopbackTest();
-  void sendCommandWithID(CommandDef* cmd, bool setValue = false, int value = 0);
+  void sendCommand(CommandDef* cmd, bool setValue = false, int value = 0);
   void handleMQTTSetRequest(const String &label, const char *payload, const uint32_t length);
   void listenOnly(bool value = true);
   void onReceiveBufferFull(uint32_t const, uint32_t const, uint8_t const *, uint8_t const);

@@ -11,16 +11,18 @@ void canBus_setup()
         driver->initInterface();
         break;
 
-    case CanICTypes::ELM327:
+    /*case CanICTypes::ELM327:
         break;
 
     case CanICTypes::SJA1000:
-        break;
+        break;*/
 
     default:
         mqttSerial.println("No CAN Driver found");
-        break;
+        return;
     }
+
+    driver->enableSniffing(config->CAN_SNIFFING_ENABLED);
 }
 
 void canBus_loop()

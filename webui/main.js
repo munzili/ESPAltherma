@@ -135,6 +135,7 @@ async function resetToDefaults()
     document.getElementById('pin_can_spi_mhz').value = boardDefaults['spi']['mhz'];
     document.getElementById('can_speed_kbps').value = boardDefaults['can_speed_kbps'];
     document.getElementById('can_mqtt_topic_name').value = boardDefaults['can_mqtt_topic_name'];
+    document.getElementById('can_autopoll_mode_disabled').checked = true;
     document.getElementById('can_autopoll_time').value = boardDefaults['can_autopoll_time'];
     document.getElementById('pin_enable_config').value = boardDefaults['pin_enable_config'];
     document.getElementById('frequency').value = boardDefaults['frequency'];
@@ -149,7 +150,7 @@ async function loadConfig()
         method: "GET"
     })
     .then(function(response) { return response.json(); })
-    .then(async function(data){
+    .then(async function(data) {
         // if no config exists yet
         if(Object.keys(data).length == 0)
             return;
@@ -247,12 +248,21 @@ async function loadConfig()
 
             document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];
             document.getElementById('can_mqtt_topic_name').value = data['CAN_MQTT_TOPIC_NAME'];
-            document.getElementById('can_autopoll_enabled').checked = data['CAN_AUTOPOLL_ENABLED'];
+            document.getElementById('can_sniffing_enabled').checked = data['CAN_SNIFFING_ENABLED'];
 
-            if(data['CAN_AUTOPOLL_ENABLED'])
+            switch(data['CAN_AUTOPOLL_MODE'])
             {
-                document.getElementById('can_autopoll_time').value = data['CAN_AUTOPOLL_TIME'];
-                show('can_autopoll');
+                case 1: // passiv
+                    document.getElementById('can_autopoll_mode_passiv').checked = true;
+                    break;
+                case 2: // auto
+                    document.getElementById('can_autopoll_mode_auto').checked = true;
+                    document.getElementById('can_autopoll_time').value = data['CAN_AUTOPOLL_TIME'];
+                    show('can_autopoll');
+                    break;
+                default: // dislabed
+                    document.getElementById('can_autopoll_mode_disabled').checked = true;
+                    break;
             }
 
             show('can_pins');
@@ -525,15 +535,17 @@ async function sendConfigData(event)
         const can_mqtt_topic_name = document.getElementById('can_mqtt_topic_name');
         can_mqtt_topic_name.setAttribute('aria-invalid', can_mqtt_topic_name.value == '' || !ValidateMQTTTopic(can_mqtt_topic_name.value));
 
-        const can_autopoll_enabled = document.getElementById('can_autopoll_enabled');
-        if(can_autopoll_enabled.checked)
+        const can_autopoll_mode = document.querySelector('input[name="can_autopoll_mode"]:checked').value;
+        switch(can_autopoll_mode)
         {
-            const can_autopoll_time = document.getElementById('can_autopoll_time');
-            can_autopoll_time.setAttribute('aria-invalid', can_autopoll_time.value == '');
-        }
-        else
-        {
-            clearHiddenValidationResult("can_autopoll");
+            case 0:
+            case 1:
+                clearHiddenValidationResult("can_autopoll");
+                break;
+            case 2:
+                const can_autopoll_time = document.getElementById('can_autopoll_time');
+                can_autopoll_time.setAttribute('aria-invalid', can_autopoll_time.value == '');
+                break;
         }
 
     }

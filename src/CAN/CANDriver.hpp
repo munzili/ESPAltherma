@@ -9,7 +9,8 @@ class CANDriver
 public:
     virtual bool initInterface();
     virtual void handleLoop();
-    virtual void sendCommandWithID(CommandDef *cmd, bool setValue = false, int value = 0);
+    virtual void enableSniffing(bool value);
+    virtual void sendCommand(CommandDef *cmd, bool setValue = false, int value = 0);
 };
 
 #endif
