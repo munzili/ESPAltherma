@@ -41,6 +41,7 @@ struct CommandDef
     CommandDefValueCode** valueCode;
 
     CommandDef( const char *namep, const char *labelp, byte commandp[COMMAND_BYTE_LENGTH], uint16_t idp, float divisorp, bool writablep, const char *unitp, const char *typep, const uint8_t valueCodeSizep, CommandDefValueCode** valueCodep);
+    ~CommandDef();
 };
 
 #endif

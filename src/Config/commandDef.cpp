@@ -19,3 +19,15 @@ CommandDef::CommandDef( const char *namep, const char *labelp, byte commandp[COM
 
     valueCode = valueCodep;
 };
+
+CommandDef::~CommandDef()
+{
+    if(valueCodeSize)
+    {
+        for (size_t i = 0; i < valueCodeSize; i++)
+        {
+            delete valueCode[i];
+        }
+        delete[] valueCode;
+    }
+}
