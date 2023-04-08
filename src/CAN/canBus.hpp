@@ -5,7 +5,6 @@
 #include "Config/config.hpp"
 #include "CANDriver.hpp"
 #include "CAN/Drivers/MCP2515.hpp"
-#include "hpsu.hpp"
 
 void canBus_setup();
 

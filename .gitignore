@@ -4,6 +4,7 @@
 .vscode/launch.json
 .vscode/ipch
 private/
+build/
 webui/*.gz
 definitions/CAN/*.conv.json
 .vscode/settings.json
