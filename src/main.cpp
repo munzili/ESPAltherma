@@ -157,7 +157,7 @@ void waitLoop(uint ms){
   unsigned long start = millis();
   while (millis() < start + ms) //wait .5sec between registries
   {
-    if(valueLoadState == Pending)
+    if(valueLoadState == Pending || mainLoopStatus == LoopRunStatus::Stopping)
       return;
 
     extraLoop();
@@ -166,6 +166,9 @@ void waitLoop(uint ms){
 
 void loop()
 {
+  if(mainLoopStatus == LoopRunStatus::Stopped)
+    return;
+
   webuiScanRegister();
 
   if(!config->configStored)
@@ -186,4 +189,7 @@ void loop()
 
   mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);
   waitLoop(config->FREQUENCY);
+
+  if(mainLoopStatus == LoopRunStatus::Stopping)
+    mainLoopStatus = LoopRunStatus::Stopped;
 }

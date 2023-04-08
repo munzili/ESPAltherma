@@ -36,6 +36,14 @@ extern const uint8_t mainCSS_end[] asm("_binary_webui_main_css_gz_end");
 extern String lastUploadFileName;
 extern bool webOTAIsBusy;
 
+enum class LoopRunStatus : uint8_t {
+    Running,
+    Stopping,
+    Stopped
+};
+
+extern LoopRunStatus mainLoopStatus;
+
 bool formatDefaultFS();
 
 void onLoadWifiNetworks(AsyncWebServerRequest *request);

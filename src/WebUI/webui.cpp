@@ -2,6 +2,7 @@
 
 String lastUploadFileName;
 bool webOTAIsBusy = false;
+LoopRunStatus mainLoopStatus = LoopRunStatus::Running;
 
 // Set web server port number to 80
 AsyncWebServer server(80);
@@ -459,6 +460,16 @@ void onLoadConfig(AsyncWebServerRequest *request)
     return;
   }
 
+  File configFile = LittleFS.open(CONFIG_FILE, FILE_READ);
+  size_t configFileSize = configFile.size();
+  configFile.close();
+
+  if(configFileSize == 0)
+  {
+    request->send(200, "text/json", "{}");
+    return;
+  }
+
   request->send(LittleFS, CONFIG_FILE, "text/json");
 }
 
@@ -607,6 +618,12 @@ void onSaveConfig(AsyncWebServerRequest *request)
   }
 
   #pragma endregion Validate_Input_Params
+
+  // ensure main loop stopped and nothing trys to access config instance as this will be destroyed now
+  mainLoopStatus = LoopRunStatus::Stopping;
+
+  while(mainLoopStatus != LoopRunStatus::Stopped)
+    delay(10);
 
   if(config)
     delete config;
