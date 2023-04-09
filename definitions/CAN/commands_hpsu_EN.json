@@ -410,7 +410,7 @@
     {
       "name": "delta_t_ch",
       "label": "Delta-T CH",
-      "description": "Set outdoor temperature spread The ROTEX HPSU compact heating circulation pump controls the flow rate in order to achieve the set spread between the inflow target temperature and the return flow temperature (tV, BH – tR1)"
+      "description": "Set outdoor temperature spread The ROTEX HPSU compact heating circulation pump controls the flow rate in order to achieve the set spread between the inflow target temperature and the return flow temperature (tV, BH - tR1)"
     },
     {
       "name": "v_var",
