@@ -6,5 +6,4 @@
 private/
 build/
 webui/*.gz
-definitions/CAN/*.conv.json
 .vscode/settings.json

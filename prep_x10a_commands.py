@@ -1,15 +1,13 @@
 
 import json
 import os
-import shutil
 import glob
-import gzip
 
 print('Generating X10A language files...')
 
 data_src_dir = os.path.join(os.getcwd(), 'definitions/X10A/')
 
-buildDir = os.path.join(os.getcwd(), 'build/')
+buildDir = os.path.join(os.getcwd(), 'build', 'X10A')
 
 if not os.path.exists(buildDir):
    os.makedirs(buildDir)
@@ -29,58 +27,43 @@ for file in files_to_convert:
     modelDefinition = json.load(modelFile)
     modelFile.close()
 
-    modelFileLanguageDir = buildDir + modelDefinition["Language"]
+    modelFileLanguageDir = os.path.join(buildDir, modelDefinition["Language"])
 
     if not os.path.exists(modelFileLanguageDir):
         os.makedirs(modelFileLanguageDir)
 
-    shutil.copyfile(file, modelFileLanguageDir + '/' + os.path.basename(file))
+    newModelFileLocation = os.path.join(modelFileLanguageDir, os.path.basename(file))
 
+    # compress json file
+    with open(newModelFileLocation, "w", encoding='utf8') as outfile:
+        json.dump(modelDefinition, outfile, ensure_ascii=False)
+
+    # update language files
     for langDirectory in language_directorys:
-        languageFile = open(file, "r", encoding='utf8')
+        languageFilePath = os.path.join(langDirectory, os.path.basename(file))
+
+        if not os.path.isfile(languageFilePath):
+            continue
+
+        print('  Converting language file: ' + languageFilePath)
+
+        languageFile = open(languageFilePath, "r", encoding='utf8')
         languageDefinition = json.load(languageFile)
         languageFile.close()
 
         modelDefinition["Language"] = languageDefinition["Language"]
 
-        languageFileDir = buildDir + languageDefinition["Language"] + '/'
+        languageFileDir = os.path.join(buildDir, languageDefinition["Language"])
 
         counter = 0
         for parameter in languageDefinition["Parameters"]:
             modelDefinition["Parameters"][counter][5] = languageDefinition["Parameters"][counter]
             counter += 1
 
-        with open(languageFileDir + os.path.basename(file), "w", encoding='utf8') as outfile:
+        if not os.path.exists(languageFileDir):
+            os.makedirs(languageFileDir)
+
+        with open(os.path.join(languageFileDir, os.path.basename(file)), "w", encoding='utf8') as outfile:
             json.dump(modelDefinition, outfile, ensure_ascii=False)
-
-
-#commandsFile = open(data_src_dir + "commands_hpsu.json")
-#commands = json.load(commandsFile)["commands"]
-#commandsFile.close()
-#
-#for file in files_to_convert:
-#    print('  Converting file: ' + file)
-#    srcFile = os.path.join(data_src_dir, os.path.basename(file))
-#    newFileName = os.path.splitext(srcFile)[0] + ".conv.json"
-#
-#    languageFile = open(srcFile, "r", encoding='utf8')
-#    languageDefinition = json.load(languageFile)
-#    languageFile.close()
-#
-#    counter = 0
-#    for definition in languageDefinition["Commands"]:
-#        defName = definition["name"]
-#        command = commands[defName]
-#
-#        for c in command:
-#            languageDefinition["Commands"][counter][c] = command[c]
-#
-#        counter += 1
-#
-#    if os.path.exists(newFileName):
-#        os.remove(newFileName)
-#
-#    with open(newFileName, "w", encoding='utf8') as outfile:
-#        json.dump(languageDefinition, outfile, ensure_ascii=False)
 
 print('Finished generating X10A language files!')
