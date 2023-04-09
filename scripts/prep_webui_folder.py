@@ -2,11 +2,11 @@ Import("env")
 
 try:
     import rcssmin
-    import htmlmin 
+    import htmlmin
     from jsmin import jsmin
 except ImportError:
-    env.Execute("$PYTHONEXE -m pip install rcssmin htmlmin jsmin")    
-    
+    env.Execute("$PYTHONEXE -m pip install rcssmin htmlmin jsmin")
+
 import os
 import shutil
 import glob
@@ -29,8 +29,8 @@ for file in files_to_gzip:
     srcFile = os.path.join(data_src_dir, os.path.basename(file))
     tmpFile = srcFile + ".tmp"
     gzFile = srcFile + ".gz"
-    extension = file.split(".")[-1]    
-    
+    extension = file.split(".")[-1]
+
     shutil.copyfile(srcFile, tmpFile)
 
     if extension == "js":
@@ -39,7 +39,7 @@ for file in files_to_gzip:
 
         with open(tmpFile, 'w') as js_file:
             js_file.write(minified)
-    elif extension == "html":                
+    elif extension == "html":
         with open(tmpFile,'r') as fileHandler:
             htmlContent = htmlmin.minify(fileHandler.read())
 
@@ -51,9 +51,9 @@ for file in files_to_gzip:
 
         with open(tmpFile,'w') as fileHandler:
             fileHandler.write(minified)
-        
+
     print('  GZipping file: ' + file)
-    with open(tmpFile, "rb") as src, gzip.open(gzFile, 'wb') as dst:        
+    with open(tmpFile, "rb") as src, gzip.open(gzFile, 'wb') as dst:
         dst.writelines(src)
 
     os.remove(tmpFile)

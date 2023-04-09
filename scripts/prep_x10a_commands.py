@@ -5,9 +5,9 @@ import glob
 
 print('Generating X10A language files...')
 
-data_src_dir = os.path.join(os.getcwd(), 'definitions/X10A/')
-
-buildDir = os.path.join(os.getcwd(), 'build', 'X10A')
+projectRoot =  os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+data_src_dir = os.path.join(projectRoot, 'definitions', 'X10A')
+buildDir = os.path.join(projectRoot, 'build', 'X10A')
 
 if not os.path.exists(buildDir):
    os.makedirs(buildDir)
@@ -15,7 +15,7 @@ if not os.path.exists(buildDir):
 files_to_convert = []
 files_to_convert.extend(glob.glob(os.path.join(data_src_dir, '*.json')))
 
-language_directorys = [os.path.abspath(data_src_dir + name) for name in os.listdir(data_src_dir + '.') if os.path.isdir(data_src_dir + name)]
+language_directorys = [os.path.abspath(os.path.join(data_src_dir,name)) for name in os.listdir(os.path.join(data_src_dir, '.')) if os.path.isdir(os.path.join(data_src_dir, name))]
 
 print('  files to convert: ' + str(files_to_convert))
 print('  directorys to convert: ' + str(language_directorys))

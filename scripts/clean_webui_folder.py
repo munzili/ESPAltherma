@@ -3,7 +3,7 @@ Import("env", "projenv")
 import os
 import glob
 
-def postBuild(source, target, env):    
+def postBuild(source, target, env):
     print('Cleaning up gzip webui files...')
 
     data_src_dir = os.path.join(env.get('PROJECT_DIR'), 'webui')
@@ -12,7 +12,7 @@ def postBuild(source, target, env):
 
     for file in files_to_delete:
         print('  Delete file: ' + file)
-        os.remove(file)        
+        os.remove(file)
 
     print('Finished cleaning up gzip webui files...')
 
