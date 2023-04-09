@@ -2,6 +2,7 @@
     "Model": "Altherma Bizone CB 11-16kW",
     "Language": "German",
     "Parameters": [
+        "Kältemittel Typ",
         "Anzahl - Sensoren",
         "Anzahl - Inverterverdichter",
         "Anzahl – Standardverdichter",

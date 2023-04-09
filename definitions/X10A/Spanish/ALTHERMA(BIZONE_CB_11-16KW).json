@@ -2,6 +2,7 @@
     "Model": "Altherma Bizone CB 11-16kW",
     "Language": "Spanish",
     "Parameters": [
+        "Tipo de refrigerante",
         "Cant. de datos del sensor",
         "Cant. de compresor INV",
         "Cant. de compresores STD",
