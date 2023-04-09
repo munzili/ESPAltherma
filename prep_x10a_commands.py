@@ -55,6 +55,10 @@ for file in files_to_convert:
 
         languageFileDir = os.path.join(buildDir, languageDefinition["Language"])
 
+        if len(languageDefinition["Parameters"]) != len(modelDefinition["Parameters"]):
+            print('Index missmatch between file ' + languageFilePath + ': ' + str(len(languageDefinition["Parameters"])) + ' -> ' + str(len(modelDefinition["Parameters"])))
+            continue
+
         counter = 0
         for parameter in languageDefinition["Parameters"]:
             modelDefinition["Parameters"][counter][5] = languageDefinition["Parameters"][counter]
