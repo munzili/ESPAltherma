@@ -6,49 +6,22 @@ using namespace MCP2515;
 
 DriverMCP2515* self;
 
-void DriverMCP2515::sniffCAN(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
-{
-  char resultText[128] = "";
-  sprintf(resultText, "CAN [ %i ] ID", timestamp_us);
-
-  if(id & MCP2515::CAN_EFF_BITMASK) strcat(resultText, "(EXT)");
-  if(id & MCP2515::CAN_RTR_BITMASK) strcat(resultText, "(RTR)");
-
-  sprintf(resultText + strlen(resultText), " %02X DATA[%i] ", id, len);
-
-  std::for_each(data,
-                  data+len,
-                  [resultText](uint8_t const elem) mutable {
-                      sprintf(resultText + strlen(resultText), "%02X ", elem);
-                  });
-
-  mqttSerial.println(resultText);
-}
-
-bool DriverMCP2515::setMode(Mode mode)
+bool DriverMCP2515::setMode(CanDriverMode mode)
 {
   bool success = false;
 
   switch (mode)
   {
-  case Mode::Normal:
+  case CanDriverMode::Normal:
     success = mcp2515->setNormalMode();
     break;
 
-  case Mode::Sleep:
-    success = mcp2515->setSleepMode();
-    break;
-
-  case Mode::Loopback:
+  case CanDriverMode::Loopback:
     success = mcp2515->setLoopbackMode();
     break;
 
-  case Mode::ListenOnly:
+  case CanDriverMode::ListenOnly:
     success = mcp2515->setListenOnlyMode();
-    break;
-
-  case Mode::Config:
-    success = mcp2515->setConfigMode();
     break;
   }
 
@@ -62,8 +35,8 @@ void DriverMCP2515::writeLoopbackTest()
 {
   mqttSerial.println("CAN running loopback test");
 
-  Mode modeBeforeTest = currentMode;
-  setMode(Mode::Loopback);
+  CanDriverMode modeBeforeTest = currentMode;
+  setMode(CanDriverMode::Loopback);
 
   CanFrame const test_frame_1 = { 0x00000001, {0}, 0 };                                              /* Minimum (no) payload */
   CanFrame const test_frame_2 = { 0x00000002, {0xCA, 0xFE, 0xCA, 0xFE, 0, 0, 0, 0}, 4 };             /* Between minimum and maximum payload */
@@ -96,219 +69,6 @@ void DriverMCP2515::writeLoopbackTest()
 
   setMode(modeBeforeTest);
 }
-
-int DriverMCP2515::HPSU_toSigned(uint16_t value, char* unit)
-{
-  if(strcmp(unit, "deg") == 0 || strcmp(unit, "value_code_signed") == 0)
-  {
-    int newValue = value & 0xFFFF;
-    return (newValue ^ 0x8000) - 0x8000;
-  }
-  else
-  {
-    return value;
-  }
-}
-
-void DriverMCP2515::enableSniffing(bool value)
-{
-  sniffingEnabled = value;
-}
-
-CommandDef* DriverMCP2515::getCommandFromData(const uint8_t *data)
-{
-  bool extended = data[2] == 0xFA;
-  CommandDef* recievedCommand = nullptr;
-
-  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
-  {
-    //Byte 3 == FA
-    //31 00 FA 0B D1 00 00   <- $CANMsg
-    //      |------| -> len: 3 byte
-    //      ^pos: 2
-    if(extended &&
-       config->COMMANDS[i]->command[2] == data[2] &&
-       config->COMMANDS[i]->command[3] == data[3] &&
-       config->COMMANDS[i]->command[4] == data[4])
-    {
-      recievedCommand = config->COMMANDS[i];
-      break;
-    }
-    //Byte 3 != FA
-    //31 00 05 00 00 00 00   <- $CANMsg
-    //      || -> len: 1 byte
-    //      ^pos: 2
-    else if(!extended && config->COMMANDS[i]->command[2] == data[2])
-    {
-      recievedCommand = config->COMMANDS[i];
-      break;
-    }
-  }
-
-  return recievedCommand;
-}
-
-void DriverMCP2515::onReceiveBufferFull(const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
-{
-  if(!canInited)
-      return;
-
-  if(sniffingEnabled || currentMode == Mode::Loopback)
-  {
-    sniffCAN(timestamp_us, id, data, len);
-
-    if(currentMode == Mode::Loopback)
-      return;
-  }
-
-  if(len < 2)
-    return;
-
-  bool extended = data[2] == 0xFA;
-
-  bool valid = false;
-  CommandDef* recievedCommand = getCommandFromData(data);
-
-  // if we got a message that we shouldnt handle, skip it
-  if(recievedCommand == nullptr)
-    return;
-
-  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
-  {
-    if(cmdSendInfos[i]->cmd == recievedCommand)
-    {
-      // if we didnt fetch the infos, ignore it
-      if(!cmdSendInfos[i]->pending)
-      {
-        return;
-      }
-
-      cmdSendInfos[i]->pending = false;
-      break;
-    }
-  }
-
-  byte valByte1 = 0;
-  byte valByte2 = 0;
-
-  if (extended)  // -> Byte3 eq FA
-  {
-    //20 0A FA 01 D6 00 D9   <- $CANMsg
-    //               |  ^pos: 6
-    //               ^pos: 5
-    //   t_hs - 21,7
-
-    valByte1 = data[5];
-    valByte2 = data[6];
-  }
-  else
-  {
-    //20 0A 0E 01 E8 00 00   <- $CANMsg
-    //         |  ^pos: 4
-    //         ^pos: 3
-    //   t_dhw - 48,8Â°
-    valByte1 = data[3];
-    valByte2 = data[4];
-  }
-
-  int value;
-
-  if(strcmp(recievedCommand->type, "int") == 0)
-  {
-    value = HPSU_toSigned(valByte1, recievedCommand->unit);
-  }
-  else if(strcmp(recievedCommand->type, "value") == 0)
-  {
-    value = valByte1;
-    //example: mode_01 val 4       -> 31 00 FA 01 12 04 00
-  }
-  else if(strcmp(recievedCommand->type, "longint") == 0)
-  {
-    value = HPSU_toSigned(valByte2 + valByte1 * 0x0100, recievedCommand->unit);
-    //example: one_hot_water val 1 -> 31 00 FA 01 44 00 01
-    //                                                   ^
-  }
-  else if(strcmp(recievedCommand->type, "float") == 0)
-  {
-    value = HPSU_toSigned(valByte2 + valByte1 * 0x0100, recievedCommand->unit);
-  }
-  else
-  {
-    return;
-  }
-
-  value /= recievedCommand->divisor;
-
-  String valueCodeKey = String(value);
-
-  if(recievedCommand->valueCodeSize > 0)
-  {
-    for (byte counter = 0; counter < recievedCommand->valueCodeSize; counter++)
-    {
-      if(recievedCommand->valueCode[counter]->value.toInt() == value)
-      {
-        valueCodeKey = recievedCommand->valueCode[counter]->key;
-        break;
-      }
-    }
-  }
-
-  if(strlen(recievedCommand->unit) > 0)
-  {
-      if(strcmp(recievedCommand->unit, "deg") == 0)
-      {
-        valueCodeKey += " °C";
-      }
-      else if(strcmp(recievedCommand->unit, "percent") == 0)
-      {
-        valueCodeKey += " %";
-      }
-      else if(strcmp(recievedCommand->unit, "bar") == 0)
-      {
-        valueCodeKey += " bar";
-      }
-      else if(strcmp(recievedCommand->unit, "kwh") == 0)
-      {
-        valueCodeKey += " kWh";
-      }
-      else if(strcmp(recievedCommand->unit, "kw") == 0)
-      {
-        valueCodeKey += " kW";
-      }
-      else if(strcmp(recievedCommand->unit, "w") == 0)
-      {
-        valueCodeKey += " W";
-      }
-      else if(strcmp(recievedCommand->unit, "sec") == 0)
-      {
-        valueCodeKey += " sec";
-      }
-      else if(strcmp(recievedCommand->unit, "min") == 0)
-      {
-        valueCodeKey += " min";
-      }
-      else if(strcmp(recievedCommand->unit, "hour") == 0)
-      {
-        valueCodeKey += " h";
-      }
-      else if(strcmp(recievedCommand->unit, "lh") == 0)
-      {
-        valueCodeKey += " lh";
-      }
-  }
-
-  if(config->MQTT_USE_ONETOPIC)
-  {
-    client.publish((config->MQTT_TOPIC_NAME + config->MQTT_ONETOPIC_NAME + config->CAN_MQTT_TOPIC_NAME + recievedCommand->label).c_str(), valueCodeKey.c_str());
-  }
-  else
-  {
-    client.publish((config->MQTT_TOPIC_NAME + config->CAN_MQTT_TOPIC_NAME + recievedCommand->label).c_str(), valueCodeKey.c_str());
-  }
-
-  mqttSerial.printf("CAN Data recieved %s: %s\n",  recievedCommand->label, valueCodeKey.c_str());
-}
-
 
 void DriverMCP2515::handleInterrupt()
 {
@@ -502,26 +262,6 @@ bool DriverMCP2515::getRate(const uint8_t mhz, const uint16_t speed, CanBitRate 
   return found;
 }
 
-void DriverMCP2515::handleMQTTSetRequest(const String &label, const char *payload, const uint32_t length)
-{
-  if(!canInited)
-      return;
-
-  const int payloadAsInt = atoi(payload);
-
-  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
-  {
-    if(config->COMMANDS[i]->writable && strcmp(config->COMMANDS[i]->name, label.c_str()) == 0)
-    {
-      mqttSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label, payloadAsInt);
-      sendCommand(config->COMMANDS[i], true, payloadAsInt);
-      return;
-    }
-  }
-
-  mqttSerial.printf("CAN: Got invalid MQTT SET request for %s\n", label);
-}
-
 DriverMCP2515::DriverMCP2515()
 {
   self = this;
@@ -540,7 +280,14 @@ DriverMCP2515::DriverMCP2515()
                               micros,
                               [this](const uint32_t timestamp_us, const uint32_t id, const uint8_t *data, const uint8_t len)
                               {
-                                onReceiveBufferFull(timestamp_us, id, data, len);
+                                CanFrame frame;
+                                frame.id = id;
+                                memcpy(frame.data, data, len);
+                                frame.len = len;
+                                frame.isEXT = id & MCP2515::CAN_EFF_BITMASK;
+                                frame.isRTR = id & MCP2515::CAN_RTR_BITMASK;
+
+                                onDataRecieved(timestamp_us, frame);
                               },
                               nullptr);
 }
@@ -555,13 +302,6 @@ bool DriverMCP2515::initInterface()
   {
       mqttSerial.println("CAN-Bus init failed! E1");
       return false;
-  }
-
-  cmdSendInfos = new CMDSendInfo*[config->COMMANDS_LENGTH];
-  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
-  {
-    cmdSendInfos[i] = new CMDSendInfo();
-    cmdSendInfos[i]->cmd = config->COMMANDS[i];
   }
 
   /* Setup SPI access */
@@ -584,171 +324,27 @@ bool DriverMCP2515::initInterface()
 
   mcp2515->begin();
 
-  if(!setMode(Mode::Loopback)) // test if we can write something to the MCP2515 (is a device connected?)
+  if(!setMode(CanDriverMode::Loopback)) // test if we can write something to the MCP2515 (is a device connected?)
   {
       SPI.end();
       mqttSerial.println("CAN-Bus init failed! E2");
       return false;
   }
 
-  callbackCAN = [this](const String label, const char *payload, const uint32_t length) { handleMQTTSetRequest(label, payload, length); };
-
-  canInited = true;
-
   mcp2515->setBitRate(rate); // CAN bit rate and MCP2515 clock speed
 
-  setMode(Mode::Normal);
-
-  mqttSerial.println("CAN-Bus inited");
+  defaultInit();
 
   return true;
 }
 
-void DriverMCP2515::listenOnly(bool value)
-{
-  if(value)
-    setMode(Mode::ListenOnly);
-  else
-    setMode(Mode::Normal);
-}
-
-void DriverMCP2515::setID(const uint16_t id)
-{
-  currentFrameId = id;
-}
-
-void DriverMCP2515::handleLoop()
-{
-  if(!canInited)
-      return;
-
-  uint64_t currentMillis = millis();
-
-  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
-  {
-    if(cmdSendInfos[i]->pending == true && currentMillis - cmdSendInfos[i]->timeMessageSend >= CAN_MESSAGE_TIMEOUT * 1000)
-    {
-      cmdSendInfos[i]->pending = false;
-      mqttSerial.printf("CAN Timeout for message: %s\n", cmdSendInfos[i]->cmd->label);
-    }
-  }
-
-  if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
-  {
-    ulong currentTime = millis();
-
-    if(currentTime - lastTimeRunned >= config->CAN_AUTOPOLL_TIME * 1000)
-    {
-      mqttSerial.printf("CAN Poll Mode Auto Reading: %lu\n", currentTime);
-
-      for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
-      {
-        if(cmdSendInfos[i]->pending == false)
-        {
-          sendCommand(config->COMMANDS[i], false);
-        }
-      }
-
-      lastTimeRunned = currentTime;
-    }
-  }
-}
-
 void DriverMCP2515::sendCommand(CommandDef* cmd, bool setValue, int value)
 {
-  CanFrame frame;
+  CanFrame* frame = getCanFrameFromCommand(cmd, setValue, value);
 
-  if(setValue)
-  {
-      frame.id = 680;
-  }
-  else
-  {
-      frame.id = cmd->id;
-  }
-
-  frame.len = sizeof(cmd->command);
-  memcpy(frame.data, cmd->command, frame.len);
-
-  if(cmd->writable && setValue)
-  {
-      // set first byte in command array to have HEX Value "0" on second position
-      // character No 2: 0=write 1=read 2=answer
-      frame.data[0] = (frame.data[0] & 0xF0) | 0x00;
-
-      byte valByte1 = 0;
-      byte valByte2 = 0;
-
-      if(value < 0 && strcmp(cmd->type, "float") != 0)
-      {
-          // error
-          // set negative values if type not float not possible !!!
-          return;
-      }
-
-      const double calculatedValue = value * cmd->divisor;
-
-      if(strcmp(cmd->type, "int") == 0)
-      {
-          valByte1 = calculatedValue;
-      }
-      else if(strcmp(cmd->type, "value") == 0)
-      {
-          valByte1 = calculatedValue;
-      }
-      else if(strcmp(cmd->type, "longint") == 0)
-      {
-          valByte1 = (int)calculatedValue >> 8;
-          valByte2 = (int)calculatedValue & 0xFF;
-      }
-      else if(strcmp(cmd->type, "float") == 0)
-      {
-          const int intCalcValue = (int)calculatedValue & 0xFFFF;
-          valByte1 = intCalcValue >> 8;
-          valByte2 = intCalcValue & 0xFF;
-      }
-
-      if (frame.data[2] == 0xFA)  // 2=pos address
-      {
-          // Byte 3 == FA
-          // 30 0A FA 01 D6 00 D9   <- $CANMsg
-          //                |  ^pos: 6
-          //                ^pos: 5
-          frame.data[5] = valByte1;
-          frame.data[6] = valByte2;
-      }
-      else
-      {
-          // Byte 3 != FA
-          // 30 0A 0E 01 E8 00 00   <- $CANMsg
-          //          |  ^pos: 4
-          //          ^pos: 3
-          //    t_dhw - 48,8Â°
-          frame.data[3] = valByte1;
-          frame.data[4] = valByte2;
-      }
-  }
-  else
-  {
-    for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
-    {
-      if(cmdSendInfos[i]->cmd == cmd)
-      {
-        cmdSendInfos[i]->pending = true;
-        cmdSendInfos[i]->timeMessageSend = millis();
-        break;
-      }
-    }
-  }
-
-  mqttSerial.printf("CAN: Transmiting ID(%i) ", frame.id);
-  for(uint8_t i = 0; i < frame.len; i++)
-  {
-    mqttSerial.printf("%02x ", frame.data[i]);
-  }
-  mqttSerial.println();
-
-  if(!mcp2515->transmit(frame.id, frame.data, frame.len)) {
+  if(!mcp2515->transmit(frame->id, frame->data, frame->len)) {
     mqttSerial.println("ERROR TX");
   }
+
+  delete frame;
 }
