@@ -11,10 +11,12 @@ void canBus_setup()
         driver->initInterface();
         break;
 
-    /*case CanICTypes::ELM327:
+    case CanICTypes::ELM327:
+        driver = new DriverELM327();
+        driver->initInterface();
         break;
 
-    case CanICTypes::SJA1000:
+    /*case CanICTypes::SJA1000:
         break;*/
 
     default:
