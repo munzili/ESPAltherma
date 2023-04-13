@@ -18,7 +18,10 @@ bool DriverSJA1000::getRate(const uint16_t speed, twai_timing_config_t &t_config
             if(chip.revision > 1)
                 t_config = TWAI_TIMING_CONFIG_20KBITS();
             else
+            {
+                mqttSerial.println("Tried to init CAN-Bus with 20kbps on Revision 0 or Revision 1 Chip!");
                 found = false;
+            }
             break;
 
         case 50:
@@ -168,6 +171,7 @@ bool DriverSJA1000::setMode(CanDriverMode mode)
         return false;
     }
 
+    currentMode = mode;
     driverIsRunning = true;
 
     return true;

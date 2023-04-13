@@ -45,6 +45,8 @@ bool DriverELM327::setMode(CanDriverMode mode)
     break;
   }
 
+  currentMode = mode;
+
   return true;
 }
 
