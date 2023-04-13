@@ -2,6 +2,9 @@
 
 bool DriverSJA1000::getRate(const uint16_t speed, twai_timing_config_t &t_config)
 {
+    esp_chip_info_t chip;
+    esp_chip_info(&chip);
+
     bool found = true;
 
     switch (speed)
@@ -11,11 +14,12 @@ bool DriverSJA1000::getRate(const uint16_t speed, twai_timing_config_t &t_config
             t_config = TWAI_TIMING_CONFIG_10KBITS();
             break;
 #endif
-#if (SOC_TWAI_BRP_MAX > 128) || (CONFIG_ESP32_REV_MIN >= 2)
         case 20:
-            t_config = TWAI_TIMING_CONFIG_20KBITS();
+            if(chip.revision > 1)
+                t_config = TWAI_TIMING_CONFIG_20KBITS();
+            else
+                found = false;
             break;
-#endif
 
         case 50:
         t_config = TWAI_TIMING_CONFIG_50KBITS();
@@ -59,7 +63,7 @@ bool DriverSJA1000::initInterface()
 
     bool ratePossible = getRate(config->CAN_SPEED_KBPS, t_config);
 
-    if(!ratePossible) // test if we can write something to the MCP2515 (is a device connected?)
+    if(!ratePossible)
     {
         mqttSerial.println("CAN-Bus init failed! E1");
         return false;
@@ -92,6 +96,9 @@ void DriverSJA1000::sendCommand(CommandDef* cmd, bool setValue, int value)
 void DriverSJA1000::handleLoop()
 {
     CANDriver::handleLoop();
+
+    if(!canInited)
+        return;
 
     twai_message_t message;
 

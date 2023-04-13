@@ -52,6 +52,9 @@ void DriverELM327::handleLoop()
 {
     CANDriver::handleLoop();
 
+    if(!canInited)
+        return;
+
     while (Elm327Serial.available())
     {
         char c = Elm327Serial.read();
