@@ -7,3 +7,4 @@ private/
 build/
 webui/*.gz
 .vscode/settings.json
+sdkconfig.*.old

@@ -279,7 +279,7 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
   }
 
   String fsFilename = lastUploadFileName;
-  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename);
+  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename.c_str());
 
   File modelsFile = LittleFS.open(MODELS_FILE, FILE_READ);
   DynamicJsonDocument modelsDoc(MODELS_DOC_SIZE);
@@ -348,7 +348,7 @@ void onUploadConfigFile(AsyncWebServerRequest *request)
   }
 
   String fsFilename = lastUploadFileName;
-  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename);
+  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename.c_str());
 
   if(LittleFS.exists(CONFIG_FILE))
   {
@@ -498,7 +498,6 @@ void onExportConfig(AsyncWebServerRequest *request)
 
 void onSaveConfig(AsyncWebServerRequest *request)
 {
-  #pragma region Validate_Input_Params
   if(!request->hasParam("standalone_wifi", true))
   {
     if(!request->hasParam("ssid", true) || !request->hasParam("ssid_password", true))
@@ -616,8 +615,6 @@ void onSaveConfig(AsyncWebServerRequest *request)
     request->send(422, "text/plain", "Missing parameter(s) for CAN-Bus SPI");
     return;
   }
-
-  #pragma endregion Validate_Input_Params
 
   // ensure main loop stopped and nothing trys to access config instance as this will be destroyed now
   mainLoopStatus = LoopRunStatus::Stopping;
@@ -921,7 +918,7 @@ void onUploadCANFile(AsyncWebServerRequest *request)
   }
 
   String fsFilename = lastUploadFileName;
-  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename);
+  mqttSerial.printf("Found LittleFS Filename: %s\n", fsFilename.c_str());
 
   File canCommandsFile = LittleFS.open(CAN_COMMANDS_FILE, FILE_READ);
   DynamicJsonDocument canCommandsDoc(MODELS_DOC_SIZE);

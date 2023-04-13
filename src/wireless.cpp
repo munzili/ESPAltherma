@@ -17,7 +17,7 @@ void setup_wifi()
 {
   delay(10);
   // We start by connecting to a WiFi network
-  mqttSerial.printf("Connecting to %s\n", config->SSID);
+  mqttSerial.printf("Connecting to %s\n", config->SSID.c_str());
 
   if(config->SSID_STATIC_IP)
   {

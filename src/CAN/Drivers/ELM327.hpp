@@ -11,7 +11,7 @@ private:
     bool write(const char *bytes, size_t size);
     bool setID(const uint16_t id);
     bool setMode(CanDriverMode mode);
-    const bool ATCommandIsOK();
+    bool ATCommandIsOK();
     bool listenOnly;
     String received = "";
 

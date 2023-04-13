@@ -172,7 +172,6 @@ void CANDriver::onDataRecieved(uint32_t const timestamp_us, CanFrame const frame
 
   bool extended = frame.data[2] == 0xFA;
 
-  bool valid = false;
   CommandDef* recievedCommand = getCommandFromData(frame.data);
 
   // if we got a message that we shouldnt handle, skip it
@@ -386,13 +385,13 @@ void CANDriver::handleMQTTSetRequest(const String &label, const char *payload, c
   {
     if(config->COMMANDS[i]->writable && strcmp(config->COMMANDS[i]->name, label.c_str()) == 0)
     {
-      mqttSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label, payloadAsInt);
+      mqttSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label.c_str(), payloadAsInt);
       sendCommand(config->COMMANDS[i], true, payloadAsInt);
       return;
     }
   }
 
-  mqttSerial.printf("CAN: Got invalid MQTT SET request for %s\n", label);
+  mqttSerial.printf("CAN: Got invalid MQTT SET request for %s\n", label.c_str());
 }
 
 void CANDriver::defaultInit()

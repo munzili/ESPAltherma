@@ -2,7 +2,7 @@
 
 #define Elm327Serial Serial1
 
-const bool DriverELM327::ATCommandIsOK()
+bool DriverELM327::ATCommandIsOK()
 {
     char result[] = "KO";
 
@@ -59,7 +59,7 @@ void DriverELM327::handleLoop()
         {
             if(received.length() > 8*2)
             {
-                mqttSerial.printf("CAN-Bus receive error! Buffer: %s\n", received);
+                mqttSerial.printf("CAN-Bus receive error! Buffer: %s\n", received.c_str());
                 received = "";
                 continue;
             }
@@ -98,7 +98,7 @@ bool DriverELM327::write(const char *bytes, const size_t size)
     if(listenOnly)
         return false;
 
-    size_t len;
+    size_t len = 0;
 
     len += Elm327Serial.write(bytes, size);
     len += Elm327Serial.write("\r");
