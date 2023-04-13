@@ -16,8 +16,10 @@ void canBus_setup()
         driver->initInterface();
         break;
 
-    /*case CanICTypes::SJA1000:
-        break;*/
+    case CanICTypes::SJA1000:
+        driver = new DriverSJA1000();
+        driver->initInterface();
+        break;
 
     default:
         mqttSerial.println("No CAN Driver found");
