@@ -79,6 +79,9 @@ bool DriverSJA1000::initInterface()
 
 void DriverSJA1000::sendCommand(CommandDef* cmd, bool setValue, int value)
 {
+    if(currentMode == CanDriverMode::ListenOnly)
+        return;
+
     CanFrame* frame = getCanFrameFromCommand(cmd, setValue, value);
 
     twai_message_t message;

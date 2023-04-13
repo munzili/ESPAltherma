@@ -407,7 +407,7 @@ void CANDriver::defaultInit()
 
   canInited = true;
 
-  setMode(CanDriverMode::Normal);
+  listenOnly(config->CAN_READONLY_ENABLED);
 
   mqttSerial.println("CAN-Bus inited");
 }

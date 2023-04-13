@@ -709,6 +709,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
     config->CAN_SPEED_KBPS = request->getParam("can_speed_kbps", true)->value().toInt();
     config->CAN_MQTT_TOPIC_NAME = (char *)request->getParam("can_mqtt_topic_name", true)->value().c_str();
+    config->CAN_READONLY_ENABLED = request->hasParam("can_readonly_enabled", true);
     config->CAN_SNIFFING_ENABLED = request->hasParam("can_sniffing_enabled", true);
     config->CAN_AUTOPOLL_MODE = (CANPollMode)request->getParam("can_autopoll_mode", true)->value().toInt();
 

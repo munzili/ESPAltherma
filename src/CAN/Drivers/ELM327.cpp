@@ -191,6 +191,9 @@ bool DriverELM327::setID(const uint16_t id)
 
 void DriverELM327::sendCommand(CommandDef* cmd, bool setValue, int value)
 {
+    if(currentMode == CanDriverMode::ListenOnly)
+        return;
+
     CanFrame* frame = getCanFrameFromCommand(cmd, setValue, value);
 
     setID(frame->id);

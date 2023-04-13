@@ -103,6 +103,7 @@ void readConfig()
 
     config->CAN_SPEED_KBPS = configDoc["CAN_SPEED_KBPS"].as<uint16_t>();
     config->CAN_MQTT_TOPIC_NAME = (char *)configDoc["CAN_MQTT_TOPIC_NAME"].as<const char*>();
+    config->CAN_READONLY_ENABLED = configDoc["CAN_READONLY_ENABLED"].as<const bool>();
     config->CAN_SNIFFING_ENABLED = configDoc["CAN_SNIFFING_ENABLED"].as<const bool>();
     config->CAN_AUTOPOLL_MODE = (CANPollMode)configDoc["CAN_AUTOPOLL_MODE"].as<uint8_t>();
     if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
@@ -244,6 +245,7 @@ void saveConfig()
 
     configDoc["CAN_SPEED_KBPS"] = config->CAN_SPEED_KBPS;
     configDoc["CAN_MQTT_TOPIC_NAME"] = config->CAN_MQTT_TOPIC_NAME;
+    configDoc["CAN_READONLY_ENABLED"] = config->CAN_READONLY_ENABLED;
     configDoc["CAN_SNIFFING_ENABLED"] = config->CAN_SNIFFING_ENABLED;
     configDoc["CAN_AUTOPOLL_MODE"] = (uint8_t)config->CAN_AUTOPOLL_MODE;
     if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)

@@ -38,13 +38,13 @@ void DriverMCP2515::writeLoopbackTest()
   CanDriverMode modeBeforeTest = currentMode;
   setMode(CanDriverMode::Loopback);
 
-  CanFrame const test_frame_1 = { 0x00000001, {0}, 0 };                                              /* Minimum (no) payload */
-  CanFrame const test_frame_2 = { 0x00000002, {0xCA, 0xFE, 0xCA, 0xFE, 0, 0, 0, 0}, 4 };             /* Between minimum and maximum payload */
-  CanFrame const test_frame_3 = { 0x00000003, {0xCA, 0xFE, 0xCA, 0xFE, 0xCA, 0xFE, 0xCA, 0xFE}, 8 }; /* Maximum payload */
-  CanFrame const test_frame_4 = { 0x40000004, {0}, 0 };                                              /* RTR frame */
-  CanFrame const test_frame_5 = { 0x000007FF, {0}, 0 };                                              /* Highest standard 11 bit CAN address */
-  CanFrame const test_frame_6 = { 0x80000000, {0}, 0 };                                              /* Lowest extended 29 bit CAN address */
-  CanFrame const test_frame_7 = { 0x9FFFFFFF, {0}, 0 };                                              /* Highest extended 29 bit CAN address */
+  CanFrame const test_frame_1 = { 0x00000001, {0}, 0, false, false};                                              /* Minimum (no) payload */
+  CanFrame const test_frame_2 = { 0x00000002, {0xCA, 0xFE, 0xCA, 0xFE, 0, 0, 0, 0}, 4, false, false };             /* Between minimum and maximum payload */
+  CanFrame const test_frame_3 = { 0x00000003, {0xCA, 0xFE, 0xCA, 0xFE, 0xCA, 0xFE, 0xCA, 0xFE}, 8, false, false }; /* Maximum payload */
+  CanFrame const test_frame_4 = { 0x40000004, {0}, 0, false, false };                                              /* RTR frame */
+  CanFrame const test_frame_5 = { 0x000007FF, {0}, 0, false, false };                                              /* Highest standard 11 bit CAN address */
+  CanFrame const test_frame_6 = { 0x80000000, {0}, 0, false, false };                                              /* Lowest extended 29 bit CAN address */
+  CanFrame const test_frame_7 = { 0x9FFFFFFF, {0}, 0, false, false };                                              /* Highest extended 29 bit CAN address */
 
   std::array<CanFrame, 7> const CAN_TEST_FRAME_ARRAY =
   {
@@ -340,6 +340,9 @@ bool DriverMCP2515::initInterface()
 
 void DriverMCP2515::sendCommand(CommandDef* cmd, bool setValue, int value)
 {
+  if(currentMode == CanDriverMode::ListenOnly)
+    return;
+
   CanFrame* frame = getCanFrameFromCommand(cmd, setValue, value);
 
   if(!mcp2515->transmit(frame->id, frame->data, frame->len)) {

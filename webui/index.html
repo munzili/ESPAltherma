@@ -468,11 +468,18 @@
         <input type="text" id="can_mqtt_topic_name" name="can_mqtt_topic_name"/>
         <small>Needs to end with a slash. CAN Values can be recieved and setted over MQTT with this topic name + the label of the command. For Setting a value, "SET/" is added before the topic name</small>
 
+        <label for="can_readonly_enabled" >
+          <input type="checkbox" id="can_readonly_enabled" name="can_readonly_enabled" role="switch"/>
+          CAN Read-only mode
+        </label>
+        <small>ESPAltherma is only allowed to listen to the CAN-Bus, no writting allowed. Ensures no problems or crashes are created on CAN-Bus by writting wrong data signals</small>
+
         <label for="can_sniffing_enabled" >
           <input type="checkbox" id="can_sniffing_enabled" name="can_sniffing_enabled" role="switch"/>
           CAN Sniffing enabled
         </label>
         <small>Output all CAN-Bus data on Serial/WebSerial</small>
+
 
         <!-- Radios -->
         <fieldset id="fieldset_autopoll">

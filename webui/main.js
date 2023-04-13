@@ -248,6 +248,7 @@ async function loadConfig()
 
             document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];
             document.getElementById('can_mqtt_topic_name').value = data['CAN_MQTT_TOPIC_NAME'];
+            document.getElementById('can_readonly_enabled').checked = data['CAN_READONLY_ENABLED'];
             document.getElementById('can_sniffing_enabled').checked = data['CAN_SNIFFING_ENABLED'];
 
             switch(data['CAN_AUTOPOLL_MODE'])
