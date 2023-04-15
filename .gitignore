@@ -3,7 +3,8 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-src/setup.local.h
-src/altherma.local.h
 private/
+build/
+webui/*.gz
 .vscode/settings.json
+sdkconfig.*
