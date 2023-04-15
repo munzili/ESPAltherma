@@ -8,7 +8,7 @@ import gzip
 print('Generating CAN language files...')
 
 projectRoot =  os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-data_src_dir = os.path.join(projectRoot, 'definitions/CAN/')
+data_src_dir = os.path.join(projectRoot, 'definitions', 'CAN/')
 buildDir = os.path.join(projectRoot, 'build', 'CAN')
 
 if not os.path.exists(buildDir):
