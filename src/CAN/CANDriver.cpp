@@ -100,7 +100,7 @@ CanFrame* CANDriver::getCanFrameFromCommand(CommandDef* cmd, bool setValue, int 
 
 void CANDriver::sniffCAN(const uint32_t timestamp_us, CanFrame const frame)
 {
-  char resultText[128] = "";
+  char resultText[64] = "";
   sprintf(resultText, "CAN [ %i ] ID", timestamp_us);
 
   if(frame.isRTR) strcat(resultText, "(RTR)");
@@ -108,11 +108,8 @@ void CANDriver::sniffCAN(const uint32_t timestamp_us, CanFrame const frame)
 
   sprintf(resultText + strlen(resultText), " %02X DATA[%i] ", frame.id, frame.len);
 
-  std::for_each(frame.data,
-                frame.data + frame.len,
-                [resultText](uint8_t const elem) mutable {
-                    sprintf(resultText + strlen(resultText), "%02X ", elem);
-                });
+  for(uint8_t i = 0; i < frame.len; i++)
+    sprintf(resultText + strlen(resultText), "%02X ", frame.data[i]);
 
   mqttSerial.println(resultText);
 }
@@ -170,6 +167,10 @@ void CANDriver::onDataRecieved(uint32_t const timestamp_us, CanFrame const frame
   if(frame.len < 2)
     return;
 
+  // skip message if it is not a answer
+  if((frame.data[0] & 0x0F) != 2)
+    return;
+
   bool extended = frame.data[2] == 0xFA;
 
   CommandDef* recievedCommand = getCommandFromData(frame.data);
@@ -178,18 +179,21 @@ void CANDriver::onDataRecieved(uint32_t const timestamp_us, CanFrame const frame
   if(recievedCommand == nullptr)
     return;
 
-  for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
+  if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
   {
-    if(cmdSendInfos[i]->cmd == recievedCommand)
+    for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
     {
-      // if we didnt fetch the infos, ignore it
-      if(!cmdSendInfos[i]->pending)
+      if(cmdSendInfos[i]->cmd == recievedCommand)
       {
-        return;
-      }
+        // if we didnt fetch the infos, ignore it
+        if(!cmdSendInfos[i]->pending)
+        {
+          return;
+        }
 
-      cmdSendInfos[i]->pending = false;
-      break;
+        cmdSendInfos[i]->pending = false;
+        break;
+      }
     }
   }
 

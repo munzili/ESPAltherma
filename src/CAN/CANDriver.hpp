@@ -46,7 +46,7 @@ protected:
 
 public:
     virtual bool initInterface();
-    void handleLoop();
+    virtual void handleLoop();
     virtual void sendCommand(CommandDef *cmd, bool setValue = false, int value = 0);
     void onDataRecieved(uint32_t const, CanFrame const);
     void listenOnly(bool value = true);

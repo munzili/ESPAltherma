@@ -106,20 +106,28 @@ void DriverSJA1000::handleLoop()
     if(!canInited)
         return;
 
-    twai_message_t message;
+    twai_status_info_t status_info;
+    twai_get_status_info(&status_info);
 
-    if (twai_receive(&message, 0) != ESP_OK) {
-        return; // no messages
+    while(status_info.msgs_to_rx > 0)
+    {
+        twai_message_t message;
+
+        if (twai_receive(&message, 0) != ESP_OK) {
+            return; // no messages
+        }
+
+        CanFrame frame;
+        frame.id = message.identifier;
+        frame.len = message.data_length_code;
+        memcpy(frame.data, message.data, sizeof(frame.data)*sizeof(frame.data[0]));
+        frame.isRTR = message.rtr;
+        frame.isEXT = message.extd;
+
+        onDataRecieved(millis(), frame);
+
+        status_info.msgs_to_rx--;
     }
-
-    CanFrame frame;
-    frame.id = message.identifier;
-    frame.len = message.data_length_code;
-    memcpy(frame.data, message.data, sizeof(frame.data)*sizeof(frame.data[0]));
-    frame.isRTR = message.rtr;
-    frame.isEXT = message.extd;
-
-    onDataRecieved(millis(), frame);
 }
 
 bool DriverSJA1000::setMode(CanDriverMode mode)
@@ -158,7 +166,12 @@ bool DriverSJA1000::setMode(CanDriverMode mode)
     case CanDriverMode::ListenOnly:
         g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)config->PIN_CAN_TX, (gpio_num_t)config->PIN_CAN_RX, TWAI_MODE_LISTEN_ONLY);
         break;
+
+    default:
+        return false;
     }
+
+    mqttSerial.printf("CAN-Bus mode %u\n", (uint8_t)mode);
 
     if ((result = twai_driver_install(&g_config, &t_config, &f_config)) != ESP_OK)
     {

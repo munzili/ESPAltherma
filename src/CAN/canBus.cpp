@@ -1,6 +1,6 @@
 #include "canBus.hpp"
 
-CANDriver *driver = nullptr;
+static CANDriver *driver = nullptr;
 
 void canBus_setup()
 {
