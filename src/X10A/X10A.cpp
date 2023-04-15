@@ -26,7 +26,7 @@ void initRegistries(RegistryBuffer** buffer, size_t& bufferSize, ParameterDef** 
 
     if (!contains(tempRegistryIDs, parametersLength, label.registryID))
     {
-      mqttSerial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
+      debugSerial.printf("Adding registry 0x%2x to be queried.\n", label.registryID);
       tempRegistryIDs[bufferSize++] = label.registryID;
     }
   }
@@ -49,7 +49,7 @@ void handleX10A(RegistryBuffer* buffer, const size_t& bufferSize, ParameterDef**
     uint8_t tries = 0;
     while (tries++ < 3 && !queryRegistry(&buffer[i]))
     {
-      mqttSerial.println("Retrying...");
+      debugSerial.println("Retrying...");
       waitLoop(1000);
     }
   }

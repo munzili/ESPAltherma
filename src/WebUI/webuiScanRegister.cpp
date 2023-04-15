@@ -15,10 +15,10 @@ void webuiScanRegister()
 
   bool serialX10AWasInited = SerialX10A;
 
-  mqttSerial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", webuiScanRegisterConfig.PinRx, webuiScanRegisterConfig.PinTx);
-  mqttSerial.println("Waiting for registry scan to finish...");
+  debugSerial.printf("Starting new serial connection with pins RX: %u, TX: %u\n", webuiScanRegisterConfig.PinRx, webuiScanRegisterConfig.PinTx);
+  debugSerial.println("Waiting for registry scan to finish...");
 
-  mqttSerial.println("Starting registry scan...");
+  debugSerial.println("Starting registry scan...");
 
   X10AInit(webuiScanRegisterConfig.PinRx, webuiScanRegisterConfig.PinTx);
 
@@ -26,7 +26,7 @@ void webuiScanRegister()
   deserializeJson(modelsDoc, webuiScanRegisterConfig.Params);
   JsonArray modelsDocArr = modelsDoc.as<JsonArray>();
 
-  mqttSerial.printf("Creating labelDefs %i\n", modelsDocArr.size());
+  debugSerial.printf("Creating labelDefs %i\n", modelsDocArr.size());
 
   size_t labelsSize = modelsDocArr.size();
   ParameterDef **labelsToLoad = new ParameterDef*[labelsSize];
@@ -46,15 +46,15 @@ void webuiScanRegister()
   if (loadRegistryBufferSize == 0)
   {
     valueLoadState = LoadingFinished;
-    mqttSerial.println("Given params doesn't contain a registry buffer to fetch");
+    debugSerial.println("Given params doesn't contain a registry buffer to fetch");
     return;
   }
 
-  mqttSerial.println("Fetching Values");
+  debugSerial.println("Fetching Values");
 
   handleX10A(loadRegistryBuffers, loadRegistryBufferSize, labelsToLoad, labelsSize, false);
 
-  mqttSerial.println("Returning Values");
+  debugSerial.println("Returning Values");
 
   DynamicJsonDocument resultDoc(labelsSize*JSON_OBJECT_SIZE(2));
   JsonArray obj = resultDoc.to<JsonArray>();
@@ -71,7 +71,7 @@ void webuiScanRegister()
 
   if(serialX10AWasInited)
   {
-    mqttSerial.println("Restoring original X10A connection");
+    debugSerial.println("Restoring original X10A connection");
     X10AInit(config->PIN_RX, config->PIN_TX);
   }
   else
@@ -79,7 +79,7 @@ void webuiScanRegister()
     X10AEnd();
   }
 
-  mqttSerial.println("Finished registry scan");
+  debugSerial.println("Finished registry scan");
 
   serializeJson(resultDoc, valueLoadResponse);
 

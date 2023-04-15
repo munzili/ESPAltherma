@@ -10,10 +10,10 @@ void Converter::convert(ParameterDef *def, char *data)
     int convId = def->convid;
     int num = def->dataSize;
     double dblData = NAN;
-    mqttSerial.print("Converting from:");
+    debugSerial.print("Converting from:");
     for (size_t i = 0; i < num; i++)
     {
-        mqttSerial.printf(" 0x%02x ", data[i]);
+        debugSerial.printf(" 0x%02x ", data[i]);
     }
 
     switch (convId)
@@ -35,7 +35,7 @@ void Converter::convert(ParameterDef *def, char *data)
             break;
         case 105:
             dblData = (double)getSignedValue(data, num, 0) * 0.1;
-            mqttSerial.printf("%f\n", dblData);
+            debugSerial.printf("%f\n", dblData);
             break;
         case 106:
             dblData = (double)getSignedValue(data, num, 1) * 0.1;
@@ -194,12 +194,12 @@ void Converter::convert(ParameterDef *def, char *data)
         sprintf(def->asString, "%g", dblData);
     }
 
-    mqttSerial.printf("-> %s\n", def->asString);
+    debugSerial.printf("-> %s\n", def->asString);
 }
 
 void Converter::convertTable300(char *data, int tableID, char *ret)
 {
-    mqttSerial.printf("Bin Conv %02x with tableID %d \n", data[0], tableID);
+    debugSerial.printf("Bin Conv %02x with tableID %d \n", data[0], tableID);
     char b = 1;
     b = (char)(b << tableID % 10);
     if ((data[0] & b) > 0)

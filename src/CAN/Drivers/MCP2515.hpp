@@ -4,7 +4,7 @@
 #include <SPI.h>
 #include <107-Arduino-MCP2515.h>
 #include "CAN/CANDriver.hpp"
-#include "MQTT/mqttSerial.hpp"
+#include "debugSerial.hpp"
 #include "MQTT/mqtt.hpp"
 #include "Config/config.hpp"
 

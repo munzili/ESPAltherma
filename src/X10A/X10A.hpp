@@ -4,7 +4,7 @@
 #include <HardwareSerial.h>
 #include "RegistryBuffer.hpp"
 #include "Config/config.hpp"
-#include "MQTT/mqttSerial.hpp"
+#include "debugSerial.hpp"
 #include "MQTT/mqtt.hpp"
 #include "arrayFunctions.hpp"
 #include "comm.hpp"

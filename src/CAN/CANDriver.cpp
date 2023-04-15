@@ -88,12 +88,12 @@ CanFrame* CANDriver::getCanFrameFromCommand(CommandDef* cmd, bool setValue, int 
     }
   }
 
-  mqttSerial.printf("CAN: Transmiting ID(%i) ", frame->id);
+  debugSerial.printf("CAN: Transmiting ID(%i) ", frame->id);
   for(uint8_t i = 0; i < frame->len; i++)
   {
-    mqttSerial.printf("%02x ", frame->data[i]);
+    debugSerial.printf("%02x ", frame->data[i]);
   }
-  mqttSerial.println();
+  debugSerial.println();
 
   return frame;
 }
@@ -111,7 +111,7 @@ void CANDriver::sniffCAN(const uint32_t timestamp_us, CanFrame const frame)
   for(uint8_t i = 0; i < frame.len; i++)
     sprintf(resultText + strlen(resultText), "%02X ", frame.data[i]);
 
-  mqttSerial.println(resultText);
+  debugSerial.println(resultText);
 }
 
 void CANDriver::handleLoop()
@@ -126,7 +126,7 @@ void CANDriver::handleLoop()
     if(cmdSendInfos[i]->pending == true && currentMillis - cmdSendInfos[i]->timeMessageSend >= CAN_MESSAGE_TIMEOUT * 1000)
     {
       cmdSendInfos[i]->pending = false;
-      mqttSerial.printf("CAN Timeout for message: %s\n", cmdSendInfos[i]->cmd->label);
+      debugSerial.printf("CAN Timeout for message: %s\n", cmdSendInfos[i]->cmd->label);
     }
   }
 
@@ -136,7 +136,7 @@ void CANDriver::handleLoop()
 
     if(currentTime - lastTimeRunned >= config->CAN_AUTOPOLL_TIME * 1000)
     {
-      mqttSerial.printf("CAN Poll Mode Auto Reading: %lu\n", currentTime);
+      debugSerial.printf("CAN Poll Mode Auto Reading: %lu\n", currentTime);
 
       for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
       {
@@ -315,7 +315,7 @@ void CANDriver::onDataRecieved(uint32_t const timestamp_us, CanFrame const frame
     client.publish((config->MQTT_TOPIC_NAME + config->CAN_MQTT_TOPIC_NAME + recievedCommand->label).c_str(), valueCodeKey.c_str());
   }
 
-  mqttSerial.printf("CAN Data recieved %s: %s\n", recievedCommand->label, valueCodeKey.c_str());
+  debugSerial.printf("CAN Data recieved %s: %s\n", recievedCommand->label, valueCodeKey.c_str());
 }
 
 
@@ -389,13 +389,13 @@ void CANDriver::handleMQTTSetRequest(const String &label, const char *payload, c
   {
     if(config->COMMANDS[i]->writable && strcmp(config->COMMANDS[i]->name, label.c_str()) == 0)
     {
-      mqttSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label.c_str(), payloadAsInt);
+      debugSerial.printf("CAN: Got MQTT SET request for %s, %08x\n", label.c_str(), payloadAsInt);
       sendCommand(config->COMMANDS[i], true, payloadAsInt);
       return;
     }
   }
 
-  mqttSerial.printf("CAN: Got invalid MQTT SET request for %s\n", label.c_str());
+  debugSerial.printf("CAN: Got invalid MQTT SET request for %s\n", label.c_str());
 }
 
 void CANDriver::defaultInit()
@@ -413,5 +413,5 @@ void CANDriver::defaultInit()
 
   listenOnly(config->CAN_READONLY_ENABLED);
 
-  mqttSerial.println("CAN-Bus inited");
+  debugSerial.println("CAN-Bus inited");
 }

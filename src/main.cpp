@@ -26,7 +26,7 @@ void extraLoop()
   if(!doRestartInStandaloneWifi)
    return;
 
-  mqttSerial.println("Restarting in standalone wifi mode");
+  debugSerial.println("Restarting in standalone wifi mode");
   config->STANDALONE_WIFI = true;
   saveConfig();
   esp_restart();
@@ -70,9 +70,9 @@ void setup()
   esp_chip_info_t chip;
   esp_chip_info(&chip);
 
-  mqttSerial.printf("ESP32 Model: %i\n", chip.model);
-  mqttSerial.printf("ESP32 Revision: %i\n", chip.revision);
-  mqttSerial.printf("ESP32 Cores: %i\n", chip.cores);
+  debugSerial.printf("ESP32 Model: %i\n", chip.model);
+  debugSerial.printf("ESP32 Revision: %i\n", chip.revision);
+  debugSerial.printf("ESP32 Cores: %i\n", chip.cores);
 
   initPersistence();
 
@@ -80,7 +80,7 @@ void setup()
 
   if(config->STANDALONE_WIFI || !config->configStored)
   {
-    mqttSerial.println("Start in standalone mode..");
+    debugSerial.println("Start in standalone mode..");
     start_standalone_wifi();
     WebUI_Init();
   }
@@ -91,7 +91,7 @@ void setup()
 
   if(!config->configStored)
   {
-    mqttSerial.println("No config found, skip setup...");
+    debugSerial.println("No config found, skip setup...");
     return;
   }
 
@@ -121,7 +121,7 @@ void setup()
     pinMode(config->PIN_SG1, OUTPUT);
     pinMode(config->PIN_SG2, OUTPUT);
 
-    mqttSerial.printf("Configured SG Pins %u %u - State: %u\n", config->PIN_SG1, config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
+    debugSerial.printf("Configured SG Pins %u %u - State: %u\n", config->PIN_SG1, config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
   }
 
   if(config->CAN_ENABLED)
@@ -138,7 +138,7 @@ void setup()
 
   if(!config->STANDALONE_WIFI)
   {
-    mqttSerial.println("Setting up wifi...");
+    debugSerial.println("Setting up wifi...");
     setup_wifi();
     WebUI_Init();
   }
@@ -146,11 +146,11 @@ void setup()
   pinMode(config->PIN_ENABLE_CONFIG, INPUT_PULLUP);
   attachInterrupt(config->PIN_ENABLE_CONFIG, restartInStandaloneWifi, FALLING);
 
-  mqttSerial.print("Connecting to MQTT server...\n");
+  debugSerial.print("Connecting to MQTT server...\n");
   reconnect();
-  mqttSerial.println("OK!");
+  debugSerial.println("OK!");
 
-  mqttSerial.print("ESPAltherma started!\n");
+  debugSerial.print("ESPAltherma started!\n");
 }
 
 void waitLoop(uint ms){
@@ -187,7 +187,7 @@ void loop()
     handleX10A(registryBuffers, registryBufferSize, config->PARAMETERS, config->PARAMETERS_LENGTH, true);
   }
 
-  mqttSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);
+  debugSerial.printf("Done. Waiting %d sec...\n", config->FREQUENCY / 1000);
   waitLoop(config->FREQUENCY);
 
   if(mainLoopStatus == LoopRunStatus::Stopping)

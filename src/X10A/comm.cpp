@@ -28,7 +28,7 @@ bool queryRegistry(RegistryBuffer *registryBuffer)
 
   int len = 0;
   registryBuffer->Buffer[2] = 10;
-  mqttSerial.printf("Querying register 0x%02x... ", registryBuffer->RegistryID);
+  debugSerial.printf("Querying register 0x%02x... ", registryBuffer->RegistryID);
   while ((len < registryBuffer->Buffer[2] + 2) && (millis() < (start + SER_TIMEOUT)))
   {
     if (SerialX10A.available())
@@ -40,17 +40,17 @@ bool queryRegistry(RegistryBuffer *registryBuffer)
   {
     if (len == 0)
     {
-      mqttSerial.printf("Time out! Check connection\n");
+      debugSerial.printf("Time out! Check connection\n");
     }
     else
     {
-      mqttSerial.printf("ERR: Time out on register 0x%02x! got %d/%d bytes\n", registryBuffer->RegistryID, len, registryBuffer->Buffer[2]);
+      debugSerial.printf("ERR: Time out on register 0x%02x! got %d/%d bytes\n", registryBuffer->RegistryID, len, registryBuffer->Buffer[2]);
       char bufflog[MAX_BUFFER_SIZE * 5] = {0};
       for (size_t i = 0; i < len; i++)
       {
         sprintf(bufflog + i * 5, "0x%02x ", registryBuffer->Buffer[i]);
       }
-      mqttSerial.print(bufflog);
+      debugSerial.print(bufflog);
     }
     delay(500);
     return false;
@@ -60,14 +60,14 @@ bool queryRegistry(RegistryBuffer *registryBuffer)
 
   if (registryBuffer->CRC != registryBuffer->Buffer[len - 1])
   {
-    mqttSerial.println("Wrong CRC!");
-    mqttSerial.printf("ERROR: Wrong CRC on register 0x%02x!", registryBuffer->RegistryID);
-    mqttSerial.printf("Calculated 0x%2x but got 0x%2x\n", registryBuffer->CRC, registryBuffer->Buffer[len - 1]);
+    debugSerial.println("Wrong CRC!");
+    debugSerial.printf("ERROR: Wrong CRC on register 0x%02x!", registryBuffer->RegistryID);
+    debugSerial.printf("Calculated 0x%2x but got 0x%2x\n", registryBuffer->CRC, registryBuffer->Buffer[len - 1]);
     return false;
   }
   else
   {
-    mqttSerial.println(".. CRC OK!");
+    debugSerial.println(".. CRC OK!");
     registryBuffer->Success = true;
     return true;
   }

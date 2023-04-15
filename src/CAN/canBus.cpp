@@ -22,7 +22,7 @@ void canBus_setup()
         break;
 
     default:
-        mqttSerial.println("No CAN Driver found");
+        debugSerial.println("No CAN Driver found");
         return;
     }
 

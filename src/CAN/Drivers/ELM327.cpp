@@ -64,7 +64,7 @@ void DriverELM327::handleLoop()
         {
             if(received.length() > 8*2)
             {
-                mqttSerial.printf("CAN-Bus receive error! Buffer: %s\n", received.c_str());
+                debugSerial.printf("CAN-Bus receive error! Buffer: %s\n", received.c_str());
                 received = "";
                 continue;
             }
@@ -115,7 +115,7 @@ bool DriverELM327::initInterface()
 {
     if(config->CAN_SPEED_KBPS > 500)
     {
-        mqttSerial.println("CAN-Bus init failed! E1");
+        debugSerial.println("CAN-Bus init failed! E1");
         return false;
     }
 
@@ -207,7 +207,7 @@ void DriverELM327::sendCommand(CommandDef* cmd, bool setValue, int value)
 
     if(!write(command, 16))
     {
-        mqttSerial.printf("CAN couldn't send command: %.16s\n", command);
+        debugSerial.printf("CAN couldn't send command: %.16s\n", command);
     }
 
     delete frame;

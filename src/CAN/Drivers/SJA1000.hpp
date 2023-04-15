@@ -4,7 +4,7 @@
 #include "driver/twai.h"
 #include "CAN/CANDriver.hpp"
 #include "Config/config.hpp"
-#include "MQTT/mqttSerial.hpp"
+#include "debugSerial.hpp"
 
 class DriverSJA1000 : public CANDriver
 {

@@ -33,8 +33,8 @@ void initMQTT()
   SG_RELAY_ACTIVE_STATE = (config->SG_RELAY_HIGH_TRIGGER == true) ? HIGH : LOW;
   SG_RELAY_INACTIVE_STATE = SG_RELAY_ACTIVE_STATE == HIGH ? LOW : HIGH;
 
-  mqttSerial.printf("SG Active State: %u\n", SG_RELAY_ACTIVE_STATE);
-  mqttSerial.printf("SG Inactive State: %u\n", SG_RELAY_INACTIVE_STATE);
+  debugSerial.printf("SG Active State: %u\n", SG_RELAY_ACTIVE_STATE);
+  debugSerial.printf("SG Inactive State: %u\n", SG_RELAY_INACTIVE_STATE);
 }
 
 void createEmptyJSONBuffer()
@@ -76,7 +76,7 @@ void updateValues(ParameterDef *labelDef)
 
 void sendValues()
 {
-  mqttSerial.printf("Sending values in MQTT.\n");
+  debugSerial.printf("Sending values in MQTT.\n");
 #ifdef ARDUINO_M5Stick_C
   //Add M5 APX values
   snprintf(jsonbuff + strlen(jsonbuff),MAX_MSG_SIZE - strlen(jsonbuff) , "\"%s\":\"%.3gV\",\"%s\":\"%gmA\",", "M5VIN", M5.Axp.GetVinVoltage(),"M5AmpIn", M5.Axp.GetVinCurrent());
@@ -100,7 +100,7 @@ void reconnect()
   //in case loopback as server is set, skip connecting (debug purpose)
   if(config->MQTT_SERVER.compareTo("127.0.0.1") == 0 || config->MQTT_SERVER.compareTo("localhost") == 0)
   {
-    mqttSerial.print("Found loopback MQTT server, skiping connection...\n");
+    debugSerial.print("Found loopback MQTT server, skiping connection...\n");
     return;
   }
 
@@ -121,16 +121,16 @@ void reconnect()
   int i = 0;
   while (!client.connected())
   {
-    mqttSerial.print("Attempting MQTT connection with ID: ");
+    debugSerial.print("Attempting MQTT connection with ID: ");
 
     String id = "ESPAltherma-";
     id += WiFi.macAddress().substring(6);
 
-    mqttSerial.println(id);
+    debugSerial.println(id);
 
     if (client.connect(id.c_str(), config->MQTT_USERNAME.c_str(), config->MQTT_PASSWORD.c_str(), publishLWTTopic.c_str(), 0, true, "Offline"))
     {
-      mqttSerial.println("connected!");
+      debugSerial.println("connected!");
 
       // TODO Update homeassistant config to publish correct informations
       client.publish("homeassistant/sensor/espAltherma/config", "{\"name\":\"AlthermaSensors\",\"stat_t\":\"~/STATESENS\",\"avty_t\":\"~/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"espaltherma\",\"device\":{\"identifiers\":[\"ESPAltherma\"]}, \"~\":\"espaltherma\",\"json_attr_t\":\"~/ATTR\"}", true);
@@ -144,34 +144,34 @@ void reconnect()
       client.subscribe(subscribeCoolingTopic.c_str());
       client.subscribe(subscribePowerTopic.c_str());
 
-      mqttSerial.println("Subscribed to following topics:");
-      mqttSerial.println(subscribeHeatingTopic);
-      mqttSerial.println(subscribeCoolingTopic);
-      mqttSerial.println(subscribePowerTopic);
+      debugSerial.println("Subscribed to following topics:");
+      debugSerial.println(subscribeHeatingTopic);
+      debugSerial.println(subscribeCoolingTopic);
+      debugSerial.println(subscribePowerTopic);
 
       if(config->SG_ENABLED)
       {
         client.publish("homeassistant/sg/espAltherma/config", "{\"name\":\"AlthermaSmartGrid\",\"cmd_t\":\"~/set\",\"stat_t\":\"~/state\",\"~\":\"espaltherma/sg\"}", true);
         client.subscribe(subscribeSGTopic.c_str());
 
-        mqttSerial.println(subscribeSGTopic);
+        debugSerial.println(subscribeSGTopic);
       }
 
       if(config->CAN_ENABLED)
       {
         client.subscribe((subscribeCANTopic + "#").c_str());
-        mqttSerial.println(subscribeCANTopic);
+        debugSerial.println(subscribeCANTopic);
       }
     }
     else
     {
-      mqttSerial.printf("failed, rc=%d, try again in 5 seconds", client.state());
+      debugSerial.printf("failed, rc=%d, try again in 5 seconds", client.state());
       unsigned long start = millis();
       while (millis() < start + 5000) { }
 
       if (i++ == 100)
       {
-        mqttSerial.printf("Tried for 500 sec, rebooting now.");
+        debugSerial.printf("Tried for 500 sec, rebooting now.");
         esp_restart();
       }
     }
@@ -189,18 +189,18 @@ void callbackHeating(byte *payload, unsigned int length)
     digitalWrite(config->PIN_HEATING, HIGH);
     savePersistence();
     client.publish(publishHeatingTopic.c_str(), "OFF");
-    mqttSerial.println("Heating turned OFF");
+    debugSerial.println("Heating turned OFF");
   }
   else if (payload[1] == 'N')
   { //turn on
     digitalWrite(config->PIN_HEATING, LOW);
     savePersistence();
     client.publish(publishHeatingTopic.c_str(), "ON");
-    mqttSerial.println("Heating turned ON");
+    debugSerial.println("Heating turned ON");
   }
   else
   {
-    mqttSerial.printf("Unknown message: %s\n", payload);
+    debugSerial.printf("Unknown message: %s\n", payload);
   }
 }
 
@@ -210,13 +210,13 @@ void callbackPower(byte *payload, unsigned int length)
 
   if (payload[0] == 'R')//R(eset/eboot)
   {
-    mqttSerial.println("Rebooting");
+    debugSerial.println("Rebooting");
     delay(100);
     esp_restart();
   }
   else
   {
-    mqttSerial.printf("Unknown message: %s\n", payload);
+    debugSerial.printf("Unknown message: %s\n", payload);
   }
 }
 
@@ -231,18 +231,18 @@ void callbackCooling(byte *payload, unsigned int length)
     digitalWrite(config->PIN_COOLING, HIGH);
     savePersistence();
     client.publish(publishCoolingTopic.c_str(), "OFF");
-    mqttSerial.println("Cooling turned OFF");
+    debugSerial.println("Cooling turned OFF");
   }
   else if (payload[1] == 'N')
   { //turn on
     digitalWrite(config->PIN_COOLING, LOW);
     savePersistence();
     client.publish(publishCoolingTopic.c_str(), "ON");
-    mqttSerial.println("Cooling turned ON");
+    debugSerial.println("Cooling turned ON");
   }
   else
   {
-    mqttSerial.printf("Unknown message: %s\n", payload);
+    debugSerial.printf("Unknown message: %s\n", payload);
   }
 }
 
@@ -257,7 +257,7 @@ void callbackSg(byte *payload, unsigned int length)
     digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
     client.publish(publishSGTopic.c_str(), "0");
-    mqttSerial.println("Set SG mode to 0 - Normal operation");
+    debugSerial.println("Set SG mode to 0 - Normal operation");
   }
   else if (payload[0] == '1')
   {
@@ -265,7 +265,7 @@ void callbackSg(byte *payload, unsigned int length)
     digitalWrite(config->PIN_SG1, SG_RELAY_INACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_ACTIVE_STATE);
     client.publish(publishSGTopic.c_str(), "1");
-    mqttSerial.println("Set SG mode to 1 - Forced OFF");
+    debugSerial.println("Set SG mode to 1 - Forced OFF");
   }
   else if (payload[0] == '2')
   {
@@ -273,7 +273,7 @@ void callbackSg(byte *payload, unsigned int length)
     digitalWrite(config->PIN_SG1, SG_RELAY_ACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_INACTIVE_STATE);
     client.publish(publishSGTopic.c_str(), "2");
-    mqttSerial.println("Set SG mode to 2 - Recommended ON");
+    debugSerial.println("Set SG mode to 2 - Recommended ON");
   }
   else if (payload[0] == '3')
   {
@@ -281,11 +281,11 @@ void callbackSg(byte *payload, unsigned int length)
     digitalWrite(config->PIN_SG1, SG_RELAY_ACTIVE_STATE);
     digitalWrite(config->PIN_SG2, SG_RELAY_ACTIVE_STATE);
     client.publish(publishSGTopic.c_str(), "3");
-    mqttSerial.println("Set SG mode to 3 - Forced ON");
+    debugSerial.println("Set SG mode to 3 - Forced ON");
   }
   else
   {
-    mqttSerial.printf("Unknown message: %s\n", payload);
+    debugSerial.printf("Unknown message: %s\n", payload);
   }
 }
 
@@ -297,7 +297,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
   payloadText[length] = '\0';
 
-  mqttSerial.printf("Message arrived [%s] : %s\n", topic, payloadText);
+  debugSerial.printf("Message arrived [%s] : %s\n", topic, payloadText);
 
   if (config->HEATING_ENABLED && subscribeHeatingTopic == topic)
   {
@@ -322,6 +322,6 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
   else
   {
-    mqttSerial.printf("Unknown topic: %s\n", topic);
+    debugSerial.printf("Unknown topic: %s\n", topic);
   }
 }

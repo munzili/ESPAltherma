@@ -3,7 +3,7 @@
 
 #include "ArduinoC.hpp"
 #include "Config/parameterDef.hpp"
-#include "MQTT/mqttSerial.hpp"
+#include "debugSerial.hpp"
 
 namespace ESPAltherma
 {

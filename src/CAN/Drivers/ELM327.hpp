@@ -4,6 +4,7 @@
 #include "ArduinoC.hpp"
 #include "CAN/CANDriver.hpp"
 #include "Config/config.hpp"
+#include "debugSerial.hpp"
 
 class DriverELM327 : public CANDriver
 {

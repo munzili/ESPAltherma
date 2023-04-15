@@ -17,7 +17,7 @@ void setup_wifi()
 {
   delay(10);
   // We start by connecting to a WiFi network
-  mqttSerial.printf("Connecting to %s\n", config->SSID.c_str());
+  debugSerial.printf("Connecting to %s\n", config->SSID.c_str());
 
   if(config->SSID_STATIC_IP)
   {
@@ -42,7 +42,7 @@ void setup_wifi()
     }
 
     if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-        mqttSerial.println("Failed to set static ip!");
+        debugSerial.println("Failed to set static ip!");
     }
   }
 
@@ -51,13 +51,13 @@ void setup_wifi()
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
-    mqttSerial.print(".");
+    debugSerial.print(".");
     if (i++ == 100)
     {
       esp_restart();
     }
   }
-  mqttSerial.printf("Connected. IP Address: %s\n", WiFi.localIP().toString().c_str());
+  debugSerial.printf("Connected. IP Address: %s\n", WiFi.localIP().toString().c_str());
 }
 
 void scan_wifi_delete_result()
@@ -81,9 +81,9 @@ void scan_wifi()
       .EncryptionType = WiFi.encryptionType(i)
     };
 
-    mqttSerial.print(lastWifiScanResults[i]->SSID);
+    debugSerial.print(lastWifiScanResults[i]->SSID);
     String serialLog = " (" + String(lastWifiScanResults[i]->RSSI) + ") " + lastWifiScanResults[i]->EncryptionType + "\n";
-    mqttSerial.print(serialLog);
+    debugSerial.print(serialLog);
     delay(10);
   }
 }

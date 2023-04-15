@@ -69,6 +69,6 @@ public:
     ~MQTTSerial();
 };
 
-extern MQTTSerial mqttSerial;
+extern MQTTSerial debugSerial;
 
 #endif

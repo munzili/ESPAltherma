@@ -3,7 +3,7 @@
 
 #include <Preferences.h>
 #include "Config/config.hpp"
-#include "MQTT/mqttSerial.hpp"
+#include "debugSerial.hpp"
 
 #define NAME_NAMESPACE "ESPAltherma"
 #define NAME_INITED "Inited"

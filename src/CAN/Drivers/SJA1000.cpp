@@ -19,7 +19,7 @@ bool DriverSJA1000::getRate(const uint16_t speed, twai_timing_config_t &t_config
                 t_config = TWAI_TIMING_CONFIG_20KBITS();
             else
             {
-                mqttSerial.println("Tried to init CAN-Bus with 20kbps on Revision 0 or Revision 1 Chip!");
+                debugSerial.println("Tried to init CAN-Bus with 20kbps on Revision 0 or Revision 1 Chip!");
                 found = false;
             }
             break;
@@ -68,7 +68,7 @@ bool DriverSJA1000::initInterface()
 
     if(!ratePossible)
     {
-        mqttSerial.println("CAN-Bus init failed! E1");
+        debugSerial.println("CAN-Bus init failed! E1");
         return false;
     }
 
@@ -93,7 +93,7 @@ void DriverSJA1000::sendCommand(CommandDef* cmd, bool setValue, int value)
     memcpy(message.data, frame->data, sizeof(message.data)*sizeof(message.data[0]));
 
     if(!twai_transmit(&message, portMAX_DELAY)) {
-        mqttSerial.println("ERROR TX");
+        debugSerial.println("ERROR TX");
     }
 
     delete frame;
@@ -138,15 +138,15 @@ bool DriverSJA1000::setMode(CanDriverMode mode)
     {
         //Stop the TWAI driver
         if ((result = twai_stop()) != ESP_OK) {
-            mqttSerial.print("CAN-Bus stop failed! ");
-            mqttSerial.println(result);
+            debugSerial.print("CAN-Bus stop failed! ");
+            debugSerial.println(result);
             return false;
         }
 
         //Uninstall the TWAI driver
         if ((result = twai_driver_uninstall()) != ESP_OK) {
-            mqttSerial.print("CAN-Bus uninstall failed! ");
-            mqttSerial.println(result);
+            debugSerial.print("CAN-Bus uninstall failed! ");
+            debugSerial.println(result);
             return false;
         }
 
@@ -171,19 +171,19 @@ bool DriverSJA1000::setMode(CanDriverMode mode)
         return false;
     }
 
-    mqttSerial.printf("CAN-Bus mode %u\n", (uint8_t)mode);
+    debugSerial.printf("CAN-Bus mode %u\n", (uint8_t)mode);
 
     if ((result = twai_driver_install(&g_config, &t_config, &f_config)) != ESP_OK)
     {
-        mqttSerial.print("CAN-Bus init failed! E2 - ");
-        mqttSerial.println(result);
+        debugSerial.print("CAN-Bus init failed! E2 - ");
+        debugSerial.println(result);
         return false;
     }
 
     if ((result = twai_start()) != ESP_OK)
     {
-        mqttSerial.print("CAN-Bus init failed! E3 - ");
-        mqttSerial.println(result);
+        debugSerial.print("CAN-Bus init failed! E3 - ");
+        debugSerial.println(result);
         return false;
     }
 

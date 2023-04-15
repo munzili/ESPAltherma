@@ -9,7 +9,7 @@
 #include "X10A/comm.hpp"
 #include "X10a/converters.hpp"
 #include "Config/config.hpp"
-#include "MQTT/mqttSerial.hpp"
+#include "debugSerial.hpp"
 
 #define MODELS_DOC_SIZE 1024*10
 

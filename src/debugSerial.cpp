@@ -1,6 +1,6 @@
-#include "mqttSerial.hpp"
+#include "debugSerial.hpp"
 
-MQTTSerial mqttSerial;
+MQTTSerial debugSerial;
 
 String* webSerialBuffer = nullptr;
 bool webSerialConnection = false;

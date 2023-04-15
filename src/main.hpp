@@ -5,7 +5,7 @@
 
 #include "ArduinoC.hpp"
 #include "Config/config.hpp"
-#include "MQTT/mqttSerial.hpp"
+#include "debugSerial.hpp"
 #include "X10A/converters.hpp"
 #include "X10A/comm.hpp"
 #include "MQTT/mqtt.hpp"

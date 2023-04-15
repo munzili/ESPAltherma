@@ -4,7 +4,7 @@
 #include <HardwareSerial.h>
 #include "ArduinoC.hpp"
 #include "X10A.hpp"
-#include "MQTT/mqttSerial.hpp"
+#include "debugSerial.hpp"
 
 #define SER_TIMEOUT 300 //leave 300ms for the machine to answer
 
