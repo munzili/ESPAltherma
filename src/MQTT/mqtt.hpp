@@ -4,6 +4,7 @@
 #include <PubSubClient.h>
 #include "Config/config.hpp"
 #include "persistence.hpp"
+#include "restart.hpp"
 
 #define MQTT_TOPIC_SUB_HEATING  "SET/HEATING"
 #define MQTT_TOPIC_SUB_COOLING  "SET/COOLING"

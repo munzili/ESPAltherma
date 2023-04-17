@@ -202,7 +202,7 @@ void onFormat(AsyncWebServerRequest *request)
 
   request->onDisconnect([]()
   {
-    esp_restart();
+    restart_board();
   });
 
   request->send(200, "text/javascript", String(result ? "OK" : "FAILED"));
@@ -359,7 +359,7 @@ void onUploadConfigFile(AsyncWebServerRequest *request)
 
   request->onDisconnect([]()
   {
-    esp_restart();
+    restart_board();
   });
 
   request->send(200);
@@ -825,7 +825,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
   request->onDisconnect([]()
   {
-    esp_restart();
+    restart_board();
   });
 
   debugSerial.println("Saving successfull. Restarting...");
@@ -841,7 +841,7 @@ void onUpdate(AsyncWebServerRequest *request)
     if(hasError)
       return;
 
-    esp_restart();
+    restart_board();
   });
 
   AsyncWebServerResponse *response = request->beginResponse((hasError)?500:200, "text/plain", (hasError)?"FAIL":"OK");

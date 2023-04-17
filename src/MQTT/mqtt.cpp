@@ -172,7 +172,7 @@ void reconnect()
       if (i++ == 100)
       {
         debugSerial.printf("Tried for 500 sec, rebooting now.");
-        esp_restart();
+        restart_board();
       }
     }
   }
@@ -212,7 +212,7 @@ void callbackPower(byte *payload, unsigned int length)
   {
     debugSerial.println("Rebooting");
     delay(100);
-    esp_restart();
+    restart_board();
   }
   else
   {

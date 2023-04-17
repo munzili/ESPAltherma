@@ -54,7 +54,7 @@ void setup_wifi()
     debugSerial.print(".");
     if (i++ == 100)
     {
-      esp_restart();
+      restart_board();
     }
   }
   debugSerial.printf("Connected. IP Address: %s\n", WiFi.localIP().toString().c_str());

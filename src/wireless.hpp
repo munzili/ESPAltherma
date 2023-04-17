@@ -4,6 +4,7 @@
 #include <string.h>
 #include "debugSerial.hpp"
 #include "Config/config.hpp"
+#include "restart.hpp"
 
 struct WifiDetails
 {

@@ -15,6 +15,7 @@
 #include "X10A/X10A.hpp"
 #include "CAN/canBus.hpp"
 #include "arrayFunctions.hpp"
+#include "restart.hpp"
 
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
 long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.

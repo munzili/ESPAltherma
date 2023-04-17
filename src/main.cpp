@@ -29,7 +29,7 @@ void extraLoop()
   debugSerial.println("Restarting in standalone wifi mode");
   config->STANDALONE_WIFI = true;
   saveConfig();
-  esp_restart();
+  restart_board();
 }
 
 
