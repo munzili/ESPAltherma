@@ -27,6 +27,8 @@ namespace ESPAltherma
 
         void convertTable217(char *data, char *ret);
 
+        double convertPress2Temp(double data);
+
         unsigned short getUnsignedValue(char *data, int dataSize, int cnvflg);
 
         short getSignedValue(char *data, int datasize, int cnvflg);
