@@ -10,9 +10,9 @@ void Converter::convert(ParameterDef *def, char *data)
     int convId = def->convid;
     int num = def->dataSize;
     double dblData = NAN;
+
     debugSerial.print("Converting from:");
-    for (size_t i = 0; i < num; i++)
-    {
+    for (size_t i = 0; i < num; i++) {
         debugSerial.printf(" 0x%02x ", data[i]);
     }
 
@@ -73,22 +73,19 @@ void Converter::convert(ParameterDef *def, char *data)
             break;
         case 114:
         {
-            if (data[0] == 0 && data[1] == 128)
-            {
+            if (data[0] == 0 && data[1] == 128) {
                 strcat(def->asString, "---");
                 return;
             }
             unsigned short num2 = (unsigned short)((int)data[1] * 256);
             num2 |= (unsigned short)data[0];
-            if ((data[1] & 128) != 0)
-            {
+            if ((data[1] & 128) != 0) {
                 num2 = ~(num2 - 1);
             }
             dblData = (double)((num2 & 65280) / 256);
             dblData += (double)(num2 & 255) / 256.0;
             dblData *= 10.0;
-            if ((data[1] & 128) != 0)
-            {
+            if ((data[1] & 128) != 0) {
                 dblData *= -1.0;
             }
             break;
@@ -210,8 +207,7 @@ void Converter::convert(ParameterDef *def, char *data)
             return;
     }
 
-    if (dblData != NAN)
-    {
+    if (dblData != NAN) {
         sprintf(def->asString, "%g", dblData);
     }
 
@@ -223,12 +219,9 @@ void Converter::convertTable300(char *data, int tableID, char *ret)
     debugSerial.printf("Bin Conv %02x with tableID %d \n", data[0], tableID);
     char b = 1;
     b = (char)(b << tableID % 10);
-    if ((data[0] & b) > 0)
-    {
+    if ((data[0] & b) > 0) {
         strcat(ret, "ON");
-    }
-    else
-    {
+    } else {
         strcat(ret, "OFF");
     }
     return;
@@ -236,23 +229,21 @@ void Converter::convertTable300(char *data, int tableID, char *ret)
 
 void Converter::convertTable203(char *data, char *ret)
 {
-    switch (data[0])
-    {
-    case 0:
-        strcat(ret, "Normal");
-        break;
-    case 1:
-        strcat(ret, "Error");
-        break;
-    case 2:
-        strcat(ret, "Warning");
-        break;
-    case 3:
-        strcat(ret, "Caution");
-        break;
-    default:
-        strcat(ret, "-");
-        ;
+    switch (data[0]) {
+        case 0:
+            strcat(ret, "Normal");
+            break;
+        case 1:
+            strcat(ret, "Error");
+            break;
+        case 2:
+            strcat(ret, "Warning");
+            break;
+        case 3:
+            strcat(ret, "Caution");
+            break;
+        default:
+            strcat(ret, "-");
     }
 }
 
@@ -271,31 +262,30 @@ void Converter::convertTable315(char *data, char *ret)
 {
     char b = 240 & data[0];
     b = (char)(b >> 4);
-    switch (b)
-    {
-    case 0:
-        strcat(ret, "Stop");
-        break;
-    case 1:
-        strcat(ret, "Heating");
-        break;
-    case 2:
-        strcat(ret, "Cooling");
-        break;
-    case 3:
-        strcat(ret, "??");
-        break;
-    case 4:
-        strcat(ret, "DHW");
-        break;
-    case 5:
-        strcat(ret, "Heating + DHW");
-        break;
-    case 6:
-        strcat(ret, "Cooling + DHW");
-        break;
-    default:
-        strcat(ret, "-");
+    switch (b) {
+        case 0:
+            strcat(ret, "Stop");
+            break;
+        case 1:
+            strcat(ret, "Heating");
+            break;
+        case 2:
+            strcat(ret, "Cooling");
+            break;
+        case 3:
+            strcat(ret, "??");
+            break;
+        case 4:
+            strcat(ret, "DHW");
+            break;
+        case 5:
+            strcat(ret, "Heating + DHW");
+            break;
+        case 6:
+            strcat(ret, "Cooling + DHW");
+            break;
+        default:
+            strcat(ret, "-");
     }
 }
 
@@ -303,30 +293,26 @@ void Converter::convertTable316(char *data, char *ret)
 {
     char b = 240 & data[0];
     b = (char)(b >> 4);
-    switch (b)
-    {
-    case 0:
-        strcat(ret, "H/P only");
-        break;
-    case 1:
-        strcat(ret, "Hybrid");
-        break;
-    case 2:
-        strcat(ret, "Boiler only");
-        break;
-    default:
-        strcat(ret, "Unknown");
+    switch (b) {
+        case 0:
+            strcat(ret, "H/P only");
+            break;
+        case 1:
+            strcat(ret, "Hybrid");
+            break;
+        case 2:
+            strcat(ret, "Boiler only");
+            break;
+        default:
+            strcat(ret, "Unknown");
     }
 }
 
 void Converter::convertTable200(char *data, char *ret)
 {
-    if (data[0] == 0)
-    {
+    if (data[0] == 0) {
         strcat(ret, "OFF");
-    }
-    else
-    {
+    } else {
         strcat(ret, "ON");
     }
 }
@@ -335,29 +321,29 @@ void Converter::convertTable200(char *data, char *ret)
 void Converter::convertTable217(char *data, char *ret)
 {
     char r217[][30] = {"Fan Only",
-                        "Heating",
-                        "Cooling",
-                        "Auto",
-                        "Ventilation",
-                        "Auto Cool",
-                        "Auto Heat",
-                        "Dry",
-                        "Aux.",
-                        "Cooling Storage",
-                        "Heating Storage",
-                        "UseStrdThrm(cl)1",
-                        "UseStrdThrm(cl)2",
-                        "UseStrdThrm(cl)3",
-                        "UseStrdThrm(cl)4",
-                        "UseStrdThrm(ht)1",
-                        "UseStrdThrm(ht)2",
-                        "UseStrdThrm(ht)3",
-                        "UseStrdThrm(ht)4"};
+                       "Heating",
+                       "Cooling",
+                       "Auto",
+                       "Ventilation",
+                       "Auto Cool",
+                       "Auto Heat",
+                       "Dry",
+                       "Aux.",
+                       "Cooling Storage",
+                       "Heating Storage",
+                       "UseStrdThrm(cl)1",
+                       "UseStrdThrm(cl)2",
+                       "UseStrdThrm(cl)3",
+                       "UseStrdThrm(cl)4",
+                       "UseStrdThrm(ht)1",
+                       "UseStrdThrm(ht)2",
+                       "UseStrdThrm(ht)3",
+                       "UseStrdThrm(ht)4"};
     sprintf(ret, r217[(int)data[0]]);
 }
 
-double Converter::convertPress2Temp(double data) // assuming R32 gaz
-{
+double Converter::convertPress2Temp(double data)
+{ // assuming R32 gaz
     double num = -2.6989493795556E-07 * data * data * data * data * data * data;
     double num2 = 4.26383417104661E-05 * data * data * data * data * data;
     double num3 = -0.00262978346547749 * data * data * data * data;
@@ -371,16 +357,11 @@ double Converter::convertPress2Temp(double data) // assuming R32 gaz
 unsigned short Converter::getUnsignedValue(char *data, int dataSize, int cnvflg)
 {
     unsigned short result;
-    if (dataSize == 1)
-    {
+    if (dataSize == 1) {
         result = (unsigned short)data[0];
-    }
-    else if (cnvflg == 0)
-    {
+    } else if (cnvflg == 0) {
         result = ((unsigned short)(data[1] << 8) | (unsigned short)data[0]);
-    }
-    else
-    {
+    } else {
         result = ((unsigned short)(data[0] << 8) | (unsigned short)data[1]);
     }
     return result;
@@ -390,8 +371,7 @@ short Converter::getSignedValue(char *data, int datasize, int cnvflg)
 {
     unsigned short num = getUnsignedValue(data, datasize, cnvflg);
     short result = (short)num;
-    if ((num & 32768) != 0)
-    {
+    if ((num & 32768) != 0) {
         num = ~num;
         num += 1;
         result = (short)((int)num * -1);

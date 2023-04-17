@@ -16,11 +16,10 @@ void start_standalone_wifi()
 void setup_wifi()
 {
   delay(10);
-  // We start by connecting to a WiFi network
+  // we start by connecting to a WiFi network
   debugSerial.printf("Connecting to %s\n", config->SSID.c_str());
 
-  if(config->SSID_STATIC_IP)
-  {
+  if(config->SSID_STATIC_IP) {
     IPAddress local_IP;
     IPAddress subnet;
     IPAddress gateway;
@@ -31,13 +30,11 @@ void setup_wifi()
     subnet.fromString(config->SSID_SUBNET);
     gateway.fromString(config->SSID_GATEWAY);
 
-    if(config->SSID_PRIMARY_DNS != "")
-    {
+    if(config->SSID_PRIMARY_DNS != "") {
       primaryDNS.fromString(config->SSID_PRIMARY_DNS);
     }
 
-    if(config->SSID_SECONDARY_DNS != "")
-    {
+    if(config->SSID_SECONDARY_DNS != "") {
       secondaryDNS.fromString(config->SSID_SECONDARY_DNS);
     }
 
@@ -48,12 +45,10 @@ void setup_wifi()
 
   WiFi.begin(config->SSID.c_str(), config->SSID_PASSWORD.c_str());
   int i = 0;
-  while (WiFi.status() != WL_CONNECTED)
-  {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     debugSerial.print(".");
-    if (i++ == 100)
-    {
+    if (i++ == 100) {
       restart_board();
     }
   }

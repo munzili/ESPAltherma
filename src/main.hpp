@@ -18,7 +18,7 @@
 #include "restart.hpp"
 
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
-long LCDTimeout = 40000;//Keep screen ON for 40s then turn off. ButtonA will turn it On again.
+long LCDTimeout = 40000; // Keep screen ON for 40s then turn off. ButtonA will turn it On again.
 #endif
 
 //Converts to string and add the value to the JSON message

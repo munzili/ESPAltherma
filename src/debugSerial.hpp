@@ -7,7 +7,7 @@
 #include "Stream.h"
 #include "ArduinoC.hpp"
 
-class MQTTSerial: public Stream
+class DebugSerial: public Stream
 {
 public:
     inline void begin() {};
@@ -64,11 +64,11 @@ public:
         return write((uint8_t) n);
     }
 
-    MQTTSerial();
+    DebugSerial();
     size_t write(const uint8_t *buffer, size_t size);
-    ~MQTTSerial();
+    ~DebugSerial();
 };
 
-extern MQTTSerial debugSerial;
+extern DebugSerial debugSerial;
 
 #endif

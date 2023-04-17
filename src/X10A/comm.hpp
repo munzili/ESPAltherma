@@ -6,7 +6,7 @@
 #include "X10A.hpp"
 #include "debugSerial.hpp"
 
-#define SER_TIMEOUT 300 //leave 300ms for the machine to answer
+#define SER_TIMEOUT 300 // leave 300ms for the machine to answer
 
 char getCRC(char *src, int len);
 
