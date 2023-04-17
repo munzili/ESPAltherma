@@ -23,7 +23,7 @@ bool queryRegistry(RegistryBuffer *registryBuffer)
 
   //Sending command to serial
   SerialX10A.flush(); //Prevent possible pending info on the read
-  SerialX10A.write(prep, 4);
+  SerialX10A.write((uint8_t*)prep, 4);
   ulong start = millis();
 
   int len = 0;
