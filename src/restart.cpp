@@ -8,3 +8,5 @@ void restart_board()
   esp_restart();
   #endif
 }
+
+#endif
