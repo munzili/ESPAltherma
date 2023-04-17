@@ -2,6 +2,10 @@
 #define X10A_H
 
 #include <HardwareSerial.h>
+#ifdef ARDUINO_ARCH_ESP8266
+#include <SoftwareSerial.h>
+#endif
+
 #include "RegistryBuffer.hpp"
 #include "Config/config.hpp"
 #include "debugSerial.hpp"

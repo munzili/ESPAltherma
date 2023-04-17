@@ -1,6 +1,12 @@
 #include "X10A.hpp"
 
+#ifdef ARDUINO_ARCH_ESP8266
+SoftwareSerial SerialX10A;
+#define SERIAL_CONFIG (SWSERIAL_8E1)
+#else
 HardwareSerial SerialX10A(1);
+#define SERIAL_CONFIG (SERIAL_8E1)
+#endif
 
 size_t registryBufferSize;
 RegistryBuffer *registryBuffers; //Holds the registries to query and the last returned data
@@ -87,5 +93,5 @@ void handleX10A(RegistryBuffer* buffer, const size_t& bufferSize, ParameterDef**
 void X10AInit(int8_t rxPin, int8_t txPin)
 {
   X10AEnd();
-  SerialX10A.begin(9600, SERIAL_8E1, rxPin, txPin);
+  SerialX10A.begin(9600, SERIAL_CONFIG, rxPin, txPin);
 }
