@@ -32,7 +32,6 @@ void extraLoop()
   restart_board();
 }
 
-
 void setupScreen(){
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
   M5.begin();
