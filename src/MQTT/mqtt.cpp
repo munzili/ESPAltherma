@@ -62,13 +62,14 @@ void updateValues(ParameterDef *labelDef)
   if(config->MQTT_USE_ONETOPIC)
   {
     client.publish((config->MQTT_TOPIC_NAME + config->MQTT_ONETOPIC_NAME + labelDef->label).c_str(), labelDef->asString);
+    return;
   }
 
   if(alpha)
   {
     snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":\"%s\",", labelDef->label.c_str(), labelDef->asString);
   }
-  else //number, no quotes
+  else // number, no quotes
   {
     snprintf(jsonbuff + strlen(jsonbuff), MAX_MSG_SIZE - strlen(jsonbuff), "\"%s\":%s,", labelDef->label.c_str(), labelDef->asString);
   }
