@@ -16,7 +16,7 @@
 
 <hr/>
 
-<p><b>ESPAltherma</b> is a solution to monitor Daikin Altherma / ROTEX / HOVAL Belaria heat pump activity using just Arduino on an <b>ESP32</b>/esp8266 Microcontroller.</p>
+<p><b>ESPAltherma</b> is a solution to monitor Daikin Altherma / ROTEX / HOVAL Belaria heat pump activity using just Arduino on an <b>ESP32</b> or <b>ESP8266</b> Microcontroller.</p>
 
 _If this project has any value for you, please consider [buying me a 🍺](https://www.buymeacoffee.com/raomin) or even better [sponsoring ESPAltherma](https://github.com/sponsors/raomin/)!. I don't do this for money but it feels good to get some support! Thanks :)_
 
@@ -92,7 +92,7 @@ If you are using an **ESP8266** select the `nodemcuv2` environement.
     ```
 
 4. Now open and edit the file you just uncommented, e.g. `include/def/ALTHERMA(HYBRID).h` (or the one under the language chosen) as follow:
-    Uncomment each line of the values you are interested in. *Try not to get everything as it will turn into a very big mqtt message*. When building for ESP8622 I had to delete `PROGMEM` from the declaration to avoid an endless reboot cycle. YMMV.
+    Uncomment each line of the values you are interested in. *Try not to get everything as it will turn into a very big mqtt message*.
 
     ```c++
     ...
@@ -110,7 +110,7 @@ If you are using an **ESP8266** select the `nodemcuv2` environement.
 
     A wiki page is available [here](https://github.com/raomin/ESPAltherma/wiki/Information-about-Values) where everyone can comment on the values and their definition.
 
-5. You're ready to go! Connect your ESP32 and click ➡ Upload! Or F1 -> `PlatformIO: Upload`
+5. You're ready to go! Connect your ESP32/ESP8266 and click -> Upload! Or press `F1` and select -> `PlatformIO: Upload`
 
 ## Step 2: Connecting to the Heat pump
 
