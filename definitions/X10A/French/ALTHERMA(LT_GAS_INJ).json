@@ -1,7 +1,8 @@
 {
-    "Model": "Altherma LT Gas Inj 20200702",
+    "Model": "Altherma LT Gas Inj",
     "Language": "French",
     "Parameters": [
+        "*Type de réfrigérant",
         "Qté de données du capteur",
         "Qté compresseur INV",
         "Qté compresseur STD",
@@ -86,8 +87,8 @@
         "Electrovanne 3",
         "In-Out separator",
         "Vanne à 4 voies (Y1S)",
-        "Température d entrée de l échangeur de chaleur",
-        "Température de sortie de l échangeur thermique",
+        "(Données brutes)Température d entrée de l échangeur de chaleur",
+        "(Données brutes)Température de sortie de l échangeur thermique",
         "Chauffage de plaque inférieure",
         "Chauffage PHE",
         "Activer/Désactiver les données",
