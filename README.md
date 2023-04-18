@@ -3,7 +3,7 @@
 <hr/>
 
 <p align="center">
-<a href="https://travis-ci.com/raomin/ESPAltherma"><img src="https://img.shields.io/travis/com/raomin/espaltherma?style=for-the-badge" /></a>
+<a href="https://travis-ci.com/raomin/ESPAltherma"><img src="https://app.travis-ci.com/raomin/ESPAltherma.svg?branch=main&status=passed" /></a>
 &nbsp;
 <img src="https://img.shields.io/github/last-commit/raomin/ESPAltherma?style=for-the-badge" />
 &nbsp;
@@ -18,7 +18,7 @@
 
 <p><b>ESPAltherma</b> is a solution to monitor Daikin Altherma / ROTEX / HOVAL Belaria heat pump activity using just Arduino on an <b>ESP32</b> or <b>ESP8266</b> Microcontroller.</p>
 
-_If this project has any value for you, please consider [buying me a 🍺](https://www.buymeacoffee.com/raomin) or even better [sponsoring ESPAltherma](https://github.com/sponsors/raomin/)!. I don't do this for money but it feels good to get some support! Thanks :)_ 
+_If this project has any value for you, please consider [buying me a 🍺](https://www.buymeacoffee.com/raomin) or even better [sponsoring ESPAltherma](https://github.com/sponsors/raomin/)!. I don't do this for money but it feels good to get some support! Thanks :)_
 
 ## Features
 
@@ -42,7 +42,7 @@ _If this project has any value for you, please consider [buying me a 🍺](https
 ## Hardware
 
 - A Daikin Altherma or Daikin Altherma based heat pump (ROTEX, HOVAL Belaria...)
-- An ESP32 or ESP8266 *I recommend the M5StickC, it has an integrated display, a magnet, fits well next to the board and is properly isolated. But any ESP32 should work.*
+- An ESP32 *I recommend the M5StickC, it has an integrated display, a magnet, fits well next to the board and is properly isolated. But any ESP32 should work.* (esp8266 is also supported)
 - 5 pins JST EH 2.5mm connector (or 4 Dupont wires M-F)
 
 ## Software
@@ -55,24 +55,25 @@ _If this project has any value for you, please consider [buying me a 🍺](https
 
 ## Step 1: Uploading the firmware
 
-1. Download the repository folder and open it in PlatformIO. 
+1. Download the repository folder and open it in PlatformIO.
 
 2. Optional - If you are using an **M5StickC** (or M5Stack), select the corresponding environment from the status bar:
 Click  ![end m5](doc/images/defaultenv.png) and select **env:M5StickC** on the top. The status bar should display ![end m5](doc/images/m5envv.png)
 For **M5StickCPlus** select **env:M5StickCPlus**
+If you are using an **ESP8266** select the `nodemcuv2` environement.
 
 3. Edit the file `src/setup.h` as follows:
     - enter your wifi and mqtt settings
     - select your RX TX GPIO pins connected to the X10A port. *The ESP32 has 3 serial ports. The first one, Serial0 is reserved for ESP<-USB->PC communication and ESP Altherma uses the Serial0 for logging (as any other project would do). So if you open the serial monitor on your PC, you'll see some debug from ESPAltherma. ESP32 can map any GPIO to the serial ports. Do NOT use the main Serial0 GPIOs RX0/TX0.* * The ESP8266 only has 1.5 Serial ports so it uses a software based serial driver. You can choose any pins, but some will stop you from being able to use the console*
 
-      For ESP32 try to stick to the RX2/TX2 of your board (probably GPIO16/GPIO17). **For M5StickC or M5StickCPlus, 26 and 36 will automatically be used if you selected the corresponding environment**. For ESP8266 pins 4 & 5 (D2 & D1 on the NodeMCUv2) are known to work well. 
+      For ESP32 try to stick to the RX2/TX2 of your board (probably GPIO16/GPIO17). **For M5StickC or M5StickCPlus, 26 and 36 will automatically be used if you selected the corresponding environment**. For ESP8266 pins 4 & 5 (D2 & D1 on the NodeMCUv2) are known to work well.
 
     - uncomment the `#include` line corresponding to your heat pump. E.g.
-  
+
     ```c++
     ...
     //#include "def/ALTHERMA(HPSU6_ULTRA).h"
-    #include "def/ALTHERMA(HYBRID).h" //<-- this one will be used. 
+    #include "def/ALTHERMA(HYBRID).h" //<-- this one will be used.
     //#include "def/ALTHERMA(LT-D7_E_BML).h"
     ...
     ```
@@ -85,14 +86,14 @@ For **M5StickCPlus** select **env:M5StickCPlus**
     ```c++
     ...
     //#include "def/ALTHERMA(HPSU6_ULTRA).h"
-    #include "def/German/ALTHERMA(HYBRID).h" //<-- this one will be used. 
+    #include "def/German/ALTHERMA(HYBRID).h" //<-- this one will be used.
     //#include "def/ALTHERMA(LT-D7_E_BML).h"
     ...
     ```
 
 4. Now open and edit the file you just uncommented, e.g. `include/def/ALTHERMA(HYBRID).h` (or the one under the language chosen) as follow:
-    Uncomment each line of the values you are interested in. *Try not to get everything as it will turn into a very big mqtt message*. When building for ESP8622 I had to delete `PROGMEM` from the declaration to avoid an endless reboot cycle. YMMV. 
-  
+    Uncomment each line of the values you are interested in. *Try not to get everything as it will turn into a very big mqtt message*. When building for ESP8622 I had to delete `PROGMEM` from the declaration to avoid an endless reboot cycle. YMMV.
+
     ```c++
     ...
     LabelDef PROGMEM labelDefs[] = {
@@ -106,21 +107,17 @@ For **M5StickCPlus** select **env:M5StickCPlus**
     // {0x60,2,300,1,-1,"Freeze Protection for water piping"},
     ...
     ```
-    
+
     A wiki page is available [here](https://github.com/raomin/ESPAltherma/wiki/Information-about-Values) where everyone can comment on the values and their definition.
 
-5. You're ready to go! Connect your ESP32/ESP8266 and click -> Upload! Or run on the command line:
-
-    ```bash
-    $ pio run --environment <your environment> --target upload
-    ````
+5. You're ready to go! Connect your ESP32 and click ➡ Upload! Or F1 -> `PlatformIO: Upload`
 
 ## Step 2: Connecting to the Heat pump
 
 1. Turn OFF your heat pump at the circuit breaker.
 2. Unscrew your pannel to access the main PCB of your unit.
-3. Localize the X10A connector on your the PCB. This is the serial port on the main PCB.
-4. Using the 5 pin connector or 4 Dupont wires, connect the ESP32 as follow. Pay attention to the orientation of the socket.
+3. Localize the X10A connector on your the PCB. This is the serial port on the main PCB. If your installation include a bi-zone module, the X10A port is occupied with a connector to the Bi-Zone module. You should then connect to the X12A port on the bi-zone module. Pins are identical to the X10A.
+4. Using the 5 pin connector or 4 Dupont wires, connect the ESP as follow. Pay attention to the orientation of the socket.
 
 ### Daikin Altherma 4 pin X10A Connection
 
@@ -128,13 +125,13 @@ For **M5StickCPlus** select **env:M5StickCPlus**
 
 | X10A | ESP32 |
 | ---- | ----- |
-| 1-5V | 5V - VIN *Can supply voltage for the ESP32 :)* |
+| 1-5V | 5V - VIN *Can supply voltage for the ESP :)* |
 | 2-TX | `RX_PIN` *Default GPIO 16. Prefer RX2 of your board.* |
 | 3-RX | `TX_PIN` *Default GPIO 17. Prefer TX2 of your board.* |
 | 4-NC | Not connected |
 | 5-GND | GND |
 
-> ESP `RX_PIN` `TX_PIN` can be changed in `src/setup.h`. 
+> ESP `RX_PIN` `TX_PIN` can be changed in `src/setup.h`.
 
 ### 8 pin X10A Connection
 
@@ -163,7 +160,7 @@ Refer to the schematic map of your heat pump to see where to connect *external O
 
 Adding this will take priority on your thermostat. ESPAltherma will turn the heating on/off ; the thermostat will be in standby.
 
-Note: I resoldered the J1 jumper that was cut when installing my digital thermostat (not sure if it is needed) and configured my *type of thermostat* as *External thermostat* 
+Note: I resoldered the J1 jumper that was cut when installing my digital thermostat (not sure if it is needed) and configured my *type of thermostat* as *External thermostat*
 
 Once installed the setup looks like this:
 
@@ -171,18 +168,18 @@ Once installed the setup looks like this:
 
 Other users installations are described [in this issue](/../../issues/17).
 
-On a Rotex this would connect to J16 Pin 1 and 2. Note: RT needs to be switched ON in the heatpump Connection menu. Heating will be ON if pins are connected, else no heating, so connect to the NC (normally closed) of the relay. 
+On a Rotex this would connect to J16 Pin 1 and 2. Note: RT needs to be switched ON in the heatpump Connection menu. Heating will be ON if pins are connected, else no heating, so connect to the NC (normally closed) of the relay.
 
 ## Step 4 (optional) - Smart grid features
-ESPaltherma can also integrate with SG-Ready options of your heat pump. To do so, uncomment and configure `PIN_SG1` and `PIN_SG2` in `src/setup.c` and send one of the allowed values (0..3) to MQTT channel `espaltherma/sg/set`. Current SG mode will be available in `espaltherma/sg/state`.  
+ESPaltherma can also integrate with SG-Ready options of your heat pump. To do so, uncomment and configure `PIN_SG1` and `PIN_SG2` in `src/setup.c` and send one of the allowed values (0..3) to MQTT channel `espaltherma/sg/set`. Current SG mode will be available in `espaltherma/sg/state`.
 
-Of course, you will need to use 2 more relays to open/close SG1 and SG2 contacts of your heat pump.  
+Of course, you will need to use 2 more relays to open/close SG1 and SG2 contacts of your heat pump.
 
-I found that using 5V supply pin of X10A provides enough power for my ESP32 and both relays, but your mileage may vary.  
+I found that using 5V supply pin of X10A provides enough power for my ESP32 and both relays, but your mileage may vary.
 
-On a Rotex SG1 and SG2 contacts are located in J8 connector, pin 5-6 (Smart Grid) and 11-12 (EVU) respectively.  
+On a Rotex SG1 and SG2 contacts are located in J8 connector, pin 5-6 (Smart Grid) and 11-12 (EVU) respectively.
 
-Once configured and connected, your heat pump will work like this:  
+Once configured and connected, your heat pump will work like this:
 
 | sg/set value| SG1   | SG2   | SG-Mode              | Working mode | Typical result |
 | ----------- | ----- | ----- | -------------------- | ------------ | -------------- |
@@ -190,9 +187,9 @@ Once configured and connected, your heat pump will work like this:
 | 1           | open  | close | 1 - Forced OFF       | Hp is forced OFF           | Heating and DHW will be turned OFF - *Beware that your comfort may be negatively affected by this working mode* |
 | 2           | close | open  | 2 - Recommended ON   | Hp is recommended to be ON | HP will increase DHW setpoint as well as LW setpoint (documentation says +5 °C, but my tests actually show +6 °C) |
 | 3           | close | close | 3 - Force ON         | Hp is forced ON            | HP will increase DHW setpoint and will use its full power to heat DHW (to 70 °C) |
-  
-*Note that In SG3 mode your HP will really be power hungry so make sure to enable it only when electricity cost is low (ideally free) or be prepared to get a high bill!*  
-  
+
+*Note that In SG3 mode your HP will really be power hungry so make sure to enable it only when electricity cost is low (ideally free) or be prepared to get a high bill!*
+
 Depending on your HP model, SG3 might be configurable in "ECO mode", "Normal mode" or "Comfort mode". The mode can be set using the specialist code Main Menu > Settings > Input/Output.
 
 | SG-Mode | Description |
@@ -215,7 +212,7 @@ Possible generic issues could be: improper wifi signal, unsupported protocol, un
 
 ESPAltherma generates logs on the main serial port (USB). Connect to the ESP32 and open the serial monitor on Platformio.
 
-ESPAltherma also generates logs on MQTT. If Wifi and MQTT is not the issue, look at the logs on the topic `espaltherma/log`. You can see them on Home Assistant through  Configuration -> Integration -> MQTT -> Config -> Listen to a topic. 
+ESPAltherma also generates logs on MQTT. If Wifi and MQTT is not the issue, look at the logs on the topic `espaltherma/log`. You can see them on Home Assistant through  Configuration -> Integration -> MQTT -> Config -> Listen to a topic.
 
 ## Note on voltage
 
@@ -303,8 +300,8 @@ When put in terms of ESPAltherma variables, the COP can be define as a sensor li
       espaltherma_cop:
         friendly_name: "COP"
         unit_of_measurement: 'COP'
-        value_template: "{% if is_state_attr('sensor.althermasensors','Operation Mode', 'Heating') and is_state_attr('sensor.althermasensors','Freeze Protection', 'OFF')  %} 
-{{ 
+        value_template: "{% if is_state_attr('sensor.althermasensors','Operation Mode', 'Heating') and is_state_attr('sensor.althermasensors','Freeze Protection', 'OFF')  %}
+{{
   ((state_attr('sensor.althermasensors','Flow sensor (l/min)')| float * 0.06 * 1.16 * (state_attr('sensor.althermasensors','Leaving water temp. before BUH (R1T)') | float - state_attr('sensor.althermasensors','Inlet water temp.(R4T)')|float) )
     /
   (state_attr('sensor.althermasensors','INV primary current (A)') | float * state_attr('sensor.althermasensors','Voltage (N-phase) (V)')|float / 1000))
@@ -319,7 +316,7 @@ When put in terms of ESPAltherma variables, the COP can be define as a sensor li
 
 Not directly. It might be possible to change registry values using the serial port but I'm not aware of this. If you know, comment on [the dedicated issue](/../../issues/1).
 
-However, ESPAltherma, supports an extra GPIO to control a relay that you can plug as *external On Off thermostat*. See [**Controling your Daikin Altherma heat pump**](#controling-your-daikin-altherma-heat-pump).
+However, ESPAltherma, supports an extra GPIO to control a relay that you can plug as *external On/Off thermostat*. See [**Controling your Daikin Altherma heat pump**](#controling-your-daikin-altherma-heat-pump).
 
 If you want to configure your heat pump using an arduino, you can interact with the P1P2 serial protocol (the one of the digital thermostats) using the [nice work on P1P2Serial](https://github.com/Arnold-n/P1P2Serial) of Arnold Niessen.
 
@@ -372,7 +369,7 @@ Yes, ESPAltherma now supports sending each value to a specific topic in addition
 To activate this specific feature uncomment the following lines from `src/setup.h`
 
 ```c++
-//Uncomment this if you want to activate the One Value <-> One Topic mode. Each value will be sent to a specific topic below 
+//Uncomment this if you want to activate the One Value <-> One Topic mode. Each value will be sent to a specific topic below
 #define ONEVAL_ONETOPIC
 #define MQTT_OneTopic "espaltherma/OneATTR/" //Keep the ending "/" !!
 ```
