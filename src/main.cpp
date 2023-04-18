@@ -14,10 +14,10 @@ void extraLoop()
     canBus_loop();
 
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_Plus)
-  if (M5.BtnA.wasPressed()) { // Turn back ON screen
+  if (M5.BtnA.wasPressed()) { // turn back ON screen
     M5.Axp.ScreenBreath(12);
     LCDTimeout = millis() + 30000;
-  } else if (LCDTimeout < millis()) { // Turn screen off.
+  } else if (LCDTimeout < millis()) { // turn screen off.
     M5.Axp.ScreenBreath(0);
   }
   M5.update();
