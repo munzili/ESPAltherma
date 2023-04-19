@@ -163,6 +163,11 @@ void loop()
   if(mainLoopStatus == LoopRunStatus::Stopped)
     return;
 
+  if (WiFi.status() != WL_CONNECTED) {
+    //restart board if needed
+    checkWifi();
+  }
+
   webuiScanRegister();
 
   if(!config->configStored) {

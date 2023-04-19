@@ -16,6 +16,8 @@ struct WifiDetails
 extern WifiDetails **lastWifiScanResults;
 extern int16_t lastWifiScanResultAmount;
 
+void checkWifi();
+
 void start_standalone_wifi();
 
 void setup_wifi();
