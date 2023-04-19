@@ -139,7 +139,7 @@ void setup()
   attachInterrupt(config->PIN_ENABLE_CONFIG, restartInStandaloneWifi, FALLING);
 
   debugSerial.print("Connecting to MQTT server...\n");
-  reconnect();
+  reconnectMqtt();
   debugSerial.println("OK!");
 
   debugSerial.print("ESPAltherma started!\n");
@@ -171,7 +171,7 @@ void loop()
   }
 
   if (!client.connected()) { // (re)connect to MQTT if needed
-    reconnect();
+    reconnectMqtt();
   }
 
   if(config->X10A_ENABLED)

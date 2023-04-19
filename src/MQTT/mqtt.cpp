@@ -90,7 +90,7 @@ void sendValues()
   createEmptyJSONBuffer();
 }
 
-void reconnect()
+void reconnectMqtt()
 {
   //in case loopback as server is set, skip connecting (debug purpose)
   if(config->MQTT_SERVER.compareTo("127.0.0.1") == 0 || config->MQTT_SERVER.compareTo("localhost") == 0)

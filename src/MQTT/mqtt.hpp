@@ -38,7 +38,7 @@ void updateValues(ParameterDef *labelDef);
 
 void sendValues();
 
-void reconnect();
+void reconnectMqtt();
 
 void callbackHeating(byte *payload, unsigned int length);
 

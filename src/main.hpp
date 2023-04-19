@@ -21,13 +21,6 @@
 long LCDTimeout = 40000; // Keep screen ON for 40s then turn off. ButtonA will turn it On again.
 #endif
 
-//Converts to string and add the value to the JSON message
-void updateValues(ParameterDef *labelDef);
-
-void extraLoop();
-
-void setupScreen();
-
 void IRAM_ATTR restartInStandaloneWifi();
 
 void setup();

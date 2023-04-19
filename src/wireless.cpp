@@ -13,11 +13,25 @@ void start_standalone_wifi()
   WiFi.setHostname("ESPAltherma");
 }
 
+void reconnectWifi()
+{
+  debugSerial.printf("Connecting to %s\n", config->SSID.c_str());
+  int i = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+    if (i++ == 120) {
+      debugSerial.println("Tried for 60 sec, rebooting now.");
+      restart_board();
+    }
+  }
+  debugSerial.printf("Connected. IP Address: %s\n", WiFi.localIP().toString().c_str());
+}
+
 void setup_wifi()
 {
   delay(10);
   // we start by connecting to a WiFi network
-  debugSerial.printf("Connecting to %s\n", config->SSID.c_str());
 
   if(config->SSID_STATIC_IP) {
     IPAddress local_IP;
@@ -44,15 +58,7 @@ void setup_wifi()
   }
 
   WiFi.begin(config->SSID.c_str(), config->SSID_PASSWORD.c_str());
-  int i = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    debugSerial.print(".");
-    if (i++ == 100) {
-      restart_board();
-    }
-  }
-  debugSerial.printf("Connected. IP Address: %s\n", WiFi.localIP().toString().c_str());
+  reconnectWifi();
 }
 
 void scan_wifi_delete_result()
