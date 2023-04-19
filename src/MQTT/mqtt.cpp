@@ -51,7 +51,7 @@ void updateValues(ParameterDef *labelDef)
   bool alpha = false;
   for (size_t j = 0; j < strlen(labelDef->asString); j++) {
     char c = labelDef->asString[j];
-    if (!isdigit(c) && c!='.') {
+    if (!isdigit(c) && c!='.' && !(c=='-' && j==0)) {
       alpha = true;
       break;
     }
