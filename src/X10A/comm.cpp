@@ -103,7 +103,7 @@ bool queryRegistry(RegistryBuffer *registryBuffer, X10AProtocol protocol)
   }
 
   registryBuffer->CRC = getCRC(registryBuffer->Buffer, len - 1);
-  // logBuffer(registryBuffer->Buffer, len);
+  logBuffer(registryBuffer->Buffer, len);
   if (registryBuffer->CRC != registryBuffer->Buffer[len - 1]) {
     debugSerial.println("Wrong CRC!");
     debugSerial.printf("ERROR: Wrong CRC on register 0x%02x!", registryBuffer->RegistryID);
