@@ -6,17 +6,17 @@ void canBus_setup()
 {
     switch (config->CAN_IC)
     {
-    case CanICTypes::MCP2515:
+    case CAN_ICTypes::MCP2515:
         driver = new DriverMCP2515();
         driver->initInterface();
         break;
 
-    case CanICTypes::ELM327:
+    case CAN_ICTypes::ELM327:
         driver = new DriverELM327();
         driver->initInterface();
         break;
 
-    case CanICTypes::SJA1000:
+    case CAN_ICTypes::SJA1000:
         driver = new DriverSJA1000();
         driver->initInterface();
         break;

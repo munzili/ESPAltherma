@@ -229,13 +229,11 @@ async function loadConfig()
 
         if(data['CAN_ENABLED'])
         {
+            let canBusPrefix = '';
+            let canICType = '';
             if(data['CAN_BUS'] == 1)
             {
-                document.getElementById('pin_can_uart_rx').value = data['PIN_CAN_RX'];
-                document.getElementById('pin_can_uart_tx').value = data['PIN_CAN_TX'];
-            }
-            else if(data['CAN_BUS'] == 0)
-            {
+                canBusPrefix = 'spi_';
                 document.getElementById('pin_can_spi_mosi').value = data['SPI']['MOSI'];
                 document.getElementById('pin_can_spi_miso').value = data['SPI']['MISO'];
                 document.getElementById('pin_can_spi_sck').value = data['SPI']['SCK'];
@@ -243,8 +241,27 @@ async function loadConfig()
                 document.getElementById('pin_can_spi_int').value = data['SPI']['INT'];
                 document.getElementById('pin_can_spi_mhz').value = data['SPI']['MHZ'];
             }
+            else if(data['CAN_BUS'] == 2)
+            {
+                canBusPrefix = 'uart_';
+                document.getElementById('pin_can_uart_rx').value = data['PIN_CAN_RX'];
+                document.getElementById('pin_can_uart_tx').value = data['PIN_CAN_TX'];
+            }
 
-            document.getElementById("can_ic_type").selectedIndex = data['CAN_IC'] + 1;
+            if(data['CAN_IC'] == 1)
+            {
+                canICType = 'mcp2515';
+            }
+            else if(data['CAN_IC'] == 2)
+            {
+                canICType = 'elm327';
+            }
+            else if(data['CAN_IC'] == 3)
+            {
+                canICType = 'sja1000';
+            }
+
+            document.getElementById("can_ic_type").value = canBusPrefix + canICType;
             updateCANConfigDisplay();
 
             document.getElementById('can_speed_kbps').value = data['CAN_SPEED_KBPS'];

@@ -130,7 +130,7 @@ void CANDriver::handleLoop()
     }
   }
 
-  if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
+  if(config->CAN_AUTOPOLL_MODE == CAN_PollMode::Auto)
   {
     ulong currentTime = millis();
 
@@ -179,7 +179,7 @@ void CANDriver::onDataRecieved(uint32_t const timestamp_us, CanFrame const frame
   if(recievedCommand == nullptr)
     return;
 
-  if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
+  if(config->CAN_AUTOPOLL_MODE == CAN_PollMode::Auto)
   {
     for(size_t i = 0; i < config->COMMANDS_LENGTH; i++)
     {

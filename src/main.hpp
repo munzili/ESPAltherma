@@ -25,7 +25,7 @@ void IRAM_ATTR restartInStandaloneWifi();
 
 void setup();
 
-void waitLoop(uint ms);
+void waitLoop(ulong ms);
 
 void loop();
 #endif

@@ -566,46 +566,44 @@ void onSaveConfig(AsyncWebServerRequest *request)
     return;
   }
 
-  String ICType = request->getParam("can_ic_type", true)->value();
-  CANICBus canICBus;
-  CanICTypes canICTypes;
+  CAN_ICBus canICBus = CAN_ICBus::None;
+  CAN_ICTypes canICTypes = CAN_ICTypes::None;
 
-  if(ICType.startsWith("uart_"))
+  if(request->hasParam("can_enabled", true))
   {
-    canICBus = CANICBus::UART;
-  }
-  else if(ICType.startsWith("spi_"))
-  {
-    canICBus = CANICBus::SPI;
-  }
-  else
-  {
-    request->send(422, "text/plain", "Invalid CAN IC/Chip communication type given");
-    return;
-  }
+    String ICType = request->getParam("can_ic_type", true)->value();
 
-  ICType = ICType.substring(ICType.indexOf('_') + 1);
+    if(ICType.startsWith("uart_")) {
+      canICBus = CAN_ICBus::UART;
+    } else if(ICType.startsWith("spi_")) {
+      canICBus = CAN_ICBus::SPI;
+    } else {
+      request->send(422, "text/plain", "Invalid CAN IC/Chip communication type given");
+      return;
+    }
 
-  if(ICType == "mcp2515")
-    canICTypes = CanICTypes::MCP2515;
-  else if(ICType == "elm327")
-    canICTypes = CanICTypes::ELM327;
-  else if(ICType == "sja1000")
-    canICTypes = CanICTypes::SJA1000;
-  else
-  {
-    request->send(422, "text/plain", "Invalid CAN IC/Chip type given");
-    return;
+    ICType = ICType.substring(ICType.indexOf('_') + 1);
+
+    if(ICType == "mcp2515") {
+      canICTypes = CAN_ICTypes::MCP2515;
+    } else if(ICType == "elm327") {
+      canICTypes = CAN_ICTypes::ELM327;
+    } else if(ICType == "sja1000") {
+      canICTypes = CAN_ICTypes::SJA1000;
+    } else {
+      request->send(422, "text/plain", "Invalid CAN IC/Chip type given");
+      return;
+    }
   }
 
-  if(request->hasParam("can_enabled", true) && canICBus == CANICBus::UART &&
+  if(request->hasParam("can_enabled", true) && canICBus == CAN_ICBus::UART &&
      (!request->hasParam("pin_can_uart_rx", true) || !request->hasParam("pin_can_uart_tx", true)))
   {
     request->send(422, "text/plain", "Missing parameter(s) for CAN-Bus UART");
     return;
   }
 
-  if(request->hasParam("can_enabled", true) && canICBus == CANICBus::SPI &&
+  if(request->hasParam("can_enabled", true) && canICBus == CAN_ICBus::SPI &&
      (!request->hasParam("pin_can_spi_mosi", true) ||
       !request->hasParam("pin_can_spi_miso", true) ||
       !request->hasParam("pin_can_spi_cs", true) ||
@@ -693,13 +691,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
     config->CAN_IC = canICTypes;
     config->CAN_BUS = canICBus;
 
-    if(config->CAN_BUS == CANICBus::UART)
-    {
-      config->PIN_CAN_RX = request->getParam("pin_can_uart_rx", true)->value().toInt();
-      config->PIN_CAN_TX = request->getParam("pin_can_uart_tx", true)->value().toInt();
-    }
-
-    if(config->CAN_BUS == CANICBus::SPI)
+    if(config->CAN_BUS == CAN_ICBus::SPI)
     {
       config->CAN_SPI.PIN_MISO = request->getParam("pin_can_spi_miso", true)->value().toInt();
       config->CAN_SPI.PIN_MOSI = request->getParam("pin_can_spi_mosi", true)->value().toInt();
@@ -708,14 +700,19 @@ void onSaveConfig(AsyncWebServerRequest *request)
       config->CAN_SPI.PIN_INT = request->getParam("pin_can_spi_int", true)->value().toInt();
       config->CAN_SPI.IC_MHZ = request->getParam("pin_can_spi_mhz", true)->value().toInt();
     }
+    else if(config->CAN_BUS == CAN_ICBus::UART)
+    {
+      config->PIN_CAN_RX = request->getParam("pin_can_uart_rx", true)->value().toInt();
+      config->PIN_CAN_TX = request->getParam("pin_can_uart_tx", true)->value().toInt();
+    }
 
     config->CAN_SPEED_KBPS = request->getParam("can_speed_kbps", true)->value().toInt();
     config->CAN_MQTT_TOPIC_NAME = (char *)request->getParam("can_mqtt_topic_name", true)->value().c_str();
     config->CAN_READONLY_ENABLED = request->hasParam("can_readonly_enabled", true);
     config->CAN_SNIFFING_ENABLED = request->hasParam("can_sniffing_enabled", true);
-    config->CAN_AUTOPOLL_MODE = (CANPollMode)request->getParam("can_autopoll_mode", true)->value().toInt();
+    config->CAN_AUTOPOLL_MODE = (CAN_PollMode)request->getParam("can_autopoll_mode", true)->value().toInt();
 
-    if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
+    if(config->CAN_AUTOPOLL_MODE == CAN_PollMode::Auto)
     {
       config->CAN_AUTOPOLL_TIME = request->getParam("can_autopoll_time", true)->value().toInt();
     }

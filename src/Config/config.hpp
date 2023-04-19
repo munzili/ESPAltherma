@@ -10,18 +10,20 @@
 #define CONFIG_FILE "/config.json"
 #define MODELS_CONFIG_SIZE 1024*10
 
-enum class CanICTypes : uint8_t {
+enum class CAN_ICTypes : uint8_t {
+    None,
     MCP2515,
     ELM327,
     SJA1000
 };
 
-enum class CANICBus : uint8_t {
+enum class CAN_ICBus : uint8_t {
+    None,
     SPI,
     UART
 };
 
-enum class CANPollMode : uint8_t {
+enum class CAN_PollMode : uint8_t {
     Disabled,
     Passiv,
     Auto
@@ -67,8 +69,8 @@ struct Config
     uint8_t PIN_SG2;
     bool SG_RELAY_HIGH_TRIGGER;
     bool CAN_ENABLED;
-    CanICTypes CAN_IC;
-    CANICBus CAN_BUS;
+    CAN_ICTypes CAN_IC;
+    CAN_ICBus CAN_BUS;
     uint8_t PIN_CAN_RX;
     uint8_t PIN_CAN_TX;
     struct
@@ -84,7 +86,7 @@ struct Config
     String CAN_MQTT_TOPIC_NAME;
     bool CAN_READONLY_ENABLED;
     bool CAN_SNIFFING_ENABLED;
-    CANPollMode CAN_AUTOPOLL_MODE;
+    CAN_PollMode CAN_AUTOPOLL_MODE;
     uint16_t CAN_AUTOPOLL_TIME;
     size_t PARAMETERS_LENGTH;
     ParameterDef** PARAMETERS;

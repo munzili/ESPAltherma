@@ -145,9 +145,9 @@ void setup()
   debugSerial.print("ESPAltherma started!\n");
 }
 
-void waitLoop(uint ms)
+void waitLoop(ulong ms)
 {
-  unsigned long start = millis();
+  ulong start = millis();
   while (millis() < start + ms) { // wait .5sec between registries
     if(valueLoadState == Pending || mainLoopStatus == LoopRunStatus::Stopping)
       return;
@@ -163,7 +163,7 @@ void loop()
   if(mainLoopStatus == LoopRunStatus::Stopped)
     return;
 
-  if (WiFi.status() != WL_CONNECTED) {
+  if (!config->STANDALONE_WIFI && config->configStored && WiFi.status() != WL_CONNECTED) {
     //restart board if needed
     checkWifi();
   }
@@ -172,22 +172,20 @@ void loop()
 
   if(!config->configStored) {
     extraLoop();
-    return;
+  } else {
+    if (!client.connected()) { // (re)connect to MQTT if needed
+      reconnectMqtt();
+    }
+
+    if(config->X10A_ENABLED) {
+      handleX10A(registryBuffers, registryBufferSize, config->PARAMETERS, config->PARAMETERS_LENGTH, true, config->X10A_PROTOCOL);
+    }
+
+    ulong loopEnd = config->FREQUENCY - millis() + loopStart;
+
+    debugSerial.printf("Done. Waiting %.2f sec...\n", (float)(loopEnd / 1000));
+    waitLoop(loopEnd);
   }
-
-  if (!client.connected()) { // (re)connect to MQTT if needed
-    reconnectMqtt();
-  }
-
-  if(config->X10A_ENABLED)
-  {
-    handleX10A(registryBuffers, registryBufferSize, config->PARAMETERS, config->PARAMETERS_LENGTH, true, config->X10A_PROTOCOL);
-  }
-
-  ulong loopEnd = millis() + loopStart;
-
-  debugSerial.printf("Done. Waiting %d sec...\n", (int)(config->FREQUENCY - loopEnd) / 1000);
-  waitLoop(config->FREQUENCY - loopEnd);
 
   if(mainLoopStatus == LoopRunStatus::Stopping)
     mainLoopStatus = LoopRunStatus::Stopped;

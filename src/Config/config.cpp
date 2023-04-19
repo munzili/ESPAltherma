@@ -91,8 +91,8 @@ void readConfig()
     config->PIN_SG2 = configDoc["PIN_SG2"].as<uint8_t>();
     config->SG_RELAY_HIGH_TRIGGER = configDoc["SG_RELAY_HIGH_TRIGGER"].as<const bool>();
     config->CAN_ENABLED = configDoc["CAN_ENABLED"].as<const bool>();
-    config->CAN_IC = (CanICTypes)configDoc["CAN_IC"].as<uint8_t>();
-    config->CAN_BUS = (CANICBus)configDoc["CAN_BUS"].as<uint8_t>();
+    config->CAN_IC = (CAN_ICTypes)configDoc["CAN_IC"].as<uint8_t>();
+    config->CAN_BUS = (CAN_ICBus)configDoc["CAN_BUS"].as<uint8_t>();
     config->PIN_CAN_RX = configDoc["PIN_CAN_RX"].as<uint8_t>();
     config->PIN_CAN_TX = configDoc["PIN_CAN_TX"].as<uint8_t>();
     config->CAN_SPI.PIN_MISO = configDoc["SPI"]["MISO"].as<uint8_t>();
@@ -106,8 +106,8 @@ void readConfig()
     config->CAN_MQTT_TOPIC_NAME = (char *)configDoc["CAN_MQTT_TOPIC_NAME"].as<const char*>();
     config->CAN_READONLY_ENABLED = configDoc["CAN_READONLY_ENABLED"].as<const bool>();
     config->CAN_SNIFFING_ENABLED = configDoc["CAN_SNIFFING_ENABLED"].as<const bool>();
-    config->CAN_AUTOPOLL_MODE = (CANPollMode)configDoc["CAN_AUTOPOLL_MODE"].as<uint8_t>();
-    if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
+    config->CAN_AUTOPOLL_MODE = (CAN_PollMode)configDoc["CAN_AUTOPOLL_MODE"].as<uint8_t>();
+    if(config->CAN_AUTOPOLL_MODE == CAN_PollMode::Auto)
     {
         config->CAN_AUTOPOLL_TIME = configDoc["CAN_AUTOPOLL_TIME"].as<uint16_t>();
     }
@@ -250,7 +250,7 @@ void saveConfig()
     configDoc["CAN_READONLY_ENABLED"] = config->CAN_READONLY_ENABLED;
     configDoc["CAN_SNIFFING_ENABLED"] = config->CAN_SNIFFING_ENABLED;
     configDoc["CAN_AUTOPOLL_MODE"] = (uint8_t)config->CAN_AUTOPOLL_MODE;
-    if(config->CAN_AUTOPOLL_MODE == CANPollMode::Auto)
+    if(config->CAN_AUTOPOLL_MODE == CAN_PollMode::Auto)
     {
         configDoc["CAN_AUTOPOLL_TIME"] = config->CAN_AUTOPOLL_TIME;
     }
