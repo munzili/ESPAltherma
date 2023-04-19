@@ -176,13 +176,13 @@ void callbackHeating(byte *payload, unsigned int length)
     // turn off
     digitalWrite(config->PIN_HEATING, HIGH);
     savePersistence();
-    client.publish(publishHeatingTopic.c_str(), "OFF");
+    client.publish(publishHeatingTopic.c_str(), "OFF", true);
     debugSerial.println("Heating turned OFF");
   } else if (payload[1] == 'N') {
     // turn on
     digitalWrite(config->PIN_HEATING, LOW);
     savePersistence();
-    client.publish(publishHeatingTopic.c_str(), "ON");
+    client.publish(publishHeatingTopic.c_str(), "ON", true);
     debugSerial.println("Heating turned ON");
   } else {
     debugSerial.printf("Unknown message: %s\n", payload);
@@ -213,13 +213,13 @@ void callbackCooling(byte *payload, unsigned int length)
     // turn off
     digitalWrite(config->PIN_COOLING, HIGH);
     savePersistence();
-    client.publish(publishCoolingTopic.c_str(), "OFF");
+    client.publish(publishCoolingTopic.c_str(), "OFF", true);
     debugSerial.println("Cooling turned OFF");
   } else if (payload[1] == 'N') {
     //turn on
     digitalWrite(config->PIN_COOLING, LOW);
     savePersistence();
-    client.publish(publishCoolingTopic.c_str(), "ON");
+    client.publish(publishCoolingTopic.c_str(), "ON", true);
     debugSerial.println("Cooling turned ON");
   } else {
     debugSerial.printf("Unknown message: %s\n", payload);
