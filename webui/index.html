@@ -20,7 +20,8 @@
     <header><h1>ESPAltherma Config</h1></header>
     <nav>
       <ul id="nav-main" style="overflow-x: auto">
-        <li><a href="#" data-link="form-network" role="button" >Network</a></li>
+        <li><a href="#" data-link="form-network" role="button">Network</a></li>
+        <li><a href="#" data-link="form-mqtt">MQTT</a></li>
         <li><a href="#" data-link="form-pins">Pins</a></li>
         <li id="nav-x10a" class="hidden"><a href="#" data-link="form-x10a">X10A-Bus</a></li>
         <li id="nav-can" class="hidden"><a href="#" data-link="form-can">CAN-Bus</a></li>
@@ -86,7 +87,8 @@
             <input type="text" id="secondary_dns" name="secondary_dns"/>
             <small>Optional</small>
         </article>
-
+      </article>
+      <article id="form-mqtt" role="tab">
         <label for="mqtt_server">MQTT Server:</label>
         <input type="text" id="mqtt_server" name="mqtt_server"/>
 
