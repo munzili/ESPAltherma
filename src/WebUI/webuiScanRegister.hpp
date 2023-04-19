@@ -16,6 +16,7 @@
 struct WebUIScanRegister {
   int8_t PinRx;
   int8_t PinTx;
+  X10AProtocol protocol;
   String Params;
 };
 

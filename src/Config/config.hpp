@@ -21,11 +21,15 @@ enum class CANICBus : uint8_t {
     UART
 };
 
-
 enum class CANPollMode : uint8_t {
     Disabled,
     Passiv,
     Auto
+};
+
+enum class X10AProtocol : uint8_t {
+    I,
+    S
 };
 
 struct Config
@@ -53,6 +57,7 @@ struct Config
     bool X10A_ENABLED;
     uint8_t PIN_RX;
     uint8_t PIN_TX;
+    X10AProtocol X10A_PROTOCOL;
     bool HEATING_ENABLED;
     uint8_t PIN_HEATING;
     bool COOLING_ENABLED;

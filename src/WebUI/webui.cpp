@@ -401,6 +401,7 @@ void onLoadValues(AsyncWebServerRequest *request)
 
   webuiScanRegisterConfig.PinRx = request->getParam("PIN_RX", true)->value().toInt();
   webuiScanRegisterConfig.PinTx = request->getParam("PIN_TX", true)->value().toInt();
+  webuiScanRegisterConfig.protocol = (X10AProtocol)request->getParam("X10A_PROTOCOL", true)->value().toInt();
   webuiScanRegisterConfig.Params = request->getParam("PARAMS", true)->value();
 
   valueLoadState = Pending;
@@ -535,7 +536,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
     return;
   }
 
-  if(request->hasParam("x10a_enabled", true) && (!request->hasParam("pin_rx", true) || !request->hasParam("pin_tx", true)))
+  if(request->hasParam("x10a_enabled", true) && (!request->hasParam("pin_rx", true) || !request->hasParam("pin_tx", true) || !request->hasParam("x10a_protocol", true)))
   {
     request->send(422, "text/plain", "Missing parameter(s) for X10A");
     return;
@@ -671,6 +672,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
   {
     config->PIN_RX = request->getParam("pin_rx", true)->value().toInt();
     config->PIN_TX = request->getParam("pin_tx", true)->value().toInt();
+    config->X10A_PROTOCOL = (X10AProtocol)request->getParam("x10a_protocol", true)->value().toInt();
   }
 
   if(config->HEATING_ENABLED)

@@ -81,6 +81,7 @@ void readConfig()
     config->X10A_ENABLED = configDoc["X10A_ENABLED"].as<const bool>();
     config->PIN_RX = configDoc["PIN_RX"].as<uint8_t>();
     config->PIN_TX = configDoc["PIN_TX"].as<uint8_t>();
+    config->X10A_PROTOCOL = (X10AProtocol)configDoc["X10A_PROTOCOL"].as<uint8_t>();
     config->HEATING_ENABLED = configDoc["HEATING_ENABLED"].as<const bool>();
     config->PIN_HEATING = configDoc["PIN_HEATING"].as<uint8_t>();
     config->COOLING_ENABLED = configDoc["COOLING_ENABLED"].as<const bool>();
@@ -222,6 +223,7 @@ void saveConfig()
     configDoc["X10A_ENABLED"] = config->X10A_ENABLED;
     configDoc["PIN_RX"] = config->PIN_RX;
     configDoc["PIN_TX"] = config->PIN_TX;
+    configDoc["X10A_PROTOCOL"] = (uint8_t)config->X10A_PROTOCOL;
     configDoc["HEATING_ENABLED"] = config->HEATING_ENABLED;
     configDoc["PIN_HEATING"] = config->PIN_HEATING;
     configDoc["COOLING_ENABLED"] = config->COOLING_ENABLED;

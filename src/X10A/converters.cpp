@@ -4,7 +4,7 @@ using ESPAltherma::Converter;
 
 Converter converter;
 
-void Converter::convert(ParameterDef *def, char *data)
+void Converter::convert(ParameterDef *def, byte *data)
 {
     def->asString[0] = {0};
     int convId = def->convid;
@@ -19,7 +19,7 @@ void Converter::convert(ParameterDef *def, char *data)
     switch (convId)
     {
         case 100:
-            strlcat(def->asString, data, num);
+            strlcat(def->asString, (char*)data, num);
             return;
         case 101:
             dblData = (double)getSignedValue(data, num, 0);
@@ -139,6 +139,9 @@ void Converter::convert(ParameterDef *def, char *data)
         case 158:
             dblData = (double)getUnsignedValue(data, num, 1) / 256.0 * 2.0;
             break;
+        case 164:
+            dblData = (double)getUnsignedValue(data, num, 1) * 5;
+            break;
         case 200:
             convertTable200(data, def->asString);
             return;
@@ -174,6 +177,9 @@ void Converter::convert(ParameterDef *def, char *data)
         case 307:
             convertTable300(data, def->convid, def->asString);
             return;
+        case 312:
+            dblData = convertTable312(data);
+            break;
         case 315:
             convertTable315(data, def->asString);
             return;
@@ -185,21 +191,27 @@ void Converter::convert(ParameterDef *def, char *data)
         case 401:
             dblData = (double)getSignedValue(data, num, 0);
             dblData = convertPress2Temp(dblData);
+            break;
         case 402:
             dblData = (double)getSignedValue(data, num, 1);
             dblData = convertPress2Temp(dblData);
+            break;
         case 403:
             dblData = (double)getSignedValue(data, num, 0) / 256.0;
             dblData = convertPress2Temp(dblData);
+            break;
         case 404:
             dblData = (double)getSignedValue(data, num, 1) / 256.0;
             dblData = convertPress2Temp(dblData);
+            break;
         case 405:
             dblData = (double)getSignedValue(data, num, 0) * 0.1;
             dblData = convertPress2Temp(dblData);
+            break;
         case 406:
             dblData = (double)getSignedValue(data, num, 1) * 0.1;
             dblData = convertPress2Temp(dblData);
+            break;
 
         default:
             // conversion is not available
@@ -214,7 +226,7 @@ void Converter::convert(ParameterDef *def, char *data)
     debugSerial.printf("-> %s\n", def->asString);
 }
 
-void Converter::convertTable300(char *data, int tableID, char *ret)
+void Converter::convertTable300(byte *data, int tableID, char *ret)
 {
     debugSerial.printf("Bin Conv %02x with tableID %d \n", data[0], tableID);
     char b = 1;
@@ -227,7 +239,7 @@ void Converter::convertTable300(char *data, int tableID, char *ret)
     return;
 }
 
-void Converter::convertTable203(char *data, char *ret)
+void Converter::convertTable203(byte *data, char *ret)
 {
     switch (data[0]) {
         case 0:
@@ -247,7 +259,7 @@ void Converter::convertTable203(char *data, char *ret)
     }
 }
 
-void Converter::convertTable204(char *data, char *ret)
+void Converter::convertTable204(byte *data, char *ret)
 {
     char array[] = " ACEHFJLPU987654";
     char array2[] = "0123456789AHCJEF";
@@ -258,7 +270,17 @@ void Converter::convertTable204(char *data, char *ret)
     ret[2] = 0;
 }
 
-void Converter::convertTable315(char *data, char *ret)
+double Converter::convertTable312(byte *data)
+{
+    double dblData = ((unsigned char) (7 & data[0] >> 4) + (unsigned char) (15U & data[0])) / 16.0;
+    if ((128 & data[0]) > 0) {
+        dblData *= -1.0;
+    }
+    // Serial.printf("convertTable312 %02x -> %f \n", data[0], dblData);
+    return dblData;
+}
+
+void Converter::convertTable315(byte *data, char *ret)
 {
     char b = 240 & data[0];
     b = (char)(b >> 4);
@@ -289,7 +311,7 @@ void Converter::convertTable315(char *data, char *ret)
     }
 }
 
-void Converter::convertTable316(char *data, char *ret)
+void Converter::convertTable316(byte *data, char *ret)
 {
     char b = 240 & data[0];
     b = (char)(b >> 4);
@@ -308,7 +330,7 @@ void Converter::convertTable316(char *data, char *ret)
     }
 }
 
-void Converter::convertTable200(char *data, char *ret)
+void Converter::convertTable200(byte *data, char *ret)
 {
     if (data[0] == 0) {
         strcat(ret, "OFF");
@@ -318,7 +340,7 @@ void Converter::convertTable200(char *data, char *ret)
 }
 
 // 201
-void Converter::convertTable217(char *data, char *ret)
+void Converter::convertTable217(byte *data, char *ret)
 {
     char r217[][30] = {"Fan Only",
                        "Heating",
@@ -354,7 +376,7 @@ double Converter::convertPress2Temp(double data)
     return num + num2 + num3 + num4 + num5 + num6 + num7;
 }
 
-unsigned short Converter::getUnsignedValue(char *data, int dataSize, int cnvflg)
+unsigned short Converter::getUnsignedValue(byte *data, int dataSize, int cnvflg)
 {
     unsigned short result;
     if (dataSize == 1) {
@@ -367,7 +389,7 @@ unsigned short Converter::getUnsignedValue(char *data, int dataSize, int cnvflg)
     return result;
 }
 
-short Converter::getSignedValue(char *data, int datasize, int cnvflg)
+short Converter::getSignedValue(byte *data, int datasize, int cnvflg)
 {
     unsigned short num = getUnsignedValue(data, datasize, cnvflg);
     short result = (short)num;

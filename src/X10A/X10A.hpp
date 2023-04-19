@@ -22,7 +22,7 @@ void X10AEnd();
 
 void initRegistries(RegistryBuffer** buffer, size_t& bufferSize, ParameterDef** parameters, const size_t parametersLength);
 
-void handleX10A(RegistryBuffer* buffer, const size_t& bufferSize, ParameterDef** parameters, const size_t parametersLength, const bool sendValuesViaMQTT);
+void handleX10A(RegistryBuffer* buffer, const size_t& bufferSize, ParameterDef** parameters, const size_t parametersLength, const bool sendValuesViaMQTT, X10AProtocol protocol);
 
 void X10AInit(int8_t rxPin, int8_t txPin);
 

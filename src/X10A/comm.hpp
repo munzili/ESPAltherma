@@ -8,8 +8,6 @@
 
 #define SER_TIMEOUT 300 // leave 300ms for the machine to answer
 
-char getCRC(char *src, int len);
-
-bool queryRegistry(RegistryBuffer *registryBuffer);
+bool queryRegistry(RegistryBuffer *registryBuffer, X10AProtocol protocol);
 
 #endif

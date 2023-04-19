@@ -44,12 +44,12 @@ void initRegistries(RegistryBuffer** buffer, size_t& bufferSize, ParameterDef** 
   delete[] tempRegistryIDs;
 }
 
-void handleX10A(RegistryBuffer* buffer, const size_t& bufferSize, ParameterDef** parameters, const size_t parametersLength, const bool sendValuesViaMQTT)
+void handleX10A(RegistryBuffer* buffer, const size_t& bufferSize, ParameterDef** parameters, const size_t parametersLength, const bool sendValuesViaMQTT, X10AProtocol protocol)
 {
   // querying all registries and store results
   for (size_t i = 0; i < bufferSize; i++) {
     uint8_t tries = 0;
-    while (tries++ < 3 && !queryRegistry(&buffer[i])) {
+    while (tries++ < 3 && !queryRegistry(&buffer[i], protocol)) {
       debugSerial.println("Retrying...");
       waitLoop(1000);
     }
@@ -60,9 +60,19 @@ void handleX10A(RegistryBuffer* buffer, const size_t& bufferSize, ParameterDef**
 
     for (size_t j = 0; j < bufferSize; j++)
     {
-      if(buffer[j].Success && label.registryID == buffer[j].RegistryID) {
-        char *input = buffer[j].Buffer;
-        input += label.offset + 3;
+      byte receivedRegistryID;
+      uint8_t offset;
+      if(protocol == X10AProtocol::S) {
+        receivedRegistryID = buffer[j].Buffer[0];
+        offset = 1;
+      } else {
+        receivedRegistryID = buffer[j].Buffer[1];
+        offset = 3;
+      }
+
+      if(buffer[j].Success && label.registryID == receivedRegistryID) {
+        byte *input = buffer[j].Buffer;
+        input += label.offset + offset;
 
         converter.convert(&label, input); // convert buffer result of label offset to correct/usabel value
 

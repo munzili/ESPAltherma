@@ -176,7 +176,7 @@ void loop()
 
   if(config->X10A_ENABLED)
   {
-    handleX10A(registryBuffers, registryBufferSize, config->PARAMETERS, config->PARAMETERS_LENGTH, true);
+    handleX10A(registryBuffers, registryBufferSize, config->PARAMETERS, config->PARAMETERS_LENGTH, true, config->X10A_PROTOCOL);
   }
 
   ulong loopEnd = millis() + loopStart;

@@ -1,7 +1,6 @@
 #ifndef COMMANDDEF_H
 #define COMMANDDEF_H
 
-#include <pgmspace.h>
 #include "ArduinoC.hpp"
 
 #define COMMAND_NAME_LENGTH 19

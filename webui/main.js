@@ -202,6 +202,7 @@ async function loadConfig()
         {
             document.getElementById('pin_rx').value = data['PIN_RX'];
             document.getElementById('pin_tx').value = data['PIN_TX'];
+            document.getElementById('x10a_protocol').value = data['X10A_PROTOCOL'];
             show('x10a');
             show('nav-x10a');
         }
@@ -1102,8 +1103,9 @@ async function beginLoadData(tableId)
     else
         params = selectedModelParameters;
 
-    const pinRx =  document.getElementById('pin_rx').value;
-    const pinTx =  document.getElementById('pin_tx').value;
+    const pinRx = document.getElementById('pin_rx').value;
+    const pinTx = document.getElementById('pin_tx').value;
+    const x10aProtocol = document.getElementById('x10a_protocol').value;
 
     if( pinRx == '' || isNaN(pinRx) ||
         pinTx == '' || isNaN(pinTx))
@@ -1120,6 +1122,7 @@ async function beginLoadData(tableId)
     const formData = new FormData();
     formData.append("PIN_RX", pinRx);
     formData.append("PIN_TX", pinTx);
+    formData.append("X10A_PROTOCOL", x10aProtocol);
     formData.append('PARAMS', JSON.stringify(params));
     await fetch('/loadValues', {
         method: "POST",

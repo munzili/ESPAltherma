@@ -1,7 +1,6 @@
 #ifndef PARAMETERDEF_H
 #define PARAMETERDEF_H
 
-#include <pgmspace.h>
 #include "ArduinoC.hpp"
 
 struct ParameterDef

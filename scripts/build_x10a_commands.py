@@ -27,6 +27,17 @@ for file in files_to_convert:
     modelDefinition = json.load(modelFile)
     modelFile.close()
 
+    # remove comments in file
+    if "Comment" in modelDefinition:
+        del modelDefinition["Comment"]
+
+    idx = 0
+    while idx < len(modelDefinition["Parameters"]):
+        if len(modelDefinition["Parameters"][idx]) == 1:
+            modelDefinition["Parameters"].pop(idx)
+        else:
+            idx += 1
+
     modelFileLanguageDir = os.path.join(buildDir, modelDefinition["Language"])
 
     if not os.path.exists(modelFileLanguageDir):

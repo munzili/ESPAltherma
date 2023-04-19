@@ -52,7 +52,7 @@ void webuiScanRegister()
 
   debugSerial.println("Fetching Values");
 
-  handleX10A(loadRegistryBuffers, loadRegistryBufferSize, labelsToLoad, labelsSize, false);
+  handleX10A(loadRegistryBuffers, loadRegistryBufferSize, labelsToLoad, labelsSize, false, webuiScanRegisterConfig.protocol);
 
   debugSerial.println("Returning Values");
 
