@@ -2,7 +2,9 @@
 
 WebUIScanRegister webuiScanRegisterConfig;
 ValueLoadState valueLoadState = NotLoading;
+ValueLoadState wifiLoadState = NotLoading;
 String valueLoadResponse;
+String wifiLoadResponse;
 
 void webuiScanRegister()
 {
@@ -84,4 +86,30 @@ void webuiScanRegister()
   serializeJson(resultDoc, valueLoadResponse);
 
   valueLoadState = LoadingFinished;
+}
+
+void webuiScanWifi()
+{
+  if(wifiLoadState == NotLoading || wifiLoadState == LoadingFinished) {
+    return;
+  }
+
+  wifiLoadState = Loading;
+
+  DynamicJsonDocument networksDoc(WIFI_DOC_SIZE);
+
+  scan_wifi();
+
+  for (int16_t i = 0; i < lastWifiScanResultAmount; i++) {
+    JsonObject networkDetails = networksDoc.createNestedObject();
+    networkDetails["SSID"] = lastWifiScanResults[i]->SSID;
+    networkDetails["RSSI"] = lastWifiScanResults[i]->RSSI;
+    networkDetails["EncryptionType"] = (lastWifiScanResults[i]->EncryptionType == WIFI_AUTH_OPEN) ? "":"*";
+  }
+
+  scan_wifi_delete_result();
+
+  serializeJson(networksDoc, wifiLoadResponse);
+
+  wifiLoadState = LoadingFinished;
 }

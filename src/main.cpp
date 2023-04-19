@@ -149,8 +149,12 @@ void waitLoop(ulong ms)
 {
   ulong start = millis();
   while (millis() < start + ms) { // wait .5sec between registries
-    if(valueLoadState == Pending || mainLoopStatus == LoopRunStatus::Stopping)
+
+    if(valueLoadState == Pending ||
+       wifiLoadState  == Pending ||
+       mainLoopStatus == LoopRunStatus::Stopping) {
       return;
+    }
 
     extraLoop();
   }
@@ -163,16 +167,20 @@ void loop()
   if(mainLoopStatus == LoopRunStatus::Stopped)
     return;
 
-  if (!config->STANDALONE_WIFI && config->configStored && WiFi.status() != WL_CONNECTED) {
+  if (wifiLoadState == ValueLoadState::NotLoading &&
+      !config->STANDALONE_WIFI &&
+      config->configStored &&
+      WiFi.status() != WL_CONNECTED) {
     //restart board if needed
     checkWifi();
   }
 
-  webuiScanRegister();
-
   if(!config->configStored) {
     extraLoop();
   } else {
+    webuiScanRegister();
+    webuiScanWifi();
+
     if (!client.connected()) { // (re)connect to MQTT if needed
       reconnectMqtt();
     }

@@ -29,27 +29,34 @@ bool formatDefaultFS()
   return true;
 }
 
-void onLoadWifiNetworks(AsyncWebServerRequest *request)
+void onWifiLoadNetworks(AsyncWebServerRequest *request)
 {
-  DynamicJsonDocument networksDoc(MODELS_DOC_SIZE);
-
-  scan_wifi();
-
-  for (int16_t i = 0; i < lastWifiScanResultAmount; i++)
-  {
-    JsonObject networkDetails = networksDoc.createNestedObject();
-    networkDetails["SSID"] = lastWifiScanResults[i]->SSID;
-    networkDetails["RSSI"] = lastWifiScanResults[i]->RSSI;
-    networkDetails["EncryptionType"] = (lastWifiScanResults[i]->EncryptionType == WIFI_AUTH_OPEN) ? "":"*";
-    delay(10);
+  if(wifiLoadState != NotLoading) {
+    request->send(202, "text/plain", "Wifi scan in progress");
+    return;
   }
 
-  scan_wifi_delete_result();
+  wifiLoadState = Pending;
 
-  String response;
-  serializeJson(networksDoc, response);
+  request->send(200, "application/json", "OK");
+}
 
-  request->send(200, "application/json", response);
+void onWifiLoadFinished(AsyncWebServerRequest *request)
+{
+  if(wifiLoadState == NotLoading) {
+    request->send(503, "text/plain", "No scan in progress");
+    return;
+  }
+
+  if(wifiLoadState == Loading || wifiLoadState == Pending) {
+    request->send(503, "text/plain", "Wifi scan not finished");
+    return;
+  }
+
+  request->send(200, "application/json", wifiLoadResponse);
+  valueLoadResponse = "";
+
+  wifiLoadState = NotLoading;
 }
 
 void onLoadBoardInfo(AsyncWebServerRequest *request)
@@ -1040,7 +1047,8 @@ void WebUI_Init()
   server.on("/saveConfig", HTTP_POST, onSaveConfig);
   server.on("/exportConfig", HTTP_GET, onExportConfig);
   server.on("/loadConfig", HTTP_GET, onLoadConfig);
-  server.on("/loadWifiNetworks", HTTP_GET, onLoadWifiNetworks);
+  server.on("/wifi/loadNetworks", HTTP_GET, onWifiLoadNetworks);
+  server.on("/wifi/loadFinished", HTTP_GET, onWifiLoadFinished);
   server.on("/format", HTTP_GET, onFormat);
   server.on("/reset", HTTP_GET, onReset);
   server.on("/update", HTTP_POST, onUpdate, handleUpdate);

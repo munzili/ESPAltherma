@@ -12,6 +12,7 @@
 #include "debugSerial.hpp"
 
 #define MODELS_DOC_SIZE 1024*10
+#define WIFI_DOC_SIZE 1024
 
 struct WebUIScanRegister {
   int8_t PinRx;
@@ -29,8 +30,11 @@ enum ValueLoadState {
 
 extern WebUIScanRegister webuiScanRegisterConfig;
 extern ValueLoadState valueLoadState;
+extern ValueLoadState wifiLoadState;
 extern String valueLoadResponse;
+extern String wifiLoadResponse;
 
 void webuiScanRegister();
+void webuiScanWifi();
 
 #endif

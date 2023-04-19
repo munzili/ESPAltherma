@@ -46,7 +46,9 @@ extern LoopRunStatus mainLoopStatus;
 
 bool formatDefaultFS();
 
-void onLoadWifiNetworks(AsyncWebServerRequest *request);
+void onWifiLoadNetworks(AsyncWebServerRequest *request);
+
+void onWifiLoadFinished(AsyncWebServerRequest *request);
 
 void onLoadBoardInfo(AsyncWebServerRequest *request);
 

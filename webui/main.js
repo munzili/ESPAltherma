@@ -9,6 +9,10 @@ let models = [];
 let canCommands = [];
 let boardDefaults = {};
 
+let fetchWifiNetworksIntervalHandler;
+let fetchWifiNetworksBtnValue;
+let fetchWifiErrorCounter = 0;
+
 let fetchDataIntervalHandler;
 let fetchDataIntervalId;
 
@@ -367,15 +371,42 @@ async function loadWifiNetworks(event)
     if(btnWifiListRefresh.getAttribute('aria-busy') == 'true')
         return;
 
-    const btnValue = btnWifiListRefresh.text;
+    fetchWifiNetworksBtnValue = btnWifiListRefresh.text;
     btnWifiListRefresh.text = '';
     btnWifiListRefresh.setAttribute('aria-busy', 'true');
 
     while (ssidSelect.options.length > 1)
         ssidSelect.remove(1);
 
-    await fetch('/loadWifiNetworks', {
+    await fetch('/wifi/loadNetworks', {
         method: "GET"
+    })
+    .then(function(response) {
+        if(response.status == 200)
+        {
+            fetchWifiNetworksIntervalHandler = setInterval(loadfWifiNetworksFinished, 5000);
+        }
+        else
+        {
+            alert('Fetching wifi list failed! Message: ' + response);
+        }
+    })
+    .catch(function(err) {
+        alert('Fetching wifi list failed! Message: ' + err);
+    });
+}
+
+async function loadfWifiNetworksFinished()
+{
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    const ssidSelect = document.getElementById('ssid_select');
+    const btnWifiListRefresh = document.getElementById('btnWifiListRefresh');
+
+    await fetch('/wifi/loadFinished', {
+        method: "GET",
+        signal: controller.signal
     })
     .then(function(response) { return response.json(); })
     .then(function(data) {
@@ -385,13 +416,21 @@ async function loadWifiNetworks(event)
             option.value = data[key]["SSID"];
             ssidSelect.add(option);
         }
+
+        clearInterval(fetchWifiNetworksIntervalHandler);
+        btnWifiListRefresh.setAttribute('aria-busy', 'false');
+        btnWifiListRefresh.text = fetchWifiNetworksBtnValue;
+        fetchWifiErrorCounter = 0;
     })
     .catch(function(err) {
-        alert('Fetching wifi list failed! Message: ' + err);
+        fetchWifiErrorCounter++;
+        if(fetchWifiErrorCounter == 5) {
+            alert('Fetching of Wifi scanning result failed. Please ensure to reconnect to the Standalone Wifi! Continuing...');
+        }
+    })
+    .finally(function() {
+        clearTimeout(timeoutId);
     });
-
-    btnWifiListRefresh.setAttribute('aria-busy', 'false');
-    btnWifiListRefresh.text = btnValue;
 }
 
 async function sendConfigData(event)
