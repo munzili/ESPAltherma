@@ -166,9 +166,11 @@ void Converter::convert(ParameterDef *def, byte *data)
         case 215:
         case 216:
 		{
-			int num = data[0] >> 4;
-			int num2 = (int)(data[0] & 15);
-            sprintf(def->asString,"{0:X}{1:X}", num, num2);
+			/*byte num = data[0] >> 4;
+			byte num2 = (int)(data[0] & 0x0F);
+            sprintf(def->asString, "{0:X}{1:X}", num, num2);*/
+            // temp fix as statment abouve is not compiling. not sure what is intended to be printed
+            sprintf(def->asString, "%02X", data[0]);
             return;
 		}
 
