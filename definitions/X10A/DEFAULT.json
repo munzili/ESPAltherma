@@ -142,6 +142,6 @@
         [ 97,   6,  105,    2,  1,  "Liquid temperature(R3T)"],
         [ 97,   8,  105,    2,  1,  "Inlet temperature(R4T)"],
         [ 97,   10, 105,    2,  1,  "DHW temperature(R5T)"],
-        [ 97,   12, 105,    2,  1,  "Remocon thermistor"],
+        [ 97,   12, 105,    2,  1,  "Remocon thermistor"]
     ]
 }
