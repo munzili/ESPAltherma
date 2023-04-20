@@ -2,6 +2,7 @@
     "Model": "Altherma  Top Grade",
     "Language": "German",
     "Parameters": [
+        "*Kältemittel Typ",
         "Anzahl - Sensoren",
         "Anzahl - Inverterverdichter",
         "Anzahl - Standardverdichter",
