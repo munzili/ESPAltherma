@@ -2,6 +2,7 @@
     "Model": "Altherma LT Gas Inj 20200702",
     "Language": "German",
     "Parameters": [
+        "*Kältemittel Typ",
         "Anzahl - Sensoren",
         "Anzahl - Inverterverdichter",
         "Anzahl - Standardverdichter",

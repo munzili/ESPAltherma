@@ -2,6 +2,7 @@
     "Model": "Altherma Monobloc CA 5-7kW",
     "Language": "French",
     "Parameters": [
+        "Type de réfrigérant",
         "Override CMD:0 N_INV=1",
         "Override CMD:0 N_STD=0",
         "Override CMD:0 N_FAN=2",

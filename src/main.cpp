@@ -191,7 +191,7 @@ void loop()
 
     ulong loopEnd = config->FREQUENCY - millis() + loopStart;
 
-    debugSerial.printf("Done. Waiting %.2f sec...\n", (float)(loopEnd / 1000));
+    debugSerial.printf("Done. Waiting %.2f sec...\n", (float)loopEnd / 1000);
     waitLoop(loopEnd);
   }
 

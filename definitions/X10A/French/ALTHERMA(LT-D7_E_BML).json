@@ -2,6 +2,7 @@
     "Model": "Altherma LT D7 E BML",
     "Language": "French",
     "Parameters": [
+        "*Type de réfrigérant",
         "Qté de données du capteur",
         "Qté compresseur INV",
         "Qté compresseur STD",

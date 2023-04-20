@@ -2,6 +2,7 @@
     "Model": "Altherma LT DA PAIR BML",
     "Language": "German",
     "Parameters": [
+        "Kältemittel Typ",
         "Anzahl - Sensoren",
         "Anzahl - Inverterverdichter",
         "Anzahl - Standardverdichter",

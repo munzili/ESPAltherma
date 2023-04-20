@@ -2,6 +2,7 @@
     "Model": "Altherma GSHP2",
     "Language": "French",
     "Parameters": [
+        "Type de réfrigérant",
         "Qté de données du capteur",
         "Qté compresseur INV",
         "Qté compresseur STD",

@@ -54,7 +54,7 @@ void onWifiLoadFinished(AsyncWebServerRequest *request)
   }
 
   request->send(200, "application/json", wifiLoadResponse);
-  valueLoadResponse = "";
+  wifiLoadResponse = "";
 
   wifiLoadState = NotLoading;
 }
@@ -1015,7 +1015,7 @@ void onReset(AsyncWebServerRequest *request)
 {
   request->onDisconnect([]()
   {
-    esp_restart();
+    restart_board();
   });
 
   request->send(200, "text/javascript", "OK");
