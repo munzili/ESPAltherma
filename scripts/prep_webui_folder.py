@@ -18,6 +18,8 @@ print('Generating gzip webui files...')
 
 data_src_dir = os.path.join(env.get('PROJECT_DIR'), 'webui')
 
+minify = env.get('BUILD_TYPE') != 'debug'
+
 files_to_gzip = []
 for extension in filetypes_to_gzip:
     files_to_gzip.extend(glob.glob(os.path.join(data_src_dir, '*.' + extension)))
@@ -35,19 +37,28 @@ for file in files_to_gzip:
 
     if extension == "js":
         with open(tmpFile, 'r') as js_file:
-            minified = jsmin(js_file.read())
+            if minify:
+                minified = jsmin(js_file.read())
+            else:
+                minified = js_file.read()
 
         with open(tmpFile, 'w') as js_file:
             js_file.write(minified)
     elif extension == "html":
         with open(tmpFile,'r') as fileHandler:
-            htmlContent = htmlmin.minify(fileHandler.read())
+            if minify:
+                htmlContent = htmlmin.minify(fileHandler.read())
+            else:
+                htmlContent = fileHandler.read()
 
         with open(tmpFile,'w') as fileHandler:
             fileHandler.write(htmlContent)
     elif extension == "css":
         with open(tmpFile,'r') as fileHandler:
-            minified = rcssmin.cssmin(fileHandler.read())
+            if minify:
+                minified = rcssmin.cssmin(fileHandler.read())
+            else:
+                minified = fileHandler.read()
 
         with open(tmpFile,'w') as fileHandler:
             fileHandler.write(minified)
