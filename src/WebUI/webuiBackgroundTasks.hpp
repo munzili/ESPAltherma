@@ -1,5 +1,5 @@
-#ifndef WEBUI_SCAN_REGISTER_H
-#define WEBUI_SCAN_REGISTER_H
+#ifndef WEBUI_BACKGROUND_TASKS_H
+#define WEBUI_BACKGROUND_TASKS_H
 
 #include "ArduinoC.hpp"
 #include "X10A/X10A.hpp"

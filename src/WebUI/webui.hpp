@@ -12,7 +12,7 @@
 #include "wireless.hpp"
 #include "persistence.hpp"
 #include "arrayFunctions.hpp"
-#include "webuiScanRegister.hpp"
+#include "webuiBackgroundTasks.hpp"
 
 #define MODELS_FILE "/models.json"
 #define CAN_COMMANDS_FILE "/CANCommands.json"
