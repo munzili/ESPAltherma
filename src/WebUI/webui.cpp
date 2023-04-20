@@ -54,7 +54,7 @@ void onWifiLoadFinished(AsyncWebServerRequest *request)
   }
 
   request->send(200, "application/json", wifiLoadResponse);
-  valueLoadResponse = "";
+  wifiLoadResponse = "";
 
   wifiLoadState = NotLoading;
 }

@@ -9,7 +9,6 @@ let models = [];
 let canCommands = [];
 let boardDefaults = {};
 
-let fetchWifiNetworksIntervalHandler;
 let fetchWifiNetworksBtnValue;
 let fetchWifiErrorCounter = 0;
 
@@ -384,7 +383,7 @@ async function loadWifiNetworks(event)
     .then(function(response) {
         if(response.status == 200)
         {
-            fetchWifiNetworksIntervalHandler = setInterval(loadfWifiNetworksFinished, 5000);
+            setTimeout(loadfWifiNetworksFinished, 5000);
         }
         else
         {
@@ -404,33 +403,41 @@ async function loadfWifiNetworksFinished()
     const ssidSelect = document.getElementById('ssid_select');
     const btnWifiListRefresh = document.getElementById('btnWifiListRefresh');
 
-    await fetch('/wifi/loadFinished', {
+    await fetch('/', {
         method: "GET",
         signal: controller.signal
     })
-    .then(function(response) { return response.json(); })
-    .then(function(data) {
-        for (let key in data) {
-            let option = document.createElement("option");
-            option.text = data[key]["SSID"] + " (Quality:" + data[key]["RSSI"] + ") " + data[key]["EncryptionType"];
-            option.value = data[key]["SSID"];
-            ssidSelect.add(option);
-        }
+    .then(function(responsePing) {
+        if(responsePing.status == 200)
+        {
+            fetch('/wifi/loadFinished', {
+                method: "GET"
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                for (let key in data) {
+                    let option = document.createElement("option");
+                    option.text = data[key]["SSID"] + " (Quality:" + data[key]["RSSI"] + ") " + data[key]["EncryptionType"];
+                    option.value = data[key]["SSID"];
+                    ssidSelect.add(option);
+                }
 
-        clearInterval(fetchWifiNetworksIntervalHandler);
-        btnWifiListRefresh.setAttribute('aria-busy', 'false');
-        btnWifiListRefresh.text = fetchWifiNetworksBtnValue;
-        fetchWifiErrorCounter = 0;
+                btnWifiListRefresh.setAttribute('aria-busy', 'false');
+                btnWifiListRefresh.text = fetchWifiNetworksBtnValue;
+                fetchWifiErrorCounter = 0;
+            });
+        }
     })
     .catch(function(err) {
         fetchWifiErrorCounter++;
         if(fetchWifiErrorCounter == 5) {
             alert('Fetching of Wifi scanning result failed. Please ensure to reconnect to the Standalone Wifi! Continuing...');
         }
+        setTimeout(loadfWifiNetworksFinished, 5000);
     })
     .finally(function() {
         clearTimeout(timeoutId);
-    });
+    });;
 }
 
 async function sendConfigData(event)
