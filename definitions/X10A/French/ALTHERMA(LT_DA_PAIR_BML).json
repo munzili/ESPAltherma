@@ -2,6 +2,7 @@
     "Model": "Altherma LT DA PAIR BML",
     "Language": "French",
     "Parameters": [
+        "Type de réfrigérant",
         "Qté de données du capteur",
         "Qté compresseur INV",
         "Qté compresseur STD",

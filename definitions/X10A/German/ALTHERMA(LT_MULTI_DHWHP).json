@@ -2,6 +2,7 @@
     "Model": "Altherma LT Multi DHWHP",
     "Language": "German",
     "Parameters": [
+        "Kältemittel Typ",
         "Override CMD:0 N_INV=1",
         "Override CMD:0 N_STD=0",
         "Override CMD:0 N_FAN=2",
