@@ -60,9 +60,12 @@ _If this project has any value for you, please consider [buying me a 🍺](https
 2. Open a new terminal inside PlatformIO. Select the PlatformIO extension and click inside the "Quick Access" menu on `New Terminal` or press `F1` and select -> `PlatformIO: New Terminal`
 
 3. Enter following command into the terminal to download all configured submodules. This will download the LittleFS ESP-IDF component.
+
 ```bash
 git submodule update --init --recursive
 ```
+
+> **_NOTE:_**  If `git` command was nout found, please make sure you installed the git client. It can be downloaded [here](https://git-scm.com/downloads). After installation, please restart VS Code.
 
 4. Optional - If you are using an **M5StickC** (or M5Stack), select the corresponding environment from the status bar:
 Click  ![end m5](doc/images/defaultenv.png) and select **env:M5StickC** on the top. The status bar should display ![end m5](doc/images/m5envv.png)
