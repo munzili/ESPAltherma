@@ -35,6 +35,7 @@ void readConfig()
     if(configFileSize == 0)
         return;
 
+
     config->configStored = true;
     config->STANDALONE_WIFI = configDoc["STANDALONE_WIFI"].as<const bool>();
 
@@ -50,6 +51,9 @@ void readConfig()
             config->SSID_SECONDARY_DNS = (char *)configDoc["SSID_SECONDARY_DNS"].as<const char*>();
         }
     }
+
+    config->AUTH_USERNAME = (char *)configDoc["AUTH_USERNAME"].as<const char*>();
+    config->AUTH_PASSWORD = (char *)configDoc["AUTH_PASSWORD"].as<const char*>();
 
     config->MQTT_SERVER = (char *)configDoc["MQTT_SERVER"].as<const char*>();
     config->MQTT_USERNAME = (char *)configDoc["MQTT_USERNAME"].as<const char*>();
@@ -146,6 +150,9 @@ void saveConfig()
             configDoc["SSID_SECONDARY_DNS"] = config->SSID_SECONDARY_DNS;
         }
     }
+
+    configDoc["AUTH_USERNAME"] = config->AUTH_USERNAME;
+    configDoc["AUTH_PASSWORD"] = config->AUTH_PASSWORD;
 
     configDoc["MQTT_SERVER"] = config->MQTT_SERVER;
     configDoc["MQTT_USERNAME"] = config->MQTT_USERNAME;

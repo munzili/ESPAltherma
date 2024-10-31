@@ -17,10 +17,13 @@
         Loading, please wait...
       </article>
     </dialog>
-    <header><h1>ESPAltherma Config</h1></header>
+    <header>
+      <h1>ESPAltherma Config</h1>
+    </header>
     <nav>
       <ul id="nav-main" style="overflow-x: auto">
         <li><a href="#" data-link="form-network" role="button">Network</a></li>
+        <li><a href="#" data-link="form-authentication">Login</a></li>
         <li><a href="#" data-link="form-mqtt">MQTT</a></li>
         <li><a href="#" data-link="form-pins">Pins</a></li>
         <li id="nav-x10a" class="hidden"><a href="#" data-link="form-x10a">X10A-Bus</a></li>
@@ -30,6 +33,7 @@
       </ul>
       <ul>
         <li><a href="/webserial" role="button" class="outline" target="_blank">Web Serial</a></li>
+        <li><a href="/logout" role="button" class="outline" target="_blank">Log Out</a></li>
       </ul>
     </nav>
     <form id="configForm" action="/saveConfig" method="post">
@@ -87,6 +91,16 @@
             <input type="text" id="secondary_dns" name="secondary_dns"/>
             <small>Optional</small>
         </article>
+      </article>
+      <article id="form-authentication" role="tab" style="display: none;">
+        <label for="auth_username">Login Username:</label>
+        <input type="text" id="auth_username" name="auth_username"/>
+
+        <label for="auth_password">Login Password:</label>
+        <input type="password" id="auth_password" name="auth_password"/>
+
+        <label for="auth_password_repeat">Login Password (again):</label>
+        <input type="password" id="auth_password_repeat" name="auth_password_repeat"/>
       </article>
       <article id="form-mqtt" role="tab" style="display: none;">
         <label for="mqtt_server">MQTT Server:</label>
