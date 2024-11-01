@@ -63,7 +63,6 @@ const char* const JSON_BOARD_DEFAULTS =
       "\"auth_username\": \"admin\","
       "\"auth_password\": \"admin\","
       "\"mqtt_topic_name\": \"espaltherma/\","
-      "\"mqtt_topic_name\": \"espaltherma/\","
       "\"mqtt_onetopic_name\": \"OneATTR/\","
       "\"mqtt_port\": 1883"
     "}"
