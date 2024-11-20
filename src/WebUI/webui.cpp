@@ -7,6 +7,8 @@ LoopRunStatus mainLoopStatus = LoopRunStatus::Running;
 
 // Set web server port number to 80
 AsyncWebServer server(80);
+AuthenticationMiddleware authMiddleware;
+RateLimitMiddleware rateLimit;
 
 bool formatDefaultFS()
 {
@@ -104,9 +106,6 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
 
 void onIndex(AsyncWebServerRequest *request)
 {
-    if(!request->authenticate(config->AUTH_USERNAME.c_str(), config->AUTH_PASSWORD.c_str()))
-      return request->requestAuthentication("ESPAltherma", false);
-
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, index_html_gz_len);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
@@ -1098,9 +1097,24 @@ void WebUI_Init()
     formatDefaultFS();
   }
 
+  // Setup Digest Auth
+  authMiddleware.setAuthType(AsyncAuthType::AUTH_DIGEST);
+  authMiddleware.setRealm("ESPAltherma");
+  authMiddleware.setUsername(config->AUTH_USERNAME.c_str());
+  authMiddleware.setPassword(config->AUTH_PASSWORD.c_str());
+  authMiddleware.setAuthFailureMessage("Authentication failed");
+  authMiddleware.generateHash(); // optimization to avoid generating the hash at each request
+
+  // Rate limit requests to 10 request per 1 sec
+  rateLimit.setMaxRequests(10);
+  rateLimit.setWindowSize(1);
+
   // WebSerial is accessible at "<IP Address>/webserial" in browser
   WebSerial.begin(&server);
   WebSerial.onMessage(onWebSerialCallback);
+
+  // Add rate limit and digest auth to all requests
+  server.addMiddlewares({&rateLimit, &authMiddleware});
 
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
