@@ -61,4 +61,4 @@ jobs:
         run: mkdir -p build
 
       - name: Check if binary successfully created
-        ru: test .pio/build/${{ matrix.target }}/firmware.bin
+        run: test .pio/build/${{ matrix.target }}/firmware.bin
