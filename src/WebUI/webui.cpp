@@ -8,7 +8,6 @@ LoopRunStatus mainLoopStatus = LoopRunStatus::Running;
 // Set web server port number to 80
 AsyncWebServer server(80);
 AuthenticationMiddleware authMiddleware;
-RateLimitMiddleware rateLimit;
 
 bool formatDefaultFS()
 {
@@ -1105,16 +1104,12 @@ void WebUI_Init()
   authMiddleware.setAuthFailureMessage("Authentication failed");
   authMiddleware.generateHash(); // optimization to avoid generating the hash at each request
 
-  // Rate limit requests to 10 request per 1 sec
-  rateLimit.setMaxRequests(10);
-  rateLimit.setWindowSize(1);
-
   // WebSerial is accessible at "<IP Address>/webserial" in browser
   WebSerial.begin(&server);
   WebSerial.onMessage(onWebSerialCallback);
 
-  // Add rate limit and digest auth to all requests
-  server.addMiddlewares({&rateLimit, &authMiddleware});
+  // Add digest auth to all requests
+  server.addMiddleware(&authMiddleware);
 
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
