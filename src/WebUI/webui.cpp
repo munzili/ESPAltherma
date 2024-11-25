@@ -7,7 +7,20 @@ LoopRunStatus mainLoopStatus = LoopRunStatus::Running;
 
 // Set web server port number to 80
 AsyncWebServer server(80);
-AuthenticationMiddleware authMiddleware;
+
+bool EnsureAuthentication(AsyncWebServerRequest *request)
+{
+  if(!config->AUTH_ENABLED)
+    return true;
+
+  if(!request->authenticate(config->AUTH_USERNAME.c_str(), config->AUTH_PASSWORD.c_str()))
+  {
+    request->requestAuthentication();
+    return false;
+  }
+
+  return true;
+}
 
 bool formatDefaultFS()
 {
@@ -33,6 +46,8 @@ bool formatDefaultFS()
 
 void onWifiLoadNetworks(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(wifiLoadState != NotLoading) {
     request->send(202, "text/plain", "Wifi scan in progress");
     return;
@@ -45,6 +60,8 @@ void onWifiLoadNetworks(AsyncWebServerRequest *request)
 
 void onWifiLoadFinished(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(wifiLoadState == NotLoading) {
     request->send(503, "text/plain", "No scan in progress");
     return;
@@ -63,6 +80,8 @@ void onWifiLoadFinished(AsyncWebServerRequest *request)
 
 void onLoadBoardInfo(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   String response = "{";
   response.concat(JSON_BOARD_DEFAULTS);
   response += ",\"Version\": \"";
@@ -105,6 +124,8 @@ void onLoadBoardInfo(AsyncWebServerRequest *request)
 
 void onIndex(AsyncWebServerRequest *request)
 {
+    if(!EnsureAuthentication(request)) return;
+
     AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, index_html_gz_len);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
@@ -112,34 +133,44 @@ void onIndex(AsyncWebServerRequest *request)
 
 void onRequestPicoCSS(AsyncWebServerRequest *request)
 {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", pico_min_css_gz, pico_min_css_gz_len);
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
+  if(!EnsureAuthentication(request)) return;
+
+  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", pico_min_css_gz, pico_min_css_gz_len);
+  response->addHeader("Content-Encoding", "gzip");
+  request->send(response);
 }
 
 void onRequestMainCSS(AsyncWebServerRequest *request)
 {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", main_css_gz, main_css_gz_len);
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
+  if(!EnsureAuthentication(request)) return;
+
+  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", main_css_gz, main_css_gz_len);
+  response->addHeader("Content-Encoding", "gzip");
+  request->send(response);
 }
 
 void onRequestMainJS(AsyncWebServerRequest *request)
 {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", main_js_gz, main_js_gz_len);
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
+  if(!EnsureAuthentication(request)) return;
+
+  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", main_js_gz, main_js_gz_len);
+  response->addHeader("Content-Encoding", "gzip");
+  request->send(response);
 }
 
 void onRequestMD5JS(AsyncWebServerRequest *request)
 {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", md5_min_js_gz, md5_min_js_gz_len);
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
+  if(!EnsureAuthentication(request)) return;
+
+  AsyncWebServerResponse *response = request->beginResponse_P(200, "text/javascript", md5_min_js_gz, md5_min_js_gz_len);
+  response->addHeader("Content-Encoding", "gzip");
+  request->send(response);
 }
 
 void onFormat(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   bool result = formatDefaultFS();
 
   request->onDisconnect([]()
@@ -152,11 +183,15 @@ void onFormat(AsyncWebServerRequest *request)
 
 void onLoadModels(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   request->send(LittleFS, MODELS_FILE, "text/json");
 }
 
 void onLoadCommands(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   request->send(LittleFS, CAN_COMMANDS_FILE, "text/json");
 }
 
@@ -208,6 +243,8 @@ void handleFileUpload(AsyncWebServerRequest *request, String filename, size_t in
 
 void onUploadX10AFile(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(!request->hasParam("file", true, true))
   {
     request->send(422, "text/plain", "Missing X10A file");
@@ -277,6 +314,8 @@ void onUploadX10AFile(AsyncWebServerRequest *request)
 
 void onUploadConfigFile(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(!request->hasParam("file", true, true))
   {
     request->send(422, "text/plain", "Missing config file");
@@ -303,6 +342,8 @@ void onUploadConfigFile(AsyncWebServerRequest *request)
 
 void onLoadValuesResult(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(valueX10ALoadState == NotLoading)
   {
     request->send(503, "text/plain", "No values loading in progress");
@@ -379,6 +420,8 @@ bool handleX10A(AsyncWebServerRequest *request, X10A_Config** X10AConfigPointer)
 
 void onLoadValues(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(valueX10ALoadState != NotLoading) {
     request->send(202, "text/plain", "Value loading in progress");
     return;
@@ -395,6 +438,8 @@ void onLoadValues(AsyncWebServerRequest *request)
 
 void onLoadModel(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(!request->hasParam("modelFile", true))
   {
     request->send(422, "text/plain", "Missing model file");
@@ -417,6 +462,8 @@ void onLoadModel(AsyncWebServerRequest *request)
 
 void onLoadCommand(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(!request->hasParam("commandFile", true))
   {
     request->send(422, "text/plain", "Missing command file");
@@ -439,6 +486,8 @@ void onLoadCommand(AsyncWebServerRequest *request)
 
 void onLoadConfig(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(!LittleFS.exists(CONFIG_FILE))
   {
     request->send(200, "text/json", "{}");
@@ -460,6 +509,8 @@ void onLoadConfig(AsyncWebServerRequest *request)
 
 void onExportConfig(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   AsyncWebServerResponse *response;
 
   if(!LittleFS.exists(CONFIG_FILE))
@@ -641,6 +692,8 @@ bool handleCAN(AsyncWebServerRequest *request, CAN_Config** CANConfigPointer)
 
 void onSaveConfig(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(!request->hasParam("standalone_wifi", true))
   {
     if(!request->hasParam("ssid", true) || !request->hasParam("ssid_password", true))
@@ -660,7 +713,7 @@ void onSaveConfig(AsyncWebServerRequest *request)
     }
   }
 
-  if(!request->hasParam("auth_username", true) || !request->hasParam("auth_password", true)) {
+  if(request->hasParam("auth_enabled", true) && (!request->hasParam("auth_username", true) || !request->hasParam("auth_password", true))) {
     request->send(422, "text/plain", "Missing parameter(s) for Authentication!");
     return;
   }
@@ -717,6 +770,10 @@ void onSaveConfig(AsyncWebServerRequest *request)
   while(mainLoopStatus != LoopRunStatus::Stopped)
     delay(10);
 
+  String currentPassword = "";
+  if(config)
+    currentPassword = config->AUTH_PASSWORD;
+
   if(config)
     delete config;
 
@@ -740,8 +797,14 @@ void onSaveConfig(AsyncWebServerRequest *request)
     }
   }
 
-  config->AUTH_USERNAME = (char *)request->getParam("auth_username", true)->value().c_str();
-  config->AUTH_PASSWORD = (char *)request->getParam("auth_password", true)->value().c_str();
+  config->AUTH_ENABLED = request->hasParam("auth_enabled", true);
+  if(config->AUTH_ENABLED) {
+    config->AUTH_USERNAME = (char *)request->getParam("auth_username", true)->value().c_str();
+    config->AUTH_PASSWORD = (char *)request->getParam("auth_password", true)->value().c_str();
+
+    if(config->AUTH_PASSWORD.isEmpty())
+      config->AUTH_PASSWORD = currentPassword;
+  }
 
   config->MQTT_SERVER = (char *)request->getParam("mqtt_server", true)->value().c_str();
   config->MQTT_USERNAME = (char *)request->getParam("mqtt_username", true)->value().c_str();
@@ -798,6 +861,8 @@ void onSaveConfig(AsyncWebServerRequest *request)
 
 void onUpdate(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   bool hasError = Update.hasError();
 
   request->onDisconnect([hasError]()
@@ -921,6 +986,8 @@ void handleUpdate(AsyncWebServerRequest *request, String filename, size_t index,
 
 void onUploadCANFile(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(!request->hasParam("file", true, true))
   {
     request->send(422, "text/plain", "Missing CAN file");
@@ -1038,6 +1105,8 @@ void onWebSerialCallback(const uint8_t *data, const size_t len)
 
 void onReset(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   request->onDisconnect([]()
   {
     restart_board();
@@ -1048,6 +1117,8 @@ void onReset(AsyncWebServerRequest *request)
 
 void onLoadCANValuesResult(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(valueCANLoadState == NotLoading)
   {
     request->send(503, "text/plain", "No values loading in progress");
@@ -1075,6 +1146,8 @@ void onLoadCANValuesResult(AsyncWebServerRequest *request)
 
 void onLoadCANValues(AsyncWebServerRequest *request)
 {
+  if(!EnsureAuthentication(request)) return;
+
   if(valueCANLoadState != NotLoading) {
     request->send(202, "text/plain", "Value loading in progress");
     return;
@@ -1082,6 +1155,7 @@ void onLoadCANValues(AsyncWebServerRequest *request)
 
   if(!handleCAN(request, &webuiScanCANRegisterConfig)) {
     return;
+
   }
 
   valueCANLoadState = Pending;
@@ -1096,20 +1170,9 @@ void WebUI_Init()
     formatDefaultFS();
   }
 
-  // Setup Digest Auth
-  authMiddleware.setAuthType(AsyncAuthType::AUTH_DIGEST);
-  authMiddleware.setRealm("ESPAltherma");
-  authMiddleware.setUsername(config->AUTH_USERNAME.c_str());
-  authMiddleware.setPassword(config->AUTH_PASSWORD.c_str());
-  authMiddleware.setAuthFailureMessage("Authentication failed");
-  authMiddleware.generateHash(); // optimization to avoid generating the hash at each request
-
   // WebSerial is accessible at "<IP Address>/webserial" in browser
   WebSerial.begin(&server);
   WebSerial.onMessage(onWebSerialCallback);
-
-  // Add digest auth to all requests
-  server.addMiddleware(&authMiddleware);
 
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
