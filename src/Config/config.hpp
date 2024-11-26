@@ -27,6 +27,8 @@ struct ESPAlthermaConfig
     String SSID_GATEWAY;
     String SSID_PRIMARY_DNS;
     String SSID_SECONDARY_DNS;
+    String AUTH_USERNAME;
+    String AUTH_PASSWORD;
     String MQTT_SERVER;
     String MQTT_USERNAME;
     String MQTT_PASSWORD;

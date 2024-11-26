@@ -7,6 +7,7 @@ LoopRunStatus mainLoopStatus = LoopRunStatus::Running;
 
 // Set web server port number to 80
 AsyncWebServer server(80);
+AuthenticationMiddleware authMiddleware;
 
 bool formatDefaultFS()
 {
@@ -659,6 +660,11 @@ void onSaveConfig(AsyncWebServerRequest *request)
     }
   }
 
+  if(!request->hasParam("auth_username", true) || !request->hasParam("auth_password", true)) {
+    request->send(422, "text/plain", "Missing parameter(s) for Authentication!");
+    return;
+  }
+
   if(!request->hasParam("mqtt_server", true) || !request->hasParam("mqtt_username", true) || !request->hasParam("mqtt_password", true) || !request->hasParam("mqtt_topic_name", true) || !request->hasParam("mqtt_port", true))
   {
     request->send(422, "text/plain", "Missing parameter(s) for MQTT!");
@@ -733,6 +739,9 @@ void onSaveConfig(AsyncWebServerRequest *request)
       config->SSID_SECONDARY_DNS = (char *)request->getParam("secondary_dns", true)->value().c_str();
     }
   }
+
+  config->AUTH_USERNAME = (char *)request->getParam("auth_username", true)->value().c_str();
+  config->AUTH_PASSWORD = (char *)request->getParam("auth_password", true)->value().c_str();
 
   config->MQTT_SERVER = (char *)request->getParam("mqtt_server", true)->value().c_str();
   config->MQTT_USERNAME = (char *)request->getParam("mqtt_username", true)->value().c_str();
@@ -1087,9 +1096,20 @@ void WebUI_Init()
     formatDefaultFS();
   }
 
+  // Setup Digest Auth
+  authMiddleware.setAuthType(AsyncAuthType::AUTH_DIGEST);
+  authMiddleware.setRealm("ESPAltherma");
+  authMiddleware.setUsername(config->AUTH_USERNAME.c_str());
+  authMiddleware.setPassword(config->AUTH_PASSWORD.c_str());
+  authMiddleware.setAuthFailureMessage("Authentication failed");
+  authMiddleware.generateHash(); // optimization to avoid generating the hash at each request
+
   // WebSerial is accessible at "<IP Address>/webserial" in browser
   WebSerial.begin(&server);
   WebSerial.onMessage(onWebSerialCallback);
+
+  // Add digest auth to all requests
+  server.addMiddleware(&authMiddleware);
 
   server.on("/", HTTP_GET, onIndex);
   server.on("/pico.min.css", HTTP_GET, onRequestPicoCSS);
@@ -1116,5 +1136,8 @@ void WebUI_Init()
   server.on("/upload/config", HTTP_POST, onUploadConfigFile, handleFileUpload);
   server.on("/upload/X10A", HTTP_POST, onUploadX10AFile, handleFileUpload);
   server.on("/upload/CAN", HTTP_POST, onUploadCANFile, handleFileUpload);
+  server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(401);
+  });
   server.begin();
 }

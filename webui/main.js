@@ -146,6 +146,9 @@ async function resetToDefaults()
     document.getElementById('mqtt_topic_name').value = boardDefaults['mqtt_topic_name'];
     document.getElementById('mqtt_onetopic_name').value = boardDefaults['mqtt_onetopic_name'];
     document.getElementById('mqtt_port').value = boardDefaults['mqtt_port'];
+    document.getElementById('auth_username').value = boardDefaults['auth_username'];
+    document.getElementById('auth_password').value = boardDefaults['auth_password'];
+    document.getElementById('auth_password_repeat').value = boardDefaults['auth_password'];
 
     document.querySelectorAll('input[data-pins]').forEach((input) => {
         input.defaultValue = input.value;
@@ -182,6 +185,10 @@ async function loadConfig()
         }
 
         updateWifiFields();
+
+        document.getElementById('auth_username').value = data['AUTH_USERNAME'];
+        document.getElementById('auth_password').value = data['AUTH_PASSWORD'];
+        document.getElementById('auth_password_repeat').value = data['AUTH_PASSWORD'];
 
         document.getElementById('mqtt_server').value = data['MQTT_SERVER'];
         document.getElementById('mqtt_username').value = data['MQTT_USERNAME'];
@@ -416,10 +423,14 @@ async function loadWifiNetworks(event)
         else
         {
             alert('Fetching wifi list failed! Message: ' + response);
+            btnWifiListRefresh.setAttribute('aria-busy', 'false');
+            btnWifiListRefresh.text = fetchWifiNetworksBtnValue;
         }
     })
     .catch(function(err) {
         alert('Fetching wifi list failed! Message: ' + err);
+        btnWifiListRefresh.setAttribute('aria-busy', 'false');
+        btnWifiListRefresh.text = fetchWifiNetworksBtnValue;
     });
 }
 
@@ -507,6 +518,14 @@ async function validateForm()
 
         clearHiddenValidationResult('staticip');
     }
+
+    const auth_username = document.getElementById('auth_username');
+    auth_username.setAttribute('aria-invalid', auth_username.value == '');
+
+    const auth_password = document.getElementById('auth_password');
+    const auth_password_repeat = document.getElementById('auth_password_repeat');
+    auth_password.setAttribute('aria-invalid', auth_password.value == '' || auth_password.value != auth_password_repeat.value);
+    auth_password_repeat.setAttribute('aria-invalid', auth_password_repeat.value == '' || auth_password.value != auth_password_repeat.value);
 
     const mqtt_server = document.getElementById('mqtt_server');
     mqtt_server.setAttribute('aria-invalid', mqtt_server.value == '' || !ValidateIPOrHostname(mqtt_server.value));
