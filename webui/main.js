@@ -16,6 +16,8 @@ let fetchWifiErrorCounter = 0;
 let fetchDataIntervalHandler;
 let fetchDataIntervalId;
 
+let authCurrentlyEnabled;
+
 window.addEventListener('load', async function () {
     document.getElementById('submit').addEventListener('click', sendConfigData);
     document.getElementById('startUpdate').addEventListener('click', sendUpdate);
@@ -23,11 +25,15 @@ window.addEventListener('load', async function () {
     document.getElementById('linkAddValueCode').addEventListener('click', addValueCode);
     document.getElementById('linkRemoveValueCode').addEventListener('click', removeValueCode);
     document.getElementById('ssid_select').addEventListener('change', selectWifiNetwork);
+    document.getElementById('logoutLink').addEventListener('click', logout);
 
     await loadBoardDefaults();
     await refreshModels();
     await refreshCANCommands();
     await loadConfig();
+
+    if(authCurrentlyEnabled == false)
+        document.getElementById('logoutLink').style.display = 'none';
 
     document.getElementById('nav-main').querySelectorAll('a').forEach(function(navLink) {
         navLink.addEventListener('click', handleNavigation);
@@ -147,8 +153,8 @@ async function resetToDefaults()
     document.getElementById('mqtt_onetopic_name').value = boardDefaults['mqtt_onetopic_name'];
     document.getElementById('mqtt_port').value = boardDefaults['mqtt_port'];
     document.getElementById('auth_username').value = boardDefaults['auth_username'];
-    document.getElementById('auth_password').value = boardDefaults['auth_password'];
-    document.getElementById('auth_password_repeat').value = boardDefaults['auth_password'];
+    document.getElementById('auth_password').value = '';
+    document.getElementById('auth_password_repeat').value = '';
 
     document.querySelectorAll('input[data-pins]').forEach((input) => {
         input.defaultValue = input.value;
@@ -186,9 +192,17 @@ async function loadConfig()
 
         updateWifiFields();
 
-        document.getElementById('auth_username').value = data['AUTH_USERNAME'];
-        document.getElementById('auth_password').value = data['AUTH_PASSWORD'];
-        document.getElementById('auth_password_repeat').value = data['AUTH_PASSWORD'];
+        document.getElementById('auth_enabled').checked = data['AUTH_ENABLED'];
+        if(data['AUTH_ENABLED'])
+        {
+            document.getElementById('auth_username').value = data['AUTH_USERNAME'];
+            authCurrentlyEnabled = true;
+            show('auth_settings');
+        }
+        else
+        {
+            authCurrentlyEnabled = false;
+        }
 
         document.getElementById('mqtt_server').value = data['MQTT_SERVER'];
         document.getElementById('mqtt_username').value = data['MQTT_USERNAME'];
@@ -383,6 +397,21 @@ async function loadConfig()
     });
 }
 
+async function logout()
+{
+    await fetch('/logout')
+    .then(function(response) {
+        if(response.status == 401)
+        {
+            window.location = '/';
+        }
+        else
+        {
+            alert('Logout failed with Code: ' + response.status);
+        }
+    });
+}
+
 async function selectWifiNetwork(event)
 {
     event.preventDefault();
@@ -519,13 +548,21 @@ async function validateForm()
         clearHiddenValidationResult('staticip');
     }
 
-    const auth_username = document.getElementById('auth_username');
-    auth_username.setAttribute('aria-invalid', auth_username.value == '');
+    const auth_enabled = document.getElementById('auth_enabled');
+    if(auth_enabled.checked)
+    {
+        const auth_username = document.getElementById('auth_username');
+        auth_username.setAttribute('aria-invalid', auth_username.value == '');
 
-    const auth_password = document.getElementById('auth_password');
-    const auth_password_repeat = document.getElementById('auth_password_repeat');
-    auth_password.setAttribute('aria-invalid', auth_password.value == '' || auth_password.value != auth_password_repeat.value);
-    auth_password_repeat.setAttribute('aria-invalid', auth_password_repeat.value == '' || auth_password.value != auth_password_repeat.value);
+        const auth_password = document.getElementById('auth_password');
+        const auth_password_repeat = document.getElementById('auth_password_repeat');
+        auth_password.setAttribute('aria-invalid', auth_password.value != auth_password_repeat.value || (!authCurrentlyEnabled && auth_password.value == ''));
+        auth_password_repeat.setAttribute('aria-invalid', auth_password.value != auth_password_repeat.value);
+    }
+    else
+    {
+        clearHiddenValidationResult("auth_settings");
+    }
 
     const mqtt_server = document.getElementById('mqtt_server');
     mqtt_server.setAttribute('aria-invalid', mqtt_server.value == '' || !ValidateIPOrHostname(mqtt_server.value));

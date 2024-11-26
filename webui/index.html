@@ -33,7 +33,7 @@
       </ul>
       <ul>
         <li><a href="/webserial" role="button" class="outline" target="_blank">Web Serial</a></li>
-        <li><a href="/logout" role="button" class="outline" target="_blank">Log Out</a></li>
+        <li><a href="#" id="logoutLink" role="button" class="outline">Log Out</a></li>
       </ul>
     </nav>
     <form id="configForm" action="/saveConfig" method="post">
@@ -93,14 +93,23 @@
         </article>
       </article>
       <article id="form-authentication" role="tab" style="display: none;">
-        <label for="auth_username">Login Username:</label>
-        <input type="text" id="auth_username" name="auth_username"/>
+        <label for="auth_enabled" >
+          <input type="checkbox" id="auth_enabled" name="auth_enabled" role="switch" onclick="show('auth_settings');"/>
+          Require Login on ESPAltherma Config
+        </label>
 
-        <label for="auth_password">Login Password:</label>
-        <input type="password" id="auth_password" name="auth_password"/>
+        <article id="auth_settings" class="hidden">
+          <label for="auth_username">Login Username:</label>
+          <input type="text" id="auth_username" name="auth_username"/>
 
-        <label for="auth_password_repeat">Login Password (again):</label>
-        <input type="password" id="auth_password_repeat" name="auth_password_repeat"/>
+          <label for="auth_password">Login Password:</label>
+          <input type="password" id="auth_password" name="auth_password"/>
+          <small>Leave the password field empty if no password change is needed. If the login is being enabled for the first time, a password is required.</small>
+
+          <label for="auth_password_repeat">Login Password (again):</label>
+          <input type="password" id="auth_password_repeat" name="auth_password_repeat"/>
+        </article>
+
       </article>
       <article id="form-mqtt" role="tab" style="display: none;">
         <label for="mqtt_server">MQTT Server:</label>

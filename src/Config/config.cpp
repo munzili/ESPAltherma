@@ -52,8 +52,11 @@ void readConfig()
         }
     }
 
-    config->AUTH_USERNAME = (char *)configDoc["AUTH_USERNAME"].as<const char*>();
-    config->AUTH_PASSWORD = (char *)configDoc["AUTH_PASSWORD"].as<const char*>();
+    config->AUTH_ENABLED = configDoc["AUTH_ENABLED"].as<const bool>();
+    if(config->AUTH_ENABLED) {
+        config->AUTH_USERNAME = (char *)configDoc["AUTH_USERNAME"].as<const char*>();
+        config->AUTH_PASSWORD = (char *)configDoc["AUTH_PASSWORD"].as<const char*>();
+    }
 
     config->MQTT_SERVER = (char *)configDoc["MQTT_SERVER"].as<const char*>();
     config->MQTT_USERNAME = (char *)configDoc["MQTT_USERNAME"].as<const char*>();
@@ -151,8 +154,11 @@ void saveConfig()
         }
     }
 
-    configDoc["AUTH_USERNAME"] = config->AUTH_USERNAME;
-    configDoc["AUTH_PASSWORD"] = config->AUTH_PASSWORD;
+    configDoc["AUTH_ENABLED"] = config->AUTH_ENABLED;
+    if(config->AUTH_ENABLED) {
+        configDoc["AUTH_USERNAME"] = config->AUTH_USERNAME;
+        configDoc["AUTH_PASSWORD"] = config->AUTH_PASSWORD;
+    }
 
     configDoc["MQTT_SERVER"] = config->MQTT_SERVER;
     configDoc["MQTT_USERNAME"] = config->MQTT_USERNAME;

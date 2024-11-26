@@ -51,13 +51,6 @@
 #define MODELS_DOC_SIZE 1024*10
 #define WEBUI_SELECTION_VALUE_SIZE 1024
 
-// Recommended defaults https://github.com/mathieucarbou/ESPAsyncWebServer?tab=readme-ov-file#important-recommendations
-#define CONFIG_ASYNC_TCP_MAX_ACK_TIME 3000
-#define CONFIG_ASYNC_TCP_PRIORITY 10
-#define CONFIG_ASYNC_TCP_QUEUE_SIZE 128
-#define CONFIG_ASYNC_TCP_RUNNING_CORE 1
-#define CONFIG_ASYNC_TCP_STACK_SIZE 4096
-
 extern String lastUploadFileName;
 extern bool webOTAIsBusy;
 
