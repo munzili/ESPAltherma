@@ -1171,7 +1171,10 @@ void WebUI_Init()
   }
 
   // WebSerial is accessible at "<IP Address>/webserial" in browser
-  WebSerial.begin(&server);
+  if(!config->AUTH_ENABLED)
+    WebSerial.begin(&server);
+  else
+    WebSerial.begin(&server, "/webserial", config->AUTH_USERNAME.c_str(), config->AUTH_PASSWORD.c_str());
   WebSerial.onMessage(onWebSerialCallback);
 
   server.on("/", HTTP_GET, onIndex);
