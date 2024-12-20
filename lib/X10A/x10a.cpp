@@ -89,7 +89,7 @@ bool queryRegistry(RegistryBuffer *registryBuffer, X10AProtocol protocol)
   }
 
   // sending command to serial
-  debugStream->printf("Querying register 0x%02x... ", registryBuffer->RegistryID);
+  debugStream->printf("Querying register 0x%02X... ", registryBuffer->RegistryID);
   X10ASerial->flush(); // prevent possible pending info on the read
   X10ASerial->write((uint8_t*)prep, queryLength);
   uint64_t start = millis();
@@ -115,7 +115,7 @@ bool queryRegistry(RegistryBuffer *registryBuffer, X10AProtocol protocol)
     if (len == 0) {
       debugStream->printf("Time out! Check connection\n");
     } else {
-      debugStream->printf("ERR: Time out on register 0x%02x! got %d/%d bytes\n", registryBuffer->RegistryID, len, replyLen);
+      debugStream->printf("ERR: Time out on register 0x%02X! got %d/%d bytes\n", registryBuffer->RegistryID, len, replyLen);
       logBuffer(registryBuffer->Buffer, len);
     }
     delay(500);
@@ -126,8 +126,8 @@ bool queryRegistry(RegistryBuffer *registryBuffer, X10AProtocol protocol)
   logBuffer(registryBuffer->Buffer, len);
   if (registryBuffer->CRC != registryBuffer->Buffer[len - 1]) {
     debugStream->println("Wrong CRC!");
-    debugStream->printf("ERROR: Wrong CRC on register 0x%02x!", registryBuffer->RegistryID);
-    debugStream->printf("Calculated 0x%2x but got 0x%2x\nnBuffer: ", registryBuffer->CRC, registryBuffer->Buffer[len - 1]);
+    debugStream->printf("ERROR: Wrong CRC on register 0x%02X!", registryBuffer->RegistryID);
+    debugStream->printf("Calculated 0x%02X but got 0x%02X\nnBuffer: ", registryBuffer->CRC, registryBuffer->Buffer[len - 1]);
     logBuffer(registryBuffer->Buffer, len);
     return false;
   } else {
@@ -163,7 +163,7 @@ void x10a_initRegistries(RegistryBuffer** buffer, size_t& bufferSize)
     auto &&label = *X10AConfig->PARAMETERS[i];
 
     if (!contains(tempRegistryIDs, X10AConfig->PARAMETERS_LENGTH, label.registryID)) {
-      debugStream->printf("Adding registry 0x%2x to be queried.\n", label.registryID);
+      debugStream->printf("Adding registry 0x%02X to be queried.\n", label.registryID);
       tempRegistryIDs[bufferSize++] = label.registryID;
     }
   }
@@ -243,6 +243,7 @@ void x10a_init(IDebugStream* stream, X10A_Config* X10AConfigToInit, const bool d
   x10a_end();
   X10AConfig = X10AConfigToInit;
   disableMQTTLogMessages = disableMQTTLogMessagesToInit;
+  debugStream->println("X10A initing");
   X10ASerial->begin(9600, X10AConfig->PIN_RX, X10AConfig->PIN_TX);
 }
 
@@ -260,9 +261,12 @@ void x10a_loop()
 
     x10a_handle(registryBuffers, registryBufferSize, true);
 
-    uint64_t loopEnd = X10AConfig->FREQUENCY - millis() + loopStart;
+    uint64_t loopEnd = loopStart + X10AConfig->FREQUENCY - millis();
+    if (loopEnd > X10AConfig->FREQUENCY) {
+        loopEnd = 0;
+    }
 
-    debugStream->printf("X10A Done. Waiting %.2f sec...\n", (float)loopEnd / 1000);
+    debugStream->printf("X10A Done. Waiting %.2f sec...\n", (double)loopEnd / 1000.0);
     lastTimeRunned = loopStart;
     handleState = HandleState::Stopped;
   }
